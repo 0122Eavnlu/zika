@@ -6,6 +6,7 @@ import { playSound } from './audio.js';
 import { startCall } from './call.js';
 import { openCardSheet } from './cards.js';
 import { openMoments } from './moments.js';
+import { pickLyric } from './music.js';
 
 let busy = false;
 let replying = false;
@@ -120,6 +121,9 @@ function buildMessage(msg) {
     inner = escapeHtml(msg.text || '');
   } else if (type === 'call') {
     inner = `<div class="call-msg"><span class="call-ic">${CALL_ICON}</span><div><div class="call-title">${escapeHtml(msg.text || '视频通话')}</div><div class="call-sub">${escapeHtml(callSub(msg))}</div></div></div>`;
+  } else if (type === 'lyric') {
+    bubbleCls = 'bubble lyric';
+    inner = `<div class="lyric-head">${escapeHtml(msg.lead || '我想给你的')}<b>《${escapeHtml(msg.song || '')}》</b></div><div class="lyric-line">${escapeHtml(msg.lyric || '')}</div>`;
   } else {
     inner = (msg.quote ? `<span class="quote">${escapeHtml(msg.quote)}</span>` : '') + escapeHtml(msg.text);
   }
@@ -178,6 +182,9 @@ function addIncoming(msgParts) {
       ts: Date.now(),
       senderId: msgParts.senderId || '',
       quote: msgParts.quote || '',
+      song: msgParts.song || '',
+      lyric: msgParts.lyric || '',
+      lead: msgParts.lead || '',
       seen,
     });
   });
@@ -485,6 +492,17 @@ async function afterReply() {
     commit(st => {
       st.messages.push({ id, role: 'them', type: 'nudge', text: `${p.name} ${item.text}`, ts: Date.now(), seen: true, senderId: '' });
     });
+  }
+
+  if (Math.random() < .3) {
+    try {
+      const l = await pickLyric();
+      if (l) {
+        await sleep(randInt(600, 1400));
+        addIncoming({ type: 'lyric', text: `${l.lead}《${l.song}》${l.lyric}`, song: l.song, lyric: l.lyric, lead: l.lead });
+        playSound();
+      }
+    } catch {}
   }
 }
 
