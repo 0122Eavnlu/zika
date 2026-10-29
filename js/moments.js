@@ -381,6 +381,9 @@ export function initMoments() {
   $('.app[data-app="moments"]')?.addEventListener('click', () => { origin = 'home'; });
   $('#momentAdd').onclick = openCompose;
   $('#momentsBgPick').onclick = pickBg;
+  $('#momentsScroll').addEventListener('scroll', () => {
+    $('#screen-moments').classList.toggle('scrolled', $('#momentsScroll').scrollTop > 40);
+  }, { passive: true });
   $('[data-moments-back]').onclick = () => {
     if (origin === 'chat' && router.isOpen('moments')) router.open('chat');
     else router.close();

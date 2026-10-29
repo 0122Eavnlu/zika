@@ -1789,7 +1789,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  height: calc(206px + env(safe-area-inset-top));
+  height: 220px;
   background: linear-gradient(160deg, #f3f2ef, #e7e6e3);
   background-size: cover;
   background-position: center;
@@ -1804,7 +1804,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   position: absolute;
   left: 12px;
   top: calc(10px + env(safe-area-inset-top));
-  z-index: 3;
+  z-index: 5;
   background: rgba(255,255,255,.62);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -1814,13 +1814,18 @@ select.input option { background: var(--surface); color: var(--ink); }
   position: absolute;
   right: 12px;
   top: calc(10px + env(safe-area-inset-top));
-  z-index: 3;
+  z-index: 5;
 }
 .moments-tools .icon-btn {
   background: rgba(255,255,255,.62);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 50%;
+}
+.moments-screen.scrolled .moments-back,
+.moments-screen.scrolled .moments-tools .icon-btn {
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 8px 22px -14px rgba(0,0,0,.45);
 }
 .moments-me {
   position: absolute;
@@ -1851,7 +1856,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   overflow-y: auto;
   overscroll-behavior: contain;
   touch-action: pan-y;
-  padding: 4px 0 calc(90px + env(safe-area-inset-bottom));
+  padding: 0 0 calc(90px + env(safe-area-inset-bottom));
   scrollbar-width: none;
 }
 .moments-scroll::-webkit-scrollbar { display: none; }
