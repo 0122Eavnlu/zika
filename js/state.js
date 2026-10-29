@@ -75,6 +75,9 @@ function defaults(withSeed = true) {
       callChance: 20,
       callAnswer: 20,
       callHangup: 5,
+      momentChance: 70,
+      momentShotChance: 50,
+      momentReplyChance: 70,
     },
     group: { enabled: false, members },
     cards: seed.cards,
@@ -84,6 +87,7 @@ function defaults(withSeed = true) {
       items: [{ id: uid(), text: '拍了拍你', at: Date.now() }],
     },
     stickers: [],
+    moments: { bg: '', posts: [] },
     messages: [],
   };
 }

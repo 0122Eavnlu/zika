@@ -5,6 +5,7 @@ import * as router from './router.js';
 import { playSound } from './audio.js';
 import { startCall } from './call.js';
 import { openCardSheet } from './cards.js';
+import { openMoments } from './moments.js';
 
 let busy = false;
 let replying = false;
@@ -674,6 +675,7 @@ export function initChat() {
   $('#sendBtn').onclick = sendMessage;
   $('#plusBtn').onclick = openAttachPanel;
   $('#chatMore').onclick = openChatMenu;
+  $('#chatAvatar').onclick = () => openMoments('chat');
 
   const input = $('#msgInput');
   input.addEventListener('input', autoGrow);
