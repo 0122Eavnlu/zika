@@ -106,7 +106,16 @@ function handleHistory() {
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+    .then(reg => reg.update().catch(() => {}))
+    .catch(() => {});
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) return;
+    if (sessionStorage.getItem('zika.sw-reloaded')) return;
+    sessionStorage.setItem('zika.sw-reloaded', '1');
+    location.reload();
+  });
 }
 
 function boot() {
