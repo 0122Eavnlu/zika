@@ -15,7 +15,6 @@ const openMeta = new Set();
 const fresh = new Set();
 
 const SEPARATORS = ['，', '、', '；', '。'];
-const EMOJIS = ['🌙', '☕', '🌸', '🕯️', '🌧️', '🍂', '🐈', '🥀', '📻', '✉️'];
 const CALL_ICON = `<svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="12.5" height="10" rx="3"/><path d="M15 11.2l5.4-3.1a.6.6 0 0 1 .9.5v6.8a.6.6 0 0 1-.9.5l-5.4-3.1z"/></svg>`;
 
 const readLabel = style => ({ text: '已读', check: '✓', double: '✓✓' }[style] || '已读');
@@ -432,15 +431,6 @@ export async function triggerReply({ proactive = false, allowCall = true } = {})
   const stickers = get().stickers || [];
   if (stickers.length && Math.random() * 100 < Number(b.stickerChance ?? 5)) {
     addIncoming({ type: 'sticker', stickerUrl: pick(stickers).url });
-    playSound();
-    replying = false;
-    setSpeakState(false);
-    await afterReply();
-    return;
-  }
-
-  if (Math.random() * 100 < Number(b.emojiChance ?? 10)) {
-    addIncoming({ type: 'emoji', text: pick(EMOJIS) });
     playSound();
     replying = false;
     setSpeakState(false);
