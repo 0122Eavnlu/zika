@@ -261,7 +261,10 @@ export function openMeSheet() {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         </span>
       </button>
-      <input class="input" id="meSheetName" maxlength="12" placeholder="我的昵称" value="${escapeHtml(me.name || '')}">
+      <div class="me-fields">
+        <input class="input" id="meSheetName" maxlength="12" placeholder="我的昵称" value="${escapeHtml(me.name || '')}">
+        <input class="input" id="meSheetStatus" maxlength="30" placeholder="我的状态" value="${escapeHtml(me.status || '')}">
+      </div>
     </div>
     <div class="sheet-actions">
       <button class="btn-ghost" id="meSheetClose">关闭</button>
@@ -288,7 +291,11 @@ export function openMeSheet() {
   $('#meSheetClose').onclick = closeSheet;
   $('#meSheetSave').onclick = () => {
     const name = $('#meSheetName').value.trim();
-    commit(s => { s.me.name = name || '我'; });
+    const status = $('#meSheetStatus').value.trim();
+    commit(s => {
+      s.me.name = name || '我';
+      s.me.status = status;
+    });
     closeSheet();
     toast('已保存');
   };

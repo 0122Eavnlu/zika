@@ -62,6 +62,8 @@ function syncControls() {
 
   const statusText = $('#personaStatusText');
   if (statusText) statusText.textContent = get().persona.status || '添加状态';
+  const meStatusText = $('#meStatusText');
+  if (meStatusText) meStatusText.textContent = get().me.status || '添加状态';
 
   const typing = $('#typingText');
   if (document.activeElement !== typing) typing.value = get().ui.typingText || '';
@@ -280,6 +282,7 @@ export function initSettings() {
   $('#personaAvatar').onclick = uploadPersonaAvatar;
   $('#personaStatus').onclick = openStatusSheet;
   $('#meAvatar').onclick = openMeSheet;
+  $('#meStatus').onclick = openMeSheet;
   $('#meName').addEventListener('change', event => {
     const value = event.target.value.trim();
     commit(s => { s.me.name = value || '我'; });

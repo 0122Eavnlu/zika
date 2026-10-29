@@ -18,6 +18,7 @@ export function applyVisuals() {
   if (meta) meta.setAttribute('content', resolvedTheme() === 'dark' ? '#0c0c0d' : '#efece5');
 
   root.style.setProperty('--fs', String(ui.fontSize));
+  root.style.setProperty('--avatar-size', `${Number(ui.avatarSize) || 28}px`);
 
   const font = (ui.font || '').trim();
   if (!font) {
@@ -61,6 +62,8 @@ function syncFont() {
 function syncSlider() {
   $('#fontSize').value = get().ui.fontSize;
   $('#fontSizeVal').textContent = String(get().ui.fontSize);
+  $('#avatarSize').value = get().ui.avatarSize;
+  $('#avatarSizeVal').textContent = String(get().ui.avatarSize);
 }
 
 function syncBg() {
@@ -102,6 +105,12 @@ export function initAppearance() {
     const value = Number(event.target.value);
     $('#fontSizeVal').textContent = String(value);
     commit(s => { s.ui.fontSize = value; });
+  });
+
+  $('#avatarSize').addEventListener('input', event => {
+    const value = Number(event.target.value);
+    $('#avatarSizeVal').textContent = String(value);
+    commit(s => { s.ui.avatarSize = value; });
   });
 
   let cssTimer = null;

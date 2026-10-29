@@ -255,6 +255,13 @@
             <span class="range-val" id="fontSizeVal">16</span>
           </div>
         </div>
+        <div class="row">
+          <span class="row-label">头像大小</span>
+          <div class="slider-row">
+            <input type="range" id="avatarSize" min="20" max="56" step="2" class="range">
+            <span class="range-val" id="avatarSizeVal">28</span>
+          </div>
+        </div>
       </section>
 
       <section class="group">
@@ -344,6 +351,11 @@
           </button>
           <div class="persona-fields">
             <input class="input" id="meName" placeholder="我的昵称" maxlength="12">
+            <button class="persona-status" id="meStatus" type="button" aria-label="我的状态">
+              <span class="status-dot"></span>
+              <span class="status-text" id="meStatusText"></span>
+              <span class="status-add">＋</span>
+            </button>
           </div>
         </div>
       </section>
