@@ -636,8 +636,31 @@ function openAttachPanel() {
   });
 }
 
+async function pickChatBg() {
+  const file = await pickFile('image/*');
+  if (!file) return;
+  try {
+    const data = await compressImage(file, 1600, .84);
+    commit(s => { s.ui.chatBg = data; });
+    toast('已设置壁纸');
+  } catch {
+    toast('图片处理失败');
+  }
+}
+
+function openBgSheet() {
+  actionSheet('聊天壁纸', [
+    { label: get().ui.chatBg ? '更换壁纸' : '选择图片', onClick: pickChatBg },
+    { label: '移除壁纸', danger: true, onClick: () => {
+      commit(s => { s.ui.chatBg = ''; });
+      toast('已移除壁纸');
+    } },
+  ]);
+}
+
 function openChatMenu() {
   actionSheet('对话', [
+    { label: '聊天壁纸', onClick: openBgSheet },
     { label: '打开字卡库', onClick: () => router.open('cards') },
     { label: '打开设定', onClick: () => router.open('settings') },
     { label: '删除所有消息', danger: true, onClick: async () => {
