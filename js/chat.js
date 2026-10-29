@@ -581,6 +581,7 @@ function sendSticker(url) {
   closeSheet();
   playSound();
   render(true);
+  triggerReply({ allowCall: false });
 }
 
 function openStickerPicker() {

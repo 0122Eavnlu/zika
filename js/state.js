@@ -40,6 +40,7 @@ function defaults(withSeed = true) {
       theme: 'auto',
       fontSize: 16,
       avatarSize: 28,
+      frost: 65,
       font: '',
       bubbleCss: '',
       chatBg: '',

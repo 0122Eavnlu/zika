@@ -19,6 +19,9 @@ export function applyVisuals() {
 
   root.style.setProperty('--fs', String(ui.fontSize));
   root.style.setProperty('--avatar-size', `${Number(ui.avatarSize) || 28}px`);
+  const frost = Math.min(100, Math.max(0, Number(ui.frost ?? 65)));
+  root.style.setProperty('--frost-alpha', `${(100 - frost * .55).toFixed(0)}%`);
+  root.style.setProperty('--frost-blur', `${(frost * .25).toFixed(1)}px`);
 
   const font = (ui.font || '').trim();
   if (!font) {
@@ -64,6 +67,8 @@ function syncSlider() {
   $('#fontSizeVal').textContent = String(get().ui.fontSize);
   $('#avatarSize').value = get().ui.avatarSize;
   $('#avatarSizeVal').textContent = String(get().ui.avatarSize);
+  $('#frostLevel').value = get().ui.frost;
+  $('#frostLevelVal').textContent = String(get().ui.frost);
 }
 
 function syncBg() {
@@ -111,6 +116,12 @@ export function initAppearance() {
     const value = Number(event.target.value);
     $('#avatarSizeVal').textContent = String(value);
     commit(s => { s.ui.avatarSize = value; });
+  });
+
+  $('#frostLevel').addEventListener('input', event => {
+    const value = Number(event.target.value);
+    $('#frostLevelVal').textContent = String(value);
+    commit(s => { s.ui.frost = value; });
   });
 
   let cssTimer = null;

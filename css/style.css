@@ -256,7 +256,9 @@ svg { display: block; }
   border-radius: 22px;
   display: grid;
   place-items: center;
-  background: linear-gradient(160deg, var(--surface-2), var(--paper-2));
+  background: color-mix(in srgb, var(--surface-2) var(--frost-alpha, 64%), transparent);
+  backdrop-filter: blur(var(--frost-blur, 16px)) saturate(1.2);
+  -webkit-backdrop-filter: blur(var(--frost-blur, 16px)) saturate(1.2);
   color: var(--ink);
   box-shadow: inset 0 0 0 1px var(--line-2), var(--shadow-sm);
   transition: transform .45s var(--spring), box-shadow .4s var(--ease);
@@ -1323,6 +1325,12 @@ select.input option { background: var(--surface); color: var(--ink); }
   --scrim: rgba(255, 255, 255, .02);
 }
 #screen-chat .chat-head { height: calc(68px + env(safe-area-inset-top)); }
+#screen-chat .chat-head,
+#screen-chat .composer {
+  background: color-mix(in srgb, var(--paper) var(--frost-alpha, 66%), transparent);
+  backdrop-filter: blur(var(--frost-blur, 16px)) saturate(1.35);
+  -webkit-backdrop-filter: blur(var(--frost-blur, 16px)) saturate(1.35);
+}
 #screen-chat .bubble,
 #screen-chat .msg.me .bubble,
 #screen-chat .typing-bubble,
