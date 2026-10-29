@@ -152,21 +152,42 @@ function syncPlayButton() {
   btn.innerHTML = playing ? PAUSE_ICON : PLAY_ICON;
 }
 
+const COVER_GRADIENT = 'linear-gradient(150deg, #a99a7c, #7d6f55 55%, #5d5343)';
+
+function applyCover(el, track) {
+  const url = httpsUrl(track && track.cover);
+  const quiet = () => {
+    el.classList.remove('has-art');
+    el.style.backgroundImage = COVER_GRADIENT;
+  };
+  if (!url) {
+    el.dataset.coverKey = '';
+    quiet();
+    return;
+  }
+  if (el.dataset.coverKey === url) return;
+  el.dataset.coverKey = url;
+  quiet();
+  const img = new Image();
+  img.onload = () => {
+    if (el.dataset.coverKey !== url) return;
+    el.style.backgroundImage = `url("${url.replace(/"/g, '%22')}")`;
+    el.classList.add('has-art');
+  };
+  img.onerror = () => {
+    if (el.dataset.coverKey !== url) return;
+    quiet();
+  };
+  img.src = url;
+}
+
 function render() {
   const list = allTracks();
   const track = currentTrack();
   const a = audio;
 
   const cover = $('#musicCover');
-  if (cover) {
-    if (track && track.cover) {
-      cover.style.backgroundImage = `url("${escapeHtml(track.cover)}")`;
-      cover.classList.add('has-art');
-    } else {
-      cover.style.backgroundImage = '';
-      cover.classList.remove('has-art');
-    }
-  }
+  if (cover) applyCover(cover, track);
   $('#musicNow').textContent = track ? track.name : '还没有歌曲';
   $('#musicArtist').textContent = track ? (track.artist || '一起听歌') : '点右上角 ＋ 添加音乐';
   $('#musicMode').textContent = (MODES.find(m => m.key === music().mode) || MODES[0]).label;
@@ -706,7 +727,18 @@ function updateDots() {
   });
 }
 
+function migrateCovers() {
+  const tracks = music().tracks || [];
+  if (!tracks.some(t => t.cover && t.cover !== httpsUrl(t.cover))) return;
+  commit(s => {
+    s.music.tracks.forEach(t => {
+      if (t.cover) t.cover = httpsUrl(t.cover);
+    });
+  });
+}
+
 export function initMusic() {
+  migrateCovers();
   bind();
   bindSwipe();
 
