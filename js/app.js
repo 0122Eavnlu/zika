@@ -157,7 +157,32 @@ function registerServiceWorker() {
   });
 }
 
+function fitViewport() {
+  const app = document.getElementById('app');
+  const vv = window.visualViewport;
+  if (!app || !vv || window.innerWidth >= 700) {
+    if (app) { app.style.top = ''; app.style.bottom = ''; app.style.height = ''; }
+    return;
+  }
+  const gap = window.innerHeight - vv.height;
+  if (gap > 100) {
+    app.style.top = `${vv.offsetTop}px`;
+    app.style.bottom = 'auto';
+    app.style.height = `${vv.height}px`;
+    const scroll = document.getElementById('msgScroll');
+    if (scroll) scroll.scrollTop = scroll.scrollHeight;
+  } else {
+    app.style.top = '';
+    app.style.bottom = '';
+    app.style.height = '';
+  }
+}
+
 function boot() {
+  fitViewport();
+  window.visualViewport?.addEventListener('resize', fitViewport);
+  window.visualViewport?.addEventListener('scroll', fitViewport);
+  window.addEventListener('resize', fitViewport);
   initAppearance();
   initSettings();
   initCards();
