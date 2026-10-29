@@ -1511,24 +1511,7 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .msg.me .bubble.emoji { background: none; color: var(--ink); }
 .bubble.lyric {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 150px;
-}
-.lyric-head {
-  font-size: 11.5px;
-  letter-spacing: .04em;
-  color: var(--ink-3, #9c9c9c);
-}
-.lyric-head b {
-  font-weight: 500;
-  color: var(--ink);
-}
-.lyric-line {
-  font-size: 14.5px;
-  line-height: 1.55;
-  letter-spacing: .05em;
+  background: #fff;
 }
 
 .call-msg { display: flex; align-items: flex-start; gap: 10px; }

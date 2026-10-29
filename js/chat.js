@@ -123,7 +123,7 @@ function buildMessage(msg) {
     inner = `<div class="call-msg"><span class="call-ic">${CALL_ICON}</span><div><div class="call-title">${escapeHtml(msg.text || '视频通话')}</div><div class="call-sub">${escapeHtml(callSub(msg))}</div></div></div>`;
   } else if (type === 'lyric') {
     bubbleCls = 'bubble lyric';
-    inner = `<div class="lyric-head">${escapeHtml(msg.lead || '我想给你的')}<b>《${escapeHtml(msg.song || '')}》</b></div><div class="lyric-line">${escapeHtml(msg.lyric || '')}</div>`;
+    inner = escapeHtml(`${msg.lead || '我想给你的'}《${msg.song || ''}》${msg.lyric || ''}`);
   } else {
     inner = (msg.quote ? `<span class="quote">${escapeHtml(msg.quote)}</span>` : '') + escapeHtml(msg.text);
   }

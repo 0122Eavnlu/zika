@@ -730,36 +730,49 @@ function updateDots() {
 /* ---------- 取一句歌词 ---------- */
 
 const LYRIC_LEADS = ['我想给你的', '想把这首送给你', '听到这句就想起了你'];
-const LYRIC_FALLBACK = [
-  { song: '偏爱', lyric: '我说过我不闪躲 我非要这么做' },
-  { song: '晴天', lyric: '刮风这天 我试过握着你手' },
-  { song: '小幸运', lyric: '原来你是我最想留住的幸运' },
-  { song: '后来', lyric: '后来 终于在眼泪中明白' },
-  { song: '红豆', lyric: '有时候 有时候 我会相信一切有尽头' },
-  { song: '小情歌', lyric: '我想我很适合 当一个歌颂者' },
-  { song: '慢慢喜欢你', lyric: '书里总爱写到喜出望外的傍晚' },
-  { song: '勇气', lyric: '爱真的需要勇气 来面对流言蜚语' },
-];
 let lastLyric = '';
 
 const randPick = list => list[Math.floor(Math.random() * list.length)];
 
-export async function pickLyric() {
-  const track = currentTrack();
-  if (track) {
-    if (!track.lyrics && !lyricsMap.get(track.id) && track.lrcUrl) await ensureLyrics();
-    const text = track.lyrics || lyricsMap.get(track.id) || '';
-    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length >= 4 && l.length <= 24);
-    if (lines.length) {
-      let line = randPick(lines);
-      if (lines.length > 1 && line === lastLyric) line = lines[(lines.indexOf(line) + 1) % lines.length];
-      lastLyric = line;
-      return { song: track.name, lyric: line, lead: randPick(LYRIC_LEADS) };
+async function lyricsOf(track) {
+  if (!track) return '';
+  const cached = track.lyrics || lyricsMap.get(track.id) || '';
+  if (cached) return cached;
+  if (!track.lrcUrl) return '';
+  try {
+    const res = await fetch(track.lrcUrl);
+    if (!res.ok) return '';
+    const cleaned = cleanLyrics(await res.text());
+    if (!cleaned) return '';
+    lyricsMap.set(track.id, cleaned);
+    if (!track.local) {
+      commit(s => {
+        const t = s.music.tracks.find(x => x.id === track.id);
+        if (t) t.lyrics = cleaned;
+      });
     }
+    return cleaned;
+  } catch {
+    return '';
   }
-  const item = randPick(LYRIC_FALLBACK);
-  lastLyric = item.lyric;
-  return { song: item.song, lyric: item.lyric, lead: randPick(LYRIC_LEADS) };
+}
+
+export async function pickLyric() {
+  const list = allTracks();
+  if (!list.length) return null;
+  const start = Math.min(Math.max(0, index), list.length - 1);
+  const rest = list.filter((_, i) => i !== start).sort(() => Math.random() - .5);
+  const order = [list[start], ...rest].slice(0, 8);
+  for (const track of order) {
+    const text = await lyricsOf(track);
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length >= 4 && l.length <= 24);
+    if (!lines.length) continue;
+    let line = randPick(lines);
+    if (lines.length > 1 && line === lastLyric) line = lines[(lines.indexOf(line) + 1) % lines.length];
+    lastLyric = line;
+    return { song: track.name, lyric: line, lead: randPick(LYRIC_LEADS) };
+  }
+  return null;
 }
 
 function migrateCovers() {
