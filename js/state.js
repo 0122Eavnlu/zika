@@ -36,6 +36,7 @@ function defaults(withSeed = true) {
     version: 1,
     persona: { name: '阿墨', avatar: '', status: '寻找灵魂伴侣', statusAt: 0, statusWait: 0, showName: true, showAvatar: true },
     me: { name: '我', avatar: '', status: '' },
+    anniversary: { enabled: true, date: '', text: '我们在一起' },
     ui: {
       theme: 'auto',
       fontSize: 16,
@@ -44,6 +45,7 @@ function defaults(withSeed = true) {
       font: '',
       bubbleCss: '',
       chatBg: '',
+      homeBg: '',
       timeOn: true,
       readOn: true,
       readStyle: 'text',

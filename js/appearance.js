@@ -76,6 +76,10 @@ function syncBg() {
   const preview = $('#bgPreview');
   preview.style.backgroundImage = bg ? `url("${bg}")` : '';
   preview.textContent = bg ? '' : '无';
+  const homeBg = get().ui.homeBg;
+  const homePreview = $('#homeBgPreview');
+  homePreview.style.backgroundImage = homeBg ? `url("${homeBg}")` : '';
+  homePreview.textContent = homeBg ? '' : '无';
 }
 
 function syncCss() {
@@ -145,6 +149,23 @@ export function initAppearance() {
 
   $('#bgClear').onclick = () => {
     commit(s => { s.ui.chatBg = ''; });
+    toast('已移除');
+  };
+
+  $('#homeBgPick').onclick = async () => {
+    const file = await pickFile('image/*');
+    if (!file) return;
+    try {
+      const data = await compressImage(file, 1600, .84);
+      commit(s => { s.ui.homeBg = data; });
+      toast('已设置主屏壁纸');
+    } catch {
+      toast('图片处理失败');
+    }
+  };
+
+  $('#homeBgClear').onclick = () => {
+    commit(s => { s.ui.homeBg = ''; });
     toast('已移除');
   };
 

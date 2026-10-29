@@ -219,6 +219,90 @@ svg { display: block; }
 #app.app-open .home { transform: scale(.94); opacity: .35; filter: blur(6px); }
 
 .home-top { margin-top: 6px; }
+
+.home-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+}
+.home-bg.empty { display: none; }
+.home > .home-top,
+.home > .anniv-card,
+.home > .home-grid,
+.home > .home-mark { position: relative; z-index: 1; }
+.home.has-bg .home-glyph,
+.home.has-bg .mark-dot { opacity: 0; }
+
+.anniv-card {
+  margin: 20px 2px 18px;
+  padding: 24px 20px 18px;
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--surface) var(--frost-alpha, 66%), transparent);
+  backdrop-filter: blur(calc(var(--frost-blur, 16px) * 1.3)) saturate(1.3);
+  -webkit-backdrop-filter: blur(calc(var(--frost-blur, 16px) * 1.3)) saturate(1.3);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  animation: appIn .8s var(--ease) both;
+}
+.anniv-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 6px;
+}
+.anniv-person {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.anniv-avatar {
+  width: 62px;
+  height: 62px;
+  font-size: 24px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--surface) 70%, transparent);
+}
+.anniv-name {
+  max-width: 100%;
+  padding: 4px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: .12em;
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.anniv-heart {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin-bottom: 26px;
+  color: var(--ink-3);
+}
+.anniv-heart path { fill: none; stroke: currentColor; stroke-width: 1.5; }
+.anniv-sep {
+  height: 1px;
+  margin: 18px 2px 14px;
+  background: var(--line-2);
+}
+.anniv-days {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.anniv-days b { font-size: 32px; font-weight: 400; letter-spacing: .02em; }
+.anniv-unit { font-size: 12px; color: var(--ink-2); }
+.anniv-since { font-size: 11px; color: var(--ink-3); letter-spacing: .04em; }
+.date-input { width: 152px; height: 36px; padding: 0 10px; font-size: 13px; }
+.bg-label { font-size: 12px; letter-spacing: .08em; color: var(--ink-3); padding: 2px 2px 8px; }
 .clock {
   font-size: 54px;
   line-height: 1.05;
