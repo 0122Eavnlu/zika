@@ -195,6 +195,10 @@ function openAdd() {
       <button class="music-src" data-src="local">本地音乐</button>
     </div>
     <div class="music-src-panel" data-panel="netease">
+      <button class="src-card wide account-card" id="musicAccount">
+        <b id="musicAccountName">连接网易云账号</b>
+        <span id="musicAccountState">填写 MUSIC_U 或扫码，读取并导入你的歌单</span>
+      </button>
       <div class="src-field">
         <input class="input" id="musicPlaylistInput" placeholder="粘贴歌单链接或歌单 ID">
         <button class="ghost-btn" id="musicImportPlaylist">导入</button>
@@ -234,6 +238,8 @@ function openAdd() {
   });
   $('#musicDaily').onclick = () => importPlaylist(HOT_ID);
   $('#musicRoam').onclick = () => importPlaylist(HOT_ID);
+  $('#musicAccount').onclick = openConnect;
+  syncAccount();
 
   $('#musicPickFiles').onclick = async () => {
     const files = await pickFile('audio/*', true);
@@ -325,6 +331,183 @@ async function importPlaylist(raw) {
     toast(`已导入 ${items.length} 首`);
   } catch {
     toast('导入失败，换一个歌单试试');
+  }
+}
+
+function apiBase() {
+  return String(music().apiBase || '').replace(/\/+$/, '');
+}
+
+function cookieParam(cookie) {
+  return `cookie=${encodeURIComponent(`MUSIC_U=${cookie}`)}`;
+}
+
+async function apiGet(path) {
+  const base = apiBase();
+  if (!base) throw new Error('noapi');
+  const res = await fetch(base + path);
+  if (!res.ok) throw new Error('http');
+  return res.json();
+}
+
+function syncAccount() {
+  const holder = $('#musicAccountName');
+  if (!holder) return;
+  const st = music();
+  const connected = Boolean(st.cookie && st.uid);
+  holder.textContent = connected ? `${st.nickname || '我的网易云'} · 我的歌单` : '连接网易云账号';
+  $('#musicAccountState').textContent = connected
+    ? '已连接，点这里查看并导入我的歌单'
+    : (st.apiBase ? '填写 MUSIC_U 或扫码，读取并导入你的歌单' : '需要先填写网易云 API 地址');
+}
+
+function openConnect() {
+  const st = music();
+  if (st.cookie && st.uid) {
+    openSheet(`
+      ${sheetTitle(st.nickname || '我的网易云')}
+      <p class="music-src-text">已连接，登录信息只保存在本机。</p>
+      <button class="ghost-btn wide" id="musicMyPlaylists">查看我的歌单</button>
+      <button class="ghost-btn wide danger" id="musicLogout">退出登录</button>
+    `);
+    $('#musicMyPlaylists').onclick = openMyPlaylists;
+    $('#musicLogout').onclick = () => {
+      commit(s => { s.music.cookie = ''; s.music.uid = ''; s.music.nickname = ''; });
+      closeSheet();
+      syncAccount();
+      toast('已退出');
+    };
+    return;
+  }
+
+  openSheet(`
+    ${sheetTitle('连接网易云')}
+    <p class="music-src-text">填写你部署的网易云 API 地址（NeteaseCloudMusicApi），登录信息只保存在本机。</p>
+    <input class="input" id="musicApiBase" placeholder="https://你的服务地址" value="${escapeHtml(st.apiBase || '')}">
+    <input class="input" id="musicCookie" placeholder="MUSIC_U 的值" value="">
+    <button class="ghost-btn wide" id="musicVerify">验证并连接</button>
+    <div class="src-head qr-wrap" id="musicQrBox" hidden></div>
+    <button class="ghost-btn wide" id="musicQr">生成登录二维码</button>
+    <p class="src-note">MUSIC_U 可在 music.163.com 登录后，从浏览器 Cookie 里复制；二维码需 API 服务支持扫码接口。</p>
+  `);
+
+  $('#musicVerify').onclick = async () => {
+    const base = $('#musicApiBase').value.trim().replace(/\/+$/, '');
+    const cookie = $('#musicCookie').value.trim().replace(/^MUSIC_U=/, '');
+    if (!/^https?:\/\//i.test(base)) { toast('请填写 API 地址'); return; }
+    if (!cookie) { toast('请填写 MUSIC_U'); return; }
+    commit(s => { s.music.apiBase = base; });
+    toast('正在验证…');
+    try {
+      const data = await apiGet(`/login/status?${cookieParam(cookie)}&timestamp=${Date.now()}`);
+      const profile = data?.data?.profile || data?.profile || data?.account || null;
+      const uid = String(profile?.userId || profile?.account?.id || '');
+      if (!uid) throw new Error('anon');
+      commit(s => {
+        s.music.cookie = cookie;
+        s.music.uid = uid;
+        s.music.nickname = profile?.nickname || '';
+      });
+      openAdd();
+      toast('已连接');
+    } catch (err) {
+      toast(err.message === 'noapi' ? '请先填写 API 地址' : '验证失败，检查地址或 MUSIC_U');
+    }
+  };
+
+  $('#musicQr').onclick = async () => {
+    const base = $('#musicApiBase').value.trim().replace(/\/+$/, '');
+    if (!/^https?:\/\//i.test(base)) { toast('请填写 API 地址'); return; }
+    commit(s => { s.music.apiBase = base; });
+    try {
+      const keyData = await apiGet(`/login/qr/key?timestamp=${Date.now()}`);
+      const key = keyData?.data?.unikey;
+      if (!key) throw new Error('qr');
+      const create = await apiGet(`/login/qr/create?key=${key}&qrimg=true&timestamp=${Date.now()}`);
+      const qrimg = create?.data?.qrimg;
+      if (!qrimg) throw new Error('qr');
+      const box = $('#musicQrBox');
+      box.hidden = false;
+      box.innerHTML = `<img src="${qrimg}" alt="登录二维码">`;
+      const timer = setInterval(async () => {
+        if (!$('#musicQrBox')) { clearInterval(timer); return; }
+        try {
+          const check = await apiGet(`/login/qr/check?key=${key}&timestamp=${Date.now()}`);
+          if (check?.code === 803 && check.cookie) {
+            clearInterval(timer);
+            const cookie = check.cookie.replace(/^MUSIC_U=/, '').split(';')[0];
+            const cookieText = check.cookie.match(/MUSIC_U=([^;]+)/)?.[1] || cookie;
+            commit(s => { s.music.cookie = cookieText; });
+            const me = await apiGet(`/login/status?${cookieParam(cookieText)}&timestamp=${Date.now()}`);
+            const profile = me?.data?.profile || me?.profile || null;
+            commit(s => {
+              s.music.uid = String(profile?.userId || '');
+              s.music.nickname = profile?.nickname || '';
+            });
+            clearInterval(timer);
+            openAdd();
+            toast('已连接');
+          } else if (check?.code === 800) {
+            clearInterval(timer);
+            toast('二维码已过期');
+          }
+        } catch {}
+      }, 2500);
+    } catch {
+      toast('生成二维码失败，请检查 API 地址');
+    }
+  };
+}
+
+async function openMyPlaylists() {
+  toast('正在读取歌单…');
+  try {
+    const data = await apiGet(`/user/playlist?uid=${music().uid}&limit=100&${cookieParam(music().cookie)}&timestamp=${Date.now()}`);
+    const list = (data?.playlist || []).filter(p => p && p.id);
+    if (!list.length) throw new Error('empty');
+    openSheet(`
+      ${sheetTitle('我的歌单')}
+      <div class="playlist-sheet">
+        ${list.map(p => `
+          <button class="playlist-row" data-pl="${p.id}">
+            <span class="pl-info"><span class="pl-name">${escapeHtml(p.name || '未命名歌单')}</span><span class="pl-artist">${p.trackCount || 0} 首</span></span>
+          </button>
+        `).join('')}
+      </div>
+    `);
+    $$('.playlist-row').forEach(btn => { btn.onclick = () => importPrivatePlaylist(btn.dataset.pl); });
+  } catch {
+    toast('读取歌单失败');
+  }
+}
+
+async function importPrivatePlaylist(playlistId) {
+  toast('正在导入…');
+  try {
+    const detail = await apiGet(`/playlist/detail?id=${playlistId}&${cookieParam(music().cookie)}&timestamp=${Date.now()}`);
+    const tracks = detail?.playlist?.tracks || [];
+    if (!tracks.length) throw new Error('empty');
+    const ids = tracks.map(t => t.id).filter(Boolean);
+    const urls = {};
+    for (let i = 0; i < ids.length; i += 18) {
+      const chunk = ids.slice(i, i + 18);
+      const data = await apiGet(`/song/url?id=${chunk.join(',')}&${cookieParam(music().cookie)}&timestamp=${Date.now()}`);
+      (data?.data || []).forEach(item => { if (item?.url) urls[item.id] = item.url; });
+    }
+    const items = tracks
+      .filter(t => urls[t.id])
+      .map(t => ({
+        name: t.name,
+        artist: (t.ar || []).map(a => a.name).join(' / '),
+        url: urls[t.id],
+        cover: t.al?.picUrl || '',
+      }));
+    if (!items.length) throw new Error('empty');
+    pushTracks(items);
+    closeSheet();
+    toast(`已导入 ${items.length} 首`);
+  } catch {
+    toast('导入失败，会员/版权歌曲可能不可用');
   }
 }
 

@@ -92,7 +92,7 @@ function defaults(withSeed = true) {
     },
     stickers: [],
     moments: { bg: '', posts: [] },
-    music: { tracks: [], mode: 'sequence', together: false, togetherCount: 0, current: 0 },
+    music: { tracks: [], mode: 'sequence', together: false, togetherCount: 0, current: 0, apiBase: '', cookie: '', uid: '', nickname: '' },
     messages: [],
   };
 }

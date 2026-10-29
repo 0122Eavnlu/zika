@@ -2455,3 +2455,12 @@ select.input option { background: var(--surface); color: var(--ink); }
   color: var(--ink-3, #999);
   text-align: center;
 }
+.src-card.wide {
+  width: 100%;
+  margin-bottom: 12px;
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+}
+.src-card.wide b { font-size: 14px; }
+.qr-wrap { width: 176px; height: 176px; margin: 12px auto; border-radius: 12px; overflow: hidden; }
+.qr-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.playlist-sheet { display: flex; flex-direction: column; max-height: 48vh; overflow-y: auto; }
