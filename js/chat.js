@@ -437,18 +437,6 @@ async function afterReply() {
       st.messages.push({ id, role: 'them', type: 'nudge', text: `${p.name} ${item.text}`, ts: Date.now(), seen: true, senderId: '' });
     });
   }
-  maybeStatus();
-}
-
-function maybeStatus() {
-  const s = get();
-  const group = s.cards.groups.find(g => g.name === '状态');
-  if (!group) return;
-  const items = s.cards.items.filter(c => c.groupId === group.id && !c.blocked);
-  if (!items.length) return;
-  if (Math.random() >= .35) return;
-  const value = pick(items).text;
-  commit(st => { st.persona.status = value; });
 }
 
 /* ---------- 主动消息 ---------- */

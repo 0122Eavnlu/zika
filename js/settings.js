@@ -3,6 +3,7 @@ import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, s
 import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js';
 import { playItem } from './audio.js';
 import * as router from './router.js';
+import { openStatusSheet } from './status.js';
 
 /* ---------- 通用控件 ---------- */
 
@@ -55,6 +56,9 @@ function syncControls() {
 
   const name = $('#personaName');
   if (document.activeElement !== name) name.value = get().persona.name || '';
+
+  const statusText = $('#personaStatusText');
+  if (statusText) statusText.textContent = get().persona.status || '添加状态';
 
   const typing = $('#typingText');
   if (document.activeElement !== typing) typing.value = get().ui.typingText || '';
@@ -269,6 +273,7 @@ export function initSettings() {
   bindData();
 
   $('#personaAvatar').onclick = uploadPersonaAvatar;
+  $('#personaStatus').onclick = openStatusSheet;
   $('#personaName').addEventListener('change', event => {
     const value = event.target.value.trim();
     commit(s => { s.persona.name = value || '阿墨'; });

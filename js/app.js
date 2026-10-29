@@ -3,6 +3,7 @@ import { initSettings } from './settings.js';
 import { initCards } from './cards.js';
 import { initChat } from './chat.js';
 import { initCall, hideCall } from './call.js';
+import { initStatus } from './status.js';
 import { bindBackButtons, open, close, currentScreen } from './router.js';
 import { closeSheet } from './ui.js';
 import { $, $$ } from './util.js';
@@ -79,6 +80,7 @@ function boot() {
   initCards();
   initChat();
   initCall();
+  initStatus();
   bindHome();
   bindBackButtons();
   handleHistory();
