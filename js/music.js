@@ -285,6 +285,13 @@ function importId(raw) {
   return (direct && direct[1]) || (bare && bare[0]) || (anyId && anyId[1]) || '';
 }
 
+function httpsUrl(url) {
+  const text = String(url || '').trim();
+  if (!text) return '';
+  if (text.startsWith('//')) return `https:${text}`;
+  return text.replace(/^http:\/\//i, 'https://');
+}
+
 function pushTracks(items) {
   const before = allTracks().length;
   commit(s => {
@@ -294,7 +301,7 @@ function pushTracks(items) {
         name: item.name || '未命名',
         artist: item.artist || '',
         url: item.url,
-        cover: item.cover || '',
+        cover: httpsUrl(item.cover),
         lyrics: '',
         lrcUrl: item.lrcUrl || '',
       });
@@ -322,8 +329,8 @@ async function importPlaylist(raw) {
         name: String(item.name).trim(),
         artist: String(item.artist || '').trim(),
         url: item.url,
-        cover: item.pic || '',
-        lrcUrl: item.lrc || '',
+        cover: httpsUrl(item.pic),
+        lrcUrl: httpsUrl(item.lrc),
       }));
     if (!items.length) throw new Error('empty');
     pushTracks(items);
@@ -500,7 +507,7 @@ async function importPrivatePlaylist(playlistId) {
         name: t.name,
         artist: (t.ar || []).map(a => a.name).join(' / '),
         url: urls[t.id],
-        cover: t.al?.picUrl || '',
+        cover: httpsUrl(t.al?.picUrl),
       }));
     if (!items.length) throw new Error('empty');
     pushTracks(items);
