@@ -183,29 +183,57 @@ function render() {
 
 /* ---------- 添加音乐 ---------- */
 
+const API = 'https://api.injahow.cn/meting/?server=netease';
+const HOT_ID = '3778678';
+const HEADPHONES = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.2 14.5v-2.2a7.8 7.8 0 0 1 15.6 0v2.2"/><path d="M4.2 14.2h1.6a1.4 1.4 0 0 1 1.4 1.4v4a1.4 1.4 0 0 1-1.4 1.4H5a1.2 1.2 0 0 1-1.2-1.2v-4.2a1.4 1.4 0 0 1 .4-1.4z"/><path d="M19.8 14.2h-1.6a1.4 1.4 0 0 0-1.4 1.4v4a1.4 1.4 0 0 0 1.4 1.4H19a1.2 1.2 0 0 0 1.2-1.2v-4.2a1.4 1.4 0 0 0-.4-1.4z"/></svg>`;
+
 function openAdd() {
   openSheet(`
     ${sheetTitle('把喜欢的歌带过来')}
     <div class="music-src-tabs">
-      <button class="music-src active" data-src="local">本地音乐</button>
-      <button class="music-src" data-src="link">链接</button>
+      <button class="music-src active" data-src="netease">网易云歌单</button>
+      <button class="music-src" data-src="local">本地音乐</button>
     </div>
-    <p class="music-src-text">一次选好，一起听。支持 MP3、M4A、WAV 等浏览器可播放格式；本地音乐仅在本次打开期间可用，链接会保存下来。</p>
-    <button class="ghost-btn wide" id="musicPickFiles">添加音乐 · 文件</button>
-    <div class="music-link-row">
-      <input class="input" id="musicUrl" placeholder="https://… 音频直链">
-      <button class="ghost-btn" id="musicUrlAdd">添加</button>
+    <div class="music-src-panel" data-panel="netease">
+      <div class="src-field">
+        <input class="input" id="musicPlaylistInput" placeholder="粘贴歌单链接或歌单 ID">
+        <button class="ghost-btn" id="musicImportPlaylist">导入</button>
+      </div>
+      <div class="src-cards">
+        <button class="src-card" id="musicDaily"><b>每日推荐</b><span>热歌榜前 50 首</span></button>
+        <button class="src-card" id="musicRoam"><b>漫游</b><span>随机热歌</span></button>
+      </div>
+      <p class="music-src-text">支持网易云公开歌单链接或数字 ID。曲目由公开接口提供，部分歌曲可能因版权无法播放。</p>
+      <button class="ghost-btn wide danger" id="musicClear">清空已导入音乐</button>
     </div>
-    <button class="ghost-btn wide danger" id="musicClear">清空已导入音乐</button>
+    <div class="music-src-panel" data-panel="local" hidden>
+      <div class="src-head">${HEADPHONES}</div>
+      <div class="src-title">一次选好，一起听。</div>
+      <p class="music-src-text">点击下面的按钮，在「文件」中多选音频。支持 MP3、M4A、WAV 等浏览器可播放的格式。</p>
+      <button class="ghost-btn wide" id="musicPickFiles">添加音乐 · 文件 / URL</button>
+      <div class="music-link-row">
+        <input class="input" id="musicUrl" placeholder="或粘贴音频直链 https://…">
+        <button class="ghost-btn" id="musicUrlAdd">添加</button>
+      </div>
+      <p class="src-note">本地音频只在本次打开期间可用，链接与歌单会保存下来。</p>
+      <button class="ghost-btn wide" id="musicDemo">体验无音频模拟</button>
+      <button class="ghost-btn wide danger" id="musicClear2">清空已导入音乐</button>
+    </div>
   `);
 
   $$('.music-src').forEach(btn => {
     btn.onclick = () => {
       $$('.music-src').forEach(b => b.classList.toggle('active', b === btn));
-      $('#musicUrl').closest('.music-link-row').style.display = btn.dataset.src === 'link' ? '' : 'none';
+      $$('.music-src-panel').forEach(p => { p.hidden = p.dataset.panel !== btn.dataset.src; });
     };
   });
-  $('#musicUrl').closest('.music-link-row').style.display = 'none';
+
+  $('#musicImportPlaylist').onclick = () => importPlaylist($('#musicPlaylistInput').value);
+  $('#musicPlaylistInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') importPlaylist(e.target.value);
+  });
+  $('#musicDaily').onclick = () => importPlaylist(HOT_ID);
+  $('#musicRoam').onclick = () => importPlaylist(HOT_ID);
 
   $('#musicPickFiles').onclick = async () => {
     const files = await pickFile('audio/*', true);
@@ -227,33 +255,117 @@ function openAdd() {
   };
 
   $('#musicUrlAdd').onclick = () => {
-    const input = $('#musicUrl');
-    const url = input.value.trim();
+    const url = $('#musicUrl').value.trim();
     if (!/^https?:\/\//i.test(url)) {
       toast('请输入 http(s) 开头的链接');
       return;
     }
-    const name = url.split('/').pop().replace(/\.\w+($|\?)/, '') || '未命名';
-    commit(s => {
-      s.music.tracks.push({ id: uid(), name, artist: '', url, cover: '', lyrics: '' });
-    });
+    pushTracks([{ name: url.split('/').pop().replace(/\.\w+($|\?)/, '') || '未命名', artist: '', url }]);
     closeSheet();
-    render();
     toast('已添加');
   };
 
-  $('#musicClear').onclick = () => {
-    session.length = 0;
-    commit(s => { s.music.tracks = []; s.music.current = 0; });
-    if (audio) {
-      audio.pause();
-      audio.removeAttribute('src');
-    }
-    index = 0;
+  $('#musicDemo').onclick = () => importPlaylist(HOT_ID);
+
+  $$('#musicClear, #musicClear2').forEach(btn => { btn.onclick = clearAll; });
+}
+
+function importId(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return '';
+  const direct = text.match(/playlist[\/?#&=]*(?:id=)?(\d{4,})/i);
+  const bare = text.match(/^\d{4,}$/);
+  const anyId = text.match(/(\d{6,})/);
+  return (direct && direct[1]) || (bare && bare[0]) || (anyId && anyId[1]) || '';
+}
+
+function pushTracks(items) {
+  const before = allTracks().length;
+  commit(s => {
+    items.forEach(item => {
+      s.music.tracks.push({
+        id: uid(),
+        name: item.name || '未命名',
+        artist: item.artist || '',
+        url: item.url,
+        cover: item.cover || '',
+        lyrics: '',
+        lrcUrl: item.lrcUrl || '',
+      });
+    });
+  });
+  render();
+  if (!before) loadTrack(0, false);
+}
+
+async function importPlaylist(raw) {
+  const id = importId(raw);
+  if (!id) {
+    toast('请粘贴歌单链接或数字 ID');
+    return;
+  }
+  toast('正在导入…');
+  try {
+    const res = await fetch(`${API}&type=playlist&id=${id}`);
+    if (!res.ok) throw new Error('http');
+    const data = await res.json();
+    if (!Array.isArray(data) || !data.length) throw new Error('empty');
+    const items = data
+      .filter(item => item && item.name && item.url)
+      .map(item => ({
+        name: String(item.name).trim(),
+        artist: String(item.artist || '').trim(),
+        url: item.url,
+        cover: item.pic || '',
+        lrcUrl: item.lrc || '',
+      }));
+    if (!items.length) throw new Error('empty');
+    pushTracks(items);
     closeSheet();
-    render();
-    toast('已清空');
-  };
+    toast(`已导入 ${items.length} 首`);
+  } catch {
+    toast('导入失败，换一个歌单试试');
+  }
+}
+
+function clearAll() {
+  session.length = 0;
+  commit(s => { s.music.tracks = []; s.music.current = 0; });
+  if (audio) {
+    audio.pause();
+    audio.removeAttribute('src');
+  }
+  index = 0;
+  closeSheet();
+  render();
+  toast('已清空');
+}
+
+async function ensureLyrics() {
+  const track = currentTrack();
+  if (!track) return;
+  if (track.lyrics || lyricsMap.get(track.id) || !track.lrcUrl) return;
+  try {
+    const res = await fetch(track.lrcUrl);
+    if (!res.ok) return;
+    const cleaned = cleanLyrics(await res.text());
+    if (!cleaned) return;
+    if (track.local) lyricsMap.set(track.id, cleaned);
+    else commit(s => {
+      const t = s.music.tracks.find(x => x.id === track.id);
+      if (t) t.lyrics = cleaned;
+    });
+    if (currentTrack()?.id === track.id) render();
+  } catch {}
+}
+
+function cleanLyrics(text) {
+  return text
+    .replace(/\r/g, '')
+    .split('\n')
+    .map(line => line.replace(/\[[^\]]*\]/g, '').trim())
+    .filter(Boolean)
+    .join('\n');
 }
 
 async function importLyrics() {
@@ -288,6 +400,7 @@ function setTab(name) {
   $('#musicPanelPlay').hidden = name !== 'play';
   $('#musicPanelLyrics').hidden = name !== 'lyrics';
   $('#musicPanelHome').hidden = name !== 'home';
+  if (name === 'lyrics') ensureLyrics();
 }
 
 function bind() {
@@ -392,9 +505,25 @@ function bindSwipe() {
   }, { passive: true });
 }
 
+function updateDots() {
+  const dots = $('#pageDots');
+  if (!dots) return;
+  const musicOpen = $('#screen-music').classList.contains('active');
+  const anyOpen = $('#app').classList.contains('app-open') || $$('.screen.active').length > 0;
+  dots.hidden = !(musicOpen || !anyOpen);
+  $$('.dot', dots).forEach(d => {
+    d.classList.toggle('active', (d.dataset.dot === 'music') === musicOpen);
+  });
+}
+
 export function initMusic() {
   bind();
   bindSwipe();
+
+  updateDots();
+  const obs = new MutationObserver(updateDots);
+  obs.observe($('#app'), { attributes: true, attributeFilter: ['class'] });
+  $$('.screen').forEach(el => obs.observe(el, { attributes: true, attributeFilter: ['class'] }));
 
   router.register('music', { onOpen: () => {
     render();

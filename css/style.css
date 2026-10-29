@@ -2164,7 +2164,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 8px 24px calc(30px + env(safe-area-inset-bottom));
+  padding: 8px 24px calc(48px + env(safe-area-inset-bottom));
   scrollbar-width: none;
 }
 .music-body::-webkit-scrollbar { display: none; }
@@ -2382,3 +2382,76 @@ select.input option { background: var(--surface); color: var(--ink); }
 .home-music:active { transform: scale(.9); }
 .home-music svg { width: 20px; height: 20px; }
 .home-music svg * { stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* 分页圆点 */
+.page-dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  pointer-events: none;
+}
+.page-dots .dot {
+  width: 7px; height: 7px;
+  border-radius: 4px;
+  background: var(--ink-3, rgba(0,0,0,.26));
+  opacity: .65;
+  transition: width .32s var(--ease), opacity .32s var(--ease), background .32s;
+}
+.page-dots .dot.active {
+  width: 26px;
+  opacity: 1;
+  background: var(--ink);
+}
+
+/* 添加音乐面板（网易云 / 本地） */
+.music-src-panel { display: flex; flex-direction: column; }
+.music-src-panel[hidden] { display: none; }
+.src-field { display: flex; gap: 8px; margin-bottom: 12px; }
+.src-field .input { flex: 1; }
+.src-field .ghost-btn { flex: 0 0 auto; padding: 0 16px; }
+.src-cards { display: flex; gap: 10px; }
+.src-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--line-2, rgba(0,0,0,.1));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-2) 60%, transparent);
+  font-family: var(--serif);
+  text-align: left;
+}
+.src-card b { font-weight: 500; font-size: 13px; letter-spacing: .06em; }
+.src-card span { font-size: 10.5px; color: var(--ink-3, #999); }
+.src-head {
+  width: 44px; height: 44px;
+  margin: 4px auto 12px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  border: 1px solid var(--line-2, rgba(0,0,0,.12));
+}
+.src-head svg { width: 20px; height: 20px; }
+.src-head svg * { stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.src-title {
+  text-align: center;
+  font-size: 15px;
+  letter-spacing: .1em;
+  margin-bottom: 8px;
+}
+.src-note {
+  margin: 10px 0 14px;
+  font-size: 10.5px;
+  line-height: 1.8;
+  color: var(--ink-3, #999);
+  text-align: center;
+}
