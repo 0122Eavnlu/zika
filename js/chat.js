@@ -1,8 +1,9 @@
 import { get, commit, subscribe } from './state.js';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid } from './util.js';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker } from './util.js';
 import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet } from './ui.js';
 import * as router from './router.js';
 import { playSound } from './audio.js';
+import { startCall } from './call.js';
 import { openCardSheet } from './cards.js';
 
 let busy = false;
@@ -14,6 +15,8 @@ const openMeta = new Set();
 const fresh = new Set();
 
 const SEPARATORS = ['，', '、', '；', '。'];
+const EMOJIS = ['🌙', '☕', '🌸', '🕯️', '🌧️', '🍂', '🐈', '🥀', '📻', '✉️'];
+const CALL_ICON = `<svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="12.5" height="10" rx="3"/><path d="M15 11.2l5.4-3.1a.6.6 0 0 1 .9.5v6.8a.6.6 0 0 1-.9.5l-5.4-3.1z"/></svg>`;
 
 const readLabel = style => ({ text: '已读', check: '✓', double: '✓✓' }[style] || '已读');
 
@@ -45,8 +48,9 @@ function availableCards() {
   return s.cards.items.filter(c => {
     if (c.blocked) return false;
     const g = groups.get(c.groupId);
-    if (g && g.blocked) return false;
-    return true;
+    if (!g) return true;
+    if (g.blocked) return false;
+    return g.name !== '状态';
   });
 }
 
@@ -60,6 +64,11 @@ function updateIdentity() {
   avatarEl.style.display = p.showAvatar ? '' : 'none';
   nameEl.textContent = p.name || '';
   nameEl.style.display = p.showName ? '' : 'none';
+  const handle = `@${(p.name || '').replace(/\s+/g, '')}`;
+  $('#chatHandle').textContent = handle;
+  $('#chatHandle').style.display = p.showName ? '' : 'none';
+  $('#chatStatus').textContent = p.status || '';
+  $('#chatStatus').style.display = p.showName && p.status ? '' : 'none';
   $('#emptyName').textContent = p.name || '';
   $('#emptyName').style.display = p.showName ? '' : 'none';
   setAvatar($('#emptyAvatar'), p.name, p.avatar);
@@ -78,9 +87,22 @@ function updateIdentity() {
   }
 }
 
+function callSub(msg) {
+  if (msg.callStatus === 'missed') return '对方暂时没有接听';
+  if (msg.callStatus === 'declined') return '对方已挂断';
+  const sec = Math.max(0, Number(msg.callDur) || 0);
+  return `通话时长 ${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+}
+
 function buildMessage(msg) {
   const p = persona();
   const isMe = msg.role === 'me';
+  const type = msg.type || 'text';
+
+  if (type === 'nudge') {
+    return `<div class="msg nudge ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}"><span>${escapeHtml(msg.text)}</span></div>`;
+  }
+
   const sender = senderOf(msg);
   const showAvatar = !isMe && p.showAvatar;
   const showName = !isMe && p.showName && get().group.enabled;
@@ -89,8 +111,22 @@ function buildMessage(msg) {
   if (isMe && msg.read && get().ui.readOn) {
     meta.push(`<span class="read ok">${escapeHtml(readLabel(get().ui.readStyle))}</span>`);
   }
-  const bubbleInner = (msg.quote ? `<span class="quote">${escapeHtml(msg.quote)}</span>` : '') + escapeHtml(msg.text);
-  return `<div class="msg ${isMe ? 'me' : 'them'} ${showAvatar ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${showAvatar ? `<span class="avatar" data-avatar="${msg.id}"></span>` : ''}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}<div class="bubble">${bubbleInner}</div>${meta.length ? `<div class="meta">${meta.join('')}</div>` : ''}</div></div>`;
+
+  let bubbleCls = 'bubble';
+  let inner = '';
+  if (type === 'sticker') {
+    bubbleCls = 'bubble sticker';
+    inner = `<img src="${escapeHtml(msg.stickerUrl || '')}" alt="">`;
+  } else if (type === 'emoji') {
+    bubbleCls = 'bubble emoji';
+    inner = escapeHtml(msg.text || '');
+  } else if (type === 'call') {
+    inner = `<div class="call-msg"><span class="call-ic">${CALL_ICON}</span><div><div class="call-title">${escapeHtml(msg.text || '视频通话')}</div><div class="call-sub">${escapeHtml(callSub(msg))}</div></div></div>`;
+  } else {
+    inner = (msg.quote ? `<span class="quote">${escapeHtml(msg.quote)}</span>` : '') + escapeHtml(msg.text);
+  }
+
+  return `<div class="msg ${isMe ? 'me' : 'them'} ${showAvatar ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${showAvatar ? `<span class="avatar" data-avatar="${msg.id}"></span>` : ''}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}<div class="${bubbleCls}">${inner}</div>${meta.length ? `<div class="meta">${meta.join('')}</div>` : ''}</div></div>`;
 }
 
 function render(forceBottom = false) {
@@ -131,14 +167,16 @@ function addIncoming(msgParts) {
     st.messages.push({
       id,
       role: 'them',
-      text: msgParts.text,
+      type: msgParts.type || 'text',
+      text: msgParts.text || '',
+      stickerUrl: msgParts.stickerUrl || '',
       ts: Date.now(),
       senderId: msgParts.senderId || '',
       quote: msgParts.quote || '',
       seen,
     });
   });
-  if (!seen) notifyIncoming(msgParts.text, msgParts.senderName);
+  if (!seen && msgParts.text) notifyIncoming(msgParts.text, msgParts.senderName);
 }
 
 function markSelfRead() {
@@ -194,13 +232,16 @@ function deleteMessage(id) {
 function openMessageSheet(id) {
   const msg = get().messages.find(m => m.id === id);
   if (!msg) return;
+  const isText = !msg.type || msg.type === 'text';
   const actions = [];
-  if (msg.role === 'me') {
+  if (msg.role === 'me' && isText) {
     actions.push({ label: '加入字卡', onClick: () => openCardSheet({ text: msg.text, title: '加入字卡' }) });
   }
-  actions.push({ label: '复制', onClick: async () => {
-    try { await navigator.clipboard.writeText(msg.text); toast('已复制'); } catch { toast('复制失败'); }
-  } });
+  if (isText) {
+    actions.push({ label: '复制', onClick: async () => {
+      try { await navigator.clipboard.writeText(msg.text); toast('已复制'); } catch { toast('复制失败'); }
+    } });
+  }
   actions.push({ label: '删除', danger: true, onClick: () => deleteMessage(id) });
   actionSheet(msg.role === 'me' ? '我的消息' : '对方消息', actions);
 }
@@ -210,7 +251,7 @@ function handleTap(row, id) {
   if (!msg) return;
   if (openMeta.has(id)) openMeta.delete(id); else openMeta.add(id);
   row.classList.toggle('show-meta');
-  if (msg.role === 'me') {
+  if (msg.role === 'me' && (!msg.type || msg.type === 'text')) {
     openCardSheet({ text: msg.text, title: '加入字卡' });
   }
 }
@@ -292,6 +333,11 @@ export async function triggerReply({ proactive = false } = {}) {
   if (replying) return;
   const b = get().behavior;
 
+  if (!proactive && Math.random() * 100 < Number(b.callChance ?? 20)) {
+    startCall();
+    return;
+  }
+
   if (!proactive && b.readSkip && Math.random() < b.readSkipRate) {
     const btn = $('#speakBtn');
     btn.classList.remove('pulse');
@@ -323,14 +369,33 @@ export async function triggerReply({ proactive = false } = {}) {
   await sleep(Math.max(delay * 1000, 800));
   hideTyping();
 
+  markSelfRead();
+
+  const stickers = get().stickers || [];
+  if (stickers.length && Math.random() * 100 < Number(b.stickerChance ?? 5)) {
+    addIncoming({ type: 'sticker', stickerUrl: pick(stickers).url });
+    playSound();
+    replying = false;
+    setSpeakState(false);
+    await afterReply();
+    return;
+  }
+
+  if (Math.random() * 100 < Number(b.emojiChance ?? 10)) {
+    addIncoming({ type: 'emoji', text: pick(EMOJIS) });
+    playSound();
+    replying = false;
+    setSpeakState(false);
+    await afterReply();
+    return;
+  }
+
   const count = randInt(1, 3);
   const chosen = [...pool].sort(() => Math.random() - .5).slice(0, Math.min(count, pool.length));
   const useQuote = b.quote && Math.random() < .65;
   const quote = useQuote ? pickQuote() : '';
   const groupOn = get().group.enabled;
   const randomSender = () => (groupOn ? pick(get().group.members) : null);
-
-  markSelfRead();
 
   if (b.chain) {
     const sep = pick(SEPARATORS);
@@ -357,6 +422,33 @@ export async function triggerReply({ proactive = false } = {}) {
 
   replying = false;
   setSpeakState(false);
+  await afterReply();
+}
+
+async function afterReply() {
+  const n = get().nudge;
+  if (n && n.enabled && n.items && n.items.length && Math.random() * 100 < Number(n.chance ?? 30)) {
+    await sleep(randInt(700, 1500));
+    const p = persona();
+    const item = pick(n.items);
+    const id = uid();
+    fresh.add(id);
+    commit(st => {
+      st.messages.push({ id, role: 'them', type: 'nudge', text: `${p.name} ${item.text}`, ts: Date.now(), seen: true, senderId: '' });
+    });
+  }
+  maybeStatus();
+}
+
+function maybeStatus() {
+  const s = get();
+  const group = s.cards.groups.find(g => g.name === '状态');
+  if (!group) return;
+  const items = s.cards.items.filter(c => c.groupId === group.id && !c.blocked);
+  if (!items.length) return;
+  if (Math.random() >= .35) return;
+  const value = pick(items).text;
+  commit(st => { st.persona.status = value; });
 }
 
 /* ---------- 主动消息 ---------- */
@@ -420,6 +512,83 @@ function sendMessage() {
   input.focus();
 }
 
+const ICON_STICKER = `<svg viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="4"/><circle cx="8" cy="10" r="1.6"/><path d="M5.4 15.6c.6-1.4 1.6-2.1 2.6-2.1s2 .7 2.6 2.1"/><path d="M14 9.5h5M14 13h5M14 16.5h3"/></svg>`;
+const ICON_VIDEO = `<svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="12.5" height="10" rx="3"/><path d="M15 11.2l5.4-3.1a.6.6 0 0 1 .9.5v6.8a.6.6 0 0 1-.9.5l-5.4-3.1z"/></svg>`;
+const ICON_VOICE = `<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="9.5" rx="3"/><path d="M6.5 11a5.5 5.5 0 0 0 11 0M12 16.5v4M8.5 20.5h7"/></svg>`;
+
+function sendSticker(url) {
+  const id = uid();
+  fresh.add(id);
+  commit(s => {
+    s.messages.push({
+      id,
+      role: 'me',
+      type: 'sticker',
+      text: '',
+      stickerUrl: url,
+      ts: Date.now(),
+      read: false,
+      seen: true,
+      senderId: '',
+    });
+  });
+  closeSheet();
+  playSound();
+  render(true);
+}
+
+function openStickerPicker() {
+  const stickers = get().stickers || [];
+  openSheet(`
+    ${sheetTitle('表情包')}
+    <div class="sticker-grid">
+      ${stickers.map(s => `<button class="sticker-cell" data-pick="${s.id}"><img src="${escapeHtml(s.url)}" alt=""></button>`).join('')}
+      <button class="sticker-cell add-cell" id="pickerUpload">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>上传</span>
+      </button>
+    </div>
+  `);
+  $$('#sheet [data-pick]').forEach(btn => {
+    btn.onclick = () => {
+      const sticker = get().stickers.find(s => s.id === btn.dataset.pick);
+      if (sticker) sendSticker(sticker.url);
+    };
+  });
+  $('#pickerUpload').onclick = async () => {
+    const file = await pickFile('image/*');
+    if (!file) return;
+    try {
+      const url = await prepareSticker(file);
+      commit(s => { s.stickers.unshift({ id: uid(), url, at: Date.now() }); });
+      openStickerPicker();
+      toast('已添加');
+    } catch {
+      toast('图片处理失败');
+    }
+  };
+}
+
+function openAttachPanel() {
+  openSheet(`
+    ${sheetTitle('添加')}
+    <div class="attach-grid">
+      <button class="attach-item" data-attach="sticker">${ICON_STICKER}<span>表情包</span></button>
+      <button class="attach-item" data-attach="video">${ICON_VIDEO}<span>视频</span></button>
+      <button class="attach-item" data-attach="voice">${ICON_VOICE}<span>语音</span></button>
+    </div>
+  `);
+  $$('#sheet [data-attach]').forEach(btn => {
+    btn.onclick = () => {
+      if (btn.dataset.attach === 'sticker') {
+        openStickerPicker();
+        return;
+      }
+      closeSheet();
+      setTimeout(() => startCall(), 260);
+    };
+  });
+}
+
 function openChatMenu() {
   actionSheet('对话', [
     { label: '打开字卡库', onClick: () => router.open('cards') },
@@ -442,6 +611,7 @@ export function initChat() {
     triggerReply();
   };
   $('#sendBtn').onclick = sendMessage;
+  $('#plusBtn').onclick = openAttachPanel;
   $('#chatMore').onclick = openChatMenu;
 
   const input = $('#msgInput');

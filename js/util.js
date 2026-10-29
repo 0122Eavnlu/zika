@@ -87,6 +87,21 @@ export function downloadBlob(filename, content, type = 'text/plain;charset=utf-8
   setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
 
+export function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+export async function prepareSticker(file, maxSize = 900) {
+  if (!file || !file.type.startsWith('image/')) throw new Error('not-image');
+  if (file.type === 'image/gif') return fileToDataUrl(file);
+  return compressImage(file, maxSize, .9);
+}
+
 export function pickFile(accept = '*/*') {
   return new Promise(resolve => {
     const input = document.createElement('input');

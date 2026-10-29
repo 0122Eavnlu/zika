@@ -3,12 +3,13 @@ import { uid, toast } from './util.js';
 const KEY = 'zika.state.v1';
 
 function seeds() {
-  const g1 = uid(), g2 = uid();
+  const g1 = uid(), g2 = uid(), g3 = uid();
   return {
     cards: {
       groups: [
         { id: g1, name: '问候', blocked: false },
         { id: g2, name: '日常', blocked: false },
+        { id: g3, name: '状态', blocked: false },
       ],
       items: [
         { id: uid(), text: '在的。', groupId: g1, blocked: false, at: Date.now() - 60000 },
@@ -16,6 +17,9 @@ function seeds() {
         { id: uid(), text: '今天还好吗？', groupId: g1, blocked: false, at: Date.now() - 40000 },
         { id: uid(), text: '别熬太晚。', groupId: g2, blocked: false, at: Date.now() - 30000 },
         { id: uid(), text: '晚点再聊。', groupId: g2, blocked: false, at: Date.now() - 20000 },
+        { id: uid(), text: '寻找灵魂伴侣', groupId: g3, blocked: false, at: Date.now() - 12000 },
+        { id: uid(), text: '不在线，勿念', groupId: g3, blocked: false, at: Date.now() - 8000 },
+        { id: uid(), text: '今天也没有睡好', groupId: g3, blocked: false, at: Date.now() - 4000 },
       ],
     },
   };
@@ -30,7 +34,7 @@ function defaults(withSeed = true) {
   ];
   return {
     version: 1,
-    persona: { name: '阿墨', avatar: '', showName: true, showAvatar: true },
+    persona: { name: '阿墨', avatar: '', status: '寻找灵魂伴侣', showName: true, showAvatar: true },
     ui: {
       theme: 'auto',
       fontSize: 16,
@@ -61,9 +65,20 @@ function defaults(withSeed = true) {
         { id: 's2', name: '风铃', preset: 'chime' },
         { id: 's3', name: '墨滴', preset: 'drop' },
       ],
+      stickerChance: 5,
+      emojiChance: 10,
+      callChance: 20,
+      callAnswer: 20,
+      callHangup: 5,
     },
     group: { enabled: false, members },
     cards: seed.cards,
+    nudge: {
+      enabled: true,
+      chance: 30,
+      items: [{ id: uid(), text: '拍了拍你', at: Date.now() }],
+    },
+    stickers: [],
     messages: [],
   };
 }

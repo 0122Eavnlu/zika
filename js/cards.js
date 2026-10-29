@@ -1,5 +1,5 @@
 import { get, commit, subscribe } from './state.js';
-import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, setAvatar } from './util.js';
+import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, prepareSticker, setAvatar } from './util.js';
 import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet, actionSheet } from './ui.js';
 import * as router from './router.js';
 
@@ -9,6 +9,7 @@ let activeGroup = 'all';
 let query = '';
 let sortMode = 'new';
 let selecting = false;
+let tab = 'cards';
 const selected = new Set();
 
 /* ---------- 数据 ---------- */
@@ -159,10 +160,64 @@ function renderBatchBar() {
   }
 }
 
+function renderStickers() {
+  const stickers = get().stickers || [];
+  const grid = $('#stickerGrid');
+  if (!stickers.length) {
+    grid.innerHTML = `<div class="card-empty">空</div>`;
+    return;
+  }
+  grid.innerHTML = stickers.map(s => `
+    <div class="sticker-cell" data-sticker="${s.id}">
+      <img src="${s.url}" alt="">
+      <button class="del" data-sticker-del="${s.id}" aria-label="删除">
+        <svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7l-10 10"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+function renderNudge() {
+  const n = get().nudge;
+  $('#nudgeSwitch').classList.toggle('on', Boolean(n.enabled));
+  $('#nudgeChance').value = String(n.chance);
+  $('#nudgeVal').textContent = `${n.chance}%`;
+  const list = $('#nudgeList');
+  if (!n.items.length) {
+    list.innerHTML = `<div class="nudge-empty">空</div>`;
+    return;
+  }
+  list.innerHTML = n.items.map(it => `
+    <div class="nudge-item" data-nudge="${it.id}">
+      <span class="nudge-name">${escapeHtml(it.text)}</span>
+      <button class="nudge-remove" data-nudge-del="${it.id}">删除</button>
+    </div>
+  `).join('');
+}
+
 function render() {
-  renderChips();
-  renderList();
-  renderBatchBar();
+  if (tab === 'cards') {
+    renderChips();
+    renderList();
+    renderBatchBar();
+    return;
+  }
+  $('#batchBar').hidden = true;
+  if (tab === 'stickers') renderStickers();
+  else renderNudge();
+}
+
+function setTab(next) {
+  tab = next;
+  $$('#cardTabs button').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === next));
+  $('#panel-cards').hidden = next !== 'cards';
+  $('#panel-stickers').hidden = next !== 'stickers';
+  $('#panel-nudge').hidden = next !== 'nudge';
+  if (next !== 'cards') {
+    selecting = false;
+    selected.clear();
+  }
+  render();
 }
 
 /* ---------- 分组 ---------- */
@@ -324,6 +379,42 @@ function doMove(ids, groupId) {
   toast(`已移动 ${ids.length} 张`);
 }
 
+/* ---------- 表情包 ---------- */
+
+async function uploadSticker() {
+  const file = await pickFile('image/*');
+  if (!file) return;
+  try {
+    const url = await prepareSticker(file);
+    commit(s => { s.stickers.unshift({ id: uid(), url, at: Date.now() }); });
+    toast('已添加');
+  } catch {
+    toast('图片处理失败');
+  }
+}
+
+/* ---------- 拍一拍 ---------- */
+
+function addNudge() {
+  promptSheet({ title: '拍一拍', placeholder: '拍了拍你的肩膀', confirm: '添加' }).then(text => {
+    if (!text || !text.trim()) return;
+    commit(s => { s.nudge.items.unshift({ id: uid(), text: text.trim(), at: Date.now() }); });
+    toast('已添加');
+  });
+}
+
+function editNudge(id) {
+  const item = get().nudge.items.find(x => x.id === id);
+  if (!item) return;
+  promptSheet({ title: '拍一拍', value: item.text, placeholder: '拍了拍你的肩膀' }).then(text => {
+    if (!text || !text.trim()) return;
+    commit(s => {
+      const t = s.nudge.items.find(x => x.id === id);
+      if (t) t.text = text.trim();
+    });
+  });
+}
+
 /* ---------- 批量 ---------- */
 
 function openBatchAdd() {
@@ -372,8 +463,40 @@ async function importFile() {
 /* ---------- 事件 ---------- */
 
 function bind() {
-  $('#cardAdd').onclick = () => openCardSheet({});
+  $('#cardAdd').onclick = () => {
+    if (tab === 'stickers') uploadSticker();
+    else if (tab === 'nudge') addNudge();
+    else openCardSheet({});
+  };
   $('#cardMenu').onclick = openCardMenu;
+  $('#cardTabs').addEventListener('click', event => {
+    const btn = event.target.closest('[data-tab]');
+    if (btn) setTab(btn.dataset.tab);
+  });
+  $('#stickerUpload').onclick = uploadSticker;
+  $('#stickerGrid').addEventListener('click', event => {
+    const del = event.target.closest('[data-sticker-del]');
+    if (!del) return;
+    commit(s => { s.stickers = s.stickers.filter(x => x.id !== del.dataset.stickerDel); });
+    toast('已删除');
+  });
+  $('#nudgeSwitch').onclick = () => commit(s => { s.nudge.enabled = !s.nudge.enabled; });
+  $('#nudgeChance').addEventListener('input', event => {
+    const value = Number(event.target.value);
+    $('#nudgeVal').textContent = `${value}%`;
+    commit(s => { s.nudge.chance = value; });
+  });
+  $('#nudgeAdd').onclick = addNudge;
+  $('#nudgeList').addEventListener('click', event => {
+    const del = event.target.closest('[data-nudge-del]');
+    if (del) {
+      commit(s => { s.nudge.items = s.nudge.items.filter(x => x.id !== del.dataset.nudgeDel); });
+      toast('已删除');
+      return;
+    }
+    const item = event.target.closest('[data-nudge]');
+    if (item) editNudge(item.dataset.nudge);
+  });
   $('#cardSelectBtn').onclick = () => {
     selecting = !selecting;
     if (!selecting) selected.clear();

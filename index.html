@@ -90,7 +90,11 @@
       </button>
       <div class="identity" id="chatIdentity">
         <span class="avatar sm" id="chatAvatar"></span>
-        <span class="identity-name" id="chatName">阿墨</span>
+        <div class="identity-text">
+          <span class="identity-name" id="chatName">阿墨</span>
+          <span class="identity-handle" id="chatHandle">@阿墨</span>
+          <span class="identity-status" id="chatStatus">寻找灵魂伴侣</span>
+        </div>
       </div>
       <button class="icon-btn" id="chatMore" aria-label="更多">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.35"/><circle cx="12" cy="12" r="1.35"/><circle cx="18" cy="12" r="1.35"/></svg>
@@ -121,6 +125,9 @@
       <div class="input-wrap">
         <textarea id="msgInput" rows="1" placeholder="输入消息" autocomplete="off"></textarea>
       </div>
+      <button class="plus-btn" id="plusBtn" aria-label="添加">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
       <button class="send-btn" id="sendBtn" aria-label="发送" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12h14M13 6.5l5.5 5.5-5.5 5.5"/></svg>
       </button>
@@ -144,26 +151,58 @@
       </div>
     </header>
     <div class="app-body cards-body">
-      <div class="search">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><path d="M15 15l4 4"/></svg>
-        <input id="cardSearch" placeholder="搜索" autocomplete="off">
-        <button class="clear-btn" id="cardSearchClear" aria-label="清除" hidden>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
-        </button>
+      <div class="tabs" id="cardTabs">
+        <button data-tab="cards" class="active">字卡</button>
+        <button data-tab="stickers">表情包</button>
+        <button data-tab="nudge">拍一拍</button>
       </div>
-      <div class="chips" id="cardChips"></div>
-      <div class="list-toolbar">
-        <span class="count" id="cardCount"></span>
-        <div class="toolbar-right">
-          <select class="sort-select" id="cardSort">
-            <option value="new">最新</option>
-            <option value="old">最早</option>
-            <option value="alpha">拼音</option>
-          </select>
-          <button class="text-btn" id="cardSelectBtn">选择</button>
+
+      <div class="tab-panel" id="panel-cards">
+        <div class="search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><path d="M15 15l4 4"/></svg>
+          <input id="cardSearch" placeholder="搜索" autocomplete="off">
+          <button class="clear-btn" id="cardSearchClear" aria-label="清除" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
+          </button>
         </div>
+        <div class="chips" id="cardChips"></div>
+        <div class="list-toolbar">
+          <span class="count" id="cardCount"></span>
+          <div class="toolbar-right">
+            <select class="sort-select" id="cardSort">
+              <option value="new">最新</option>
+              <option value="old">最早</option>
+              <option value="alpha">拼音</option>
+            </select>
+            <button class="text-btn" id="cardSelectBtn">选择</button>
+          </div>
+        </div>
+        <div class="card-list" id="cardList"></div>
       </div>
-      <div class="card-list" id="cardList"></div>
+
+      <div class="tab-panel" id="panel-stickers" hidden>
+        <div class="sticker-grid" id="stickerGrid"></div>
+        <button class="ghost-btn wide" id="stickerUpload">上传表情包</button>
+      </div>
+
+      <div class="tab-panel" id="panel-nudge" hidden>
+        <section class="group">
+          <h2 class="group-title">拍一拍</h2>
+          <div class="row">
+            <span class="row-label">开启</span>
+            <button class="switch" id="nudgeSwitch" aria-label="拍一拍"></button>
+          </div>
+          <div class="row">
+            <span class="row-label">概率</span>
+            <div class="slider-row">
+              <input type="range" min="20" max="50" step="5" class="range" id="nudgeChance">
+              <span class="range-val" id="nudgeVal">30%</span>
+            </div>
+          </div>
+        </section>
+        <div class="nudge-list" id="nudgeList"></div>
+        <button class="ghost-btn wide" id="nudgeAdd">添加拍一拍</button>
+      </div>
     </div>
     <div class="batch-bar" id="batchBar" hidden>
       <span class="batch-count" id="batchCount">0</span>
@@ -378,6 +417,46 @@
 
     </div>
   </section>
+
+  <!-- 通话 -->
+  <div class="call-layer" id="callLayer" hidden>
+    <div class="call-top">
+      <span class="call-title">视频通话</span>
+      <div class="call-top-actions">
+        <button class="call-top-btn" data-call-hide aria-label="最小化">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 4.5v4a1 1 0 0 1-1 1h-4M14.5 4.5v4a1 1 0 0 0 1 1h4M9.5 19.5v-4a1 1 0 0 0-1-1h-4M14.5 19.5v-4a1 1 0 0 1 1-1h4"/></svg>
+        </button>
+        <button class="call-top-btn" data-call-hide aria-label="关闭">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7l-10 10"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="call-card">
+      <div class="call-eyebrow">Just the two of us</div>
+      <span class="avatar call-avatar" id="callAvatar"></span>
+      <div class="call-name" id="callName">阿墨</div>
+      <div class="call-status" id="callStatus">正在等待对方接听…</div>
+      <div class="call-timer" id="callTimer">00:00</div>
+      <div class="call-self" id="callSelf">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.4-2h7.2L17 8.5h3v10H4z"/><circle cx="12" cy="13" r="3.2"/></svg>
+      </div>
+    </div>
+    <div class="call-actions">
+      <button class="call-btn" id="callMute" aria-label="静音">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="9" y="3.5" width="6" height="9.5" rx="3"/>
+          <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3.5M8.5 20.5h7"/>
+          <path class="slash" d="M4.5 4.5l15 15"/>
+        </svg>
+      </button>
+      <button class="call-btn hangup" id="callHangup" aria-label="挂断">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg>
+      </button>
+      <button class="call-btn" data-call-hide aria-label="最小化">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="12" height="12" rx="3.5"/><path d="M8 3.5h10a2.5 2.5 0 0 1 2.5 2.5v12"/></svg>
+      </button>
+    </div>
+  </div>
 
   <!-- 弹层 -->
   <div class="layer" id="sheetLayer" hidden>

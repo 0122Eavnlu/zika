@@ -2,6 +2,7 @@ import { initAppearance } from './appearance.js';
 import { initSettings } from './settings.js';
 import { initCards } from './cards.js';
 import { initChat } from './chat.js';
+import { initCall, hideCall } from './call.js';
 import { bindBackButtons, open, close, currentScreen } from './router.js';
 import { closeSheet } from './ui.js';
 import { $, $$ } from './util.js';
@@ -47,6 +48,12 @@ function splash() {
 function handleHistory() {
   history.pushState({ zika: true }, '');
   window.addEventListener('popstate', () => {
+    const callLayer = $('#callLayer');
+    if (callLayer && !callLayer.hidden) {
+      hideCall();
+      history.pushState({ zika: true }, '');
+      return;
+    }
     const sheet = $('#sheetLayer');
     if (sheet && !sheet.hidden) {
       closeSheet();
@@ -71,6 +78,7 @@ function boot() {
   initSettings();
   initCards();
   initChat();
+  initCall();
   bindHome();
   bindBackButtons();
   handleHistory();
