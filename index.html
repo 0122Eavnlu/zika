@@ -552,6 +552,73 @@
     </button>
   </section>
 
+  <!-- 一起听歌 -->
+  <section class="screen music-screen" id="screen-music" aria-hidden="true">
+    <header class="music-head">
+      <button class="icon-btn" data-music-back aria-label="返回">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>
+      </button>
+      <div class="music-head-title">
+        <span class="music-kicker">LISTENING TOGETHER</span>
+        <span class="music-title">一起听歌</span>
+      </div>
+      <button class="icon-btn" id="musicAdd" aria-label="添加音乐">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg>
+      </button>
+    </header>
+    <div class="music-tabs" id="musicTabs">
+      <button class="music-tab active" data-music-tab="play">正在播放</button>
+      <button class="music-tab" data-music-tab="lyrics">歌词</button>
+      <button class="music-tab" data-music-tab="home">主页</button>
+    </div>
+    <div class="music-body">
+      <div class="music-panel" id="musicPanelPlay">
+        <div class="music-cover" id="musicCover">
+          <span class="cover-note">♪</span>
+        </div>
+        <div class="music-title-line" id="musicNow">还没有歌曲</div>
+        <div class="music-artist-line" id="musicArtist">点右上角 ＋ 添加音乐</div>
+        <div class="music-progress-row">
+          <span class="music-time" id="musicCur">0:00</span>
+          <input class="music-range" type="range" min="0" max="1000" value="0" id="musicSeek" aria-label="进度">
+          <span class="music-time" id="musicDur">0:00</span>
+        </div>
+        <div class="music-controls">
+          <button class="mctl small" id="musicMode" aria-label="播放模式">顺序</button>
+          <button class="mctl" id="musicPrev" aria-label="上一首">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5.5v13M18 6.4v11.2L8.6 12z"/></svg>
+          </button>
+          <button class="mctl play" id="musicPlay" aria-label="播放">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 5.6v12.8l10.2-6.4z"/></svg>
+          </button>
+          <button class="mctl" id="musicNext" aria-label="下一首">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5.5v13M6 6.4v11.2L15.4 12z"/></svg>
+          </button>
+          <button class="mctl small" id="musicListBtn" aria-label="歌单">歌单</button>
+        </div>
+        <div class="together-row">
+          <span class="together-dot"></span>
+          <div class="together-text">
+            <div class="together-title">和你一起听</div>
+            <div class="together-sub">偶尔预约下一首，偶尔安静地陪着你。</div>
+          </div>
+          <button class="switch" id="musicTogether" aria-label="和你一起听"></button>
+        </div>
+      </div>
+      <div class="music-panel" id="musicPanelLyrics" hidden>
+        <div class="lyrics" id="musicLyrics">暂未导入歌词</div>
+        <button class="ghost-btn wide" id="musicLyricsImport">导入歌词（LRC / TXT）</button>
+      </div>
+      <div class="music-panel" id="musicPanelHome" hidden>
+        <div class="music-stats">
+          <div class="stat"><b id="musicCount">0</b><span>首歌曲</span></div>
+          <div class="stat"><b id="musicTogetherCount">0</b><span>次一起听</span></div>
+        </div>
+        <div class="music-hint">在主屏向右滑动可打开这一页，向左滑动返回。离开这一页后音乐仍会继续播放。</div>
+      </div>
+    </div>
+  </section>
+
   <!-- 通话 -->
   <div class="call-layer" id="callLayer" hidden>
     <div class="call-card">

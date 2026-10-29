@@ -5,6 +5,7 @@ import { initChat } from './chat.js';
 import { initCall, hideCall } from './call.js';
 import { initStatus } from './status.js';
 import { initMoments } from './moments.js';
+import { initMusic } from './music.js';
 import { bindBackButtons, open, close, currentScreen } from './router.js';
 import { openSheet, closeSheet, sheetTitle } from './ui.js';
 import { $, $$, setAvatar, toast } from './util.js';
@@ -190,6 +191,7 @@ function boot() {
   initChat();
   initCall();
   initMoments();
+  initMusic();
   initStatus();
   bindHome();
   bindBackButtons();

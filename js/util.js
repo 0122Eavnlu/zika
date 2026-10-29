@@ -102,17 +102,18 @@ export async function prepareSticker(file, maxSize = 900) {
   return compressImage(file, maxSize, .9);
 }
 
-export function pickFile(accept = '*/*') {
+export function pickFile(accept = '*/*', multiple = false) {
   return new Promise(resolve => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = accept;
+    input.multiple = multiple;
     input.className = 'hidden-file';
     document.body.appendChild(input);
     input.addEventListener('change', () => {
-      const file = input.files?.[0] || null;
+      const files = input.files ? [...input.files] : [];
       input.remove();
-      resolve(file);
+      resolve(multiple ? files : (files[0] || null));
     });
     input.click();
   });
