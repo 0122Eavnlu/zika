@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#efece5">
+<title>字卡</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- 开场 -->
+  <div class="splash" id="splash">
+    <div class="splash-glow"></div>
+    <div class="splash-inner">
+      <svg class="enso" viewBox="0 0 120 120" aria-hidden="true">
+        <circle cx="60" cy="60" r="43"/>
+      </svg>
+      <span class="splash-dot"></span>
+      <div class="splash-title"><span>字</span><span>卡</span></div>
+    </div>
+  </div>
+
+  <!-- 主屏幕 -->
+  <section class="home" id="home">
+    <div class="home-top">
+      <div class="clock" id="clock">--:--</div>
+      <div class="date" id="date"></div>
+    </div>
+    <div class="home-grid">
+      <button class="app" data-app="chat" aria-label="对话">
+        <span class="tile">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="4.5" width="12.5" height="9.5" rx="4.75"/>
+            <rect x="8.5" y="10" width="12.5" height="9.5" rx="4.75" class="ghost"/>
+            <circle cx="6.6" cy="9.2" r="1" class="dot"/>
+          </svg>
+        </span>
+        <span class="app-name">对话</span>
+        <span class="badge" id="chatBadge" hidden>0</span>
+      </button>
+      <button class="app" data-app="cards" aria-label="字卡库">
+        <span class="tile">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="6.5" y="3" width="14.5" height="17" rx="3"/>
+            <path d="M3.6 6.4v11.2c0 1.9 1.3 3.1 3.1 3.1h8.6"/>
+            <path d="M10 8.2h7.5M10 11.4h7.5"/>
+            <circle cx="10.4" cy="15.2" r="1" class="dot"/>
+          </svg>
+        </span>
+        <span class="app-name">字卡</span>
+      </button>
+      <button class="app" data-app="appearance" aria-label="外观">
+        <span class="tile">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="6.2"/>
+            <path class="half" d="M12 5.8a6.2 6.2 0 0 1 0 12.4z"/>
+            <path d="M12 1.8v2.2M12 20v2.2M1.8 12h2.2M20 12h2.2M4.8 4.8l1.6 1.6M17.6 17.6l1.6 1.6M19.2 4.8l-1.6 1.6M6.4 17.6l-1.6 1.6" class="ray"/>
+          </svg>
+        </span>
+        <span class="app-name">外观</span>
+      </button>
+      <button class="app" data-app="settings" aria-label="设定">
+        <span class="tile">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3.2 6.6h17.6M3.2 12h17.6M3.2 17.4h17.6" class="rail"/>
+            <circle cx="8" cy="6.6" r="2.1" class="knob"/>
+            <circle cx="16" cy="12" r="2.1" class="knob"/>
+            <circle cx="10.5" cy="17.4" r="2.1" class="knob dot-ring"/>
+          </svg>
+        </span>
+        <span class="app-name">设定</span>
+      </button>
+    </div>
+    <div class="home-mark">
+      <svg class="home-glyph" viewBox="0 0 200 200" aria-hidden="true"><text x="100" y="148" text-anchor="middle">字</text></svg>
+      <span class="mark-dot"></span>
+    </div>
+  </section>
+
+  <!-- 对话 -->
+  <section class="screen" id="screen-chat" aria-hidden="true">
+    <div class="chat-bg" id="chatBg"></div>
+    <header class="chat-head">
+      <button class="icon-btn" data-close aria-label="返回">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>
+      </button>
+      <div class="identity" id="chatIdentity">
+        <span class="avatar sm" id="chatAvatar"></span>
+        <span class="identity-name" id="chatName">阿墨</span>
+      </div>
+      <button class="icon-btn" id="chatMore" aria-label="更多">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.35"/><circle cx="12" cy="12" r="1.35"/><circle cx="18" cy="12" r="1.35"/></svg>
+      </button>
+    </header>
+
+    <div class="msg-scroll" id="msgScroll">
+      <div class="empty-chat" id="emptyChat">
+        <span class="avatar lg" id="emptyAvatar"></span>
+        <div class="empty-name" id="emptyName">阿墨</div>
+      </div>
+      <div class="msg-list" id="msgList"></div>
+      <div class="typing-row" id="typingRow" hidden>
+        <span class="avatar xs" id="typingAvatar"></span>
+        <div class="typing-bubble">
+          <span id="typingText">正在输入</span>
+          <span class="dots"><i></i><i></i><i></i></span>
+        </div>
+      </div>
+    </div>
+
+    <footer class="composer">
+      <button class="speak-btn" id="speakBtn" aria-label="说话">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 10v4M8.5 7v10M12 4.5v15M15.5 7.5v9M19 10v4"/>
+        </svg>
+      </button>
+      <div class="input-wrap">
+        <textarea id="msgInput" rows="1" placeholder="输入消息" autocomplete="off"></textarea>
+      </div>
+      <button class="send-btn" id="sendBtn" aria-label="发送" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12h14M13 6.5l5.5 5.5-5.5 5.5"/></svg>
+      </button>
+    </footer>
+  </section>
+
+  <!-- 字卡库 -->
+  <section class="screen" id="screen-cards" aria-hidden="true">
+    <header class="app-head">
+      <button class="icon-btn" data-close aria-label="返回">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>
+      </button>
+      <h1 class="app-title">字卡库</h1>
+      <div class="head-actions">
+        <button class="icon-btn" id="cardAdd" aria-label="添加">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="icon-btn" id="cardMenu" aria-label="菜单">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.35"/><circle cx="12" cy="12" r="1.35"/><circle cx="18" cy="12" r="1.35"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="app-body cards-body">
+      <div class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><path d="M15 15l4 4"/></svg>
+        <input id="cardSearch" placeholder="搜索" autocomplete="off">
+        <button class="clear-btn" id="cardSearchClear" aria-label="清除" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
+        </button>
+      </div>
+      <div class="chips" id="cardChips"></div>
+      <div class="list-toolbar">
+        <span class="count" id="cardCount"></span>
+        <div class="toolbar-right">
+          <select class="sort-select" id="cardSort">
+            <option value="new">最新</option>
+            <option value="old">最早</option>
+            <option value="alpha">拼音</option>
+          </select>
+          <button class="text-btn" id="cardSelectBtn">选择</button>
+        </div>
+      </div>
+      <div class="card-list" id="cardList"></div>
+    </div>
+    <div class="batch-bar" id="batchBar" hidden>
+      <span class="batch-count" id="batchCount">0</span>
+      <div class="batch-actions">
+        <button class="batch-btn" id="batchMove">移动</button>
+        <button class="batch-btn" id="batchBlock">屏蔽</button>
+        <button class="batch-btn danger" id="batchDelete">删除</button>
+        <button class="batch-btn" id="batchCancel">取消</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 外观 -->
+  <section class="screen" id="screen-appearance" aria-hidden="true">
+    <header class="app-head">
+      <button class="icon-btn" data-close aria-label="返回">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>
+      </button>
+      <h1 class="app-title">外观</h1>
+      <div class="head-actions spacer"></div>
+    </header>
+    <div class="app-body">
+
+      <section class="group">
+        <h2 class="group-title">主题</h2>
+        <div class="seg" id="themeSeg">
+          <button data-theme-set="light">日</button>
+          <button data-theme-set="dark">夜</button>
+          <button data-theme-set="auto">跟随</button>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">字体</h2>
+        <div class="field">
+          <select class="input" id="fontPreset">
+            <option value="">宋体</option>
+            <option value="'Kaiti SC','KaiTi','STKaiti',serif">楷体</option>
+            <option value="'PingFang SC','Microsoft YaHei',sans-serif">黑体</option>
+            <option value="'Yuanti SC','YouYuan','PingFang SC',sans-serif">圆体</option>
+            <option value="__custom">自定义</option>
+          </select>
+        </div>
+        <div class="field">
+          <input class="input" id="fontCustom" placeholder="CSS 或字体文件 URL" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="row">
+          <span class="row-label">字号</span>
+          <div class="slider-row">
+            <input type="range" id="fontSize" min="13" max="20" step="1" class="range">
+            <span class="range-val" id="fontSizeVal">16</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">气泡</h2>
+        <div class="field">
+          <textarea class="input area" id="bubbleCss" rows="3" placeholder="自定义气泡 CSS" spellcheck="false"></textarea>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">背景</h2>
+        <div class="bg-row">
+          <div class="bg-preview" id="bgPreview"></div>
+          <div class="bg-actions">
+            <button class="ghost-btn" id="bgPick">上传</button>
+            <button class="ghost-btn danger-text" id="bgClear">移除</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">消息</h2>
+        <div class="row">
+          <span class="row-label">名称</span>
+          <button class="switch" data-switch="persona.showName" aria-label="名称"></button>
+        </div>
+        <div class="row">
+          <span class="row-label">头像</span>
+          <button class="switch" data-switch="persona.showAvatar" aria-label="头像"></button>
+        </div>
+        <div class="row">
+          <span class="row-label">时间</span>
+          <button class="switch" data-switch="ui.timeOn" aria-label="时间"></button>
+        </div>
+        <div class="row">
+          <span class="row-label">已读</span>
+          <button class="switch" data-switch="ui.readOn" aria-label="已读"></button>
+        </div>
+        <div class="row">
+          <span class="row-label">已读样式</span>
+          <select class="input mini" data-select="ui.readStyle">
+            <option value="text">已读</option>
+            <option value="check">✓</option>
+            <option value="double">✓✓</option>
+          </select>
+        </div>
+      </section>
+
+    </div>
+  </section>
+
+  <!-- 设定 -->
+  <section class="screen" id="screen-settings" aria-hidden="true">
+    <header class="app-head">
+      <button class="icon-btn" data-close aria-label="返回">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>
+      </button>
+      <h1 class="app-title">设定</h1>
+      <div class="head-actions spacer"></div>
+    </header>
+    <div class="app-body">
+
+      <section class="group">
+        <h2 class="group-title">人物</h2>
+        <div class="persona-row">
+          <button class="avatar-wrap" id="personaAvatar" aria-label="头像">
+            <span class="avatar lg" id="personaAvatarView"></span>
+            <span class="avatar-edit">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            </span>
+          </button>
+          <div class="persona-fields">
+            <input class="input" id="personaName" placeholder="名称" maxlength="12">
+          </div>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">对话</h2>
+        <div class="row">
+          <span class="row-label">回复延迟</span>
+          <div class="range-pair">
+            <input class="num" type="number" min="0" max="120" data-input="behavior.delayMin">
+            <span class="tilde">—</span>
+            <input class="num" type="number" min="0" max="120" data-input="behavior.delayMax">
+            <span class="unit">秒</span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="row-label">主动消息</span>
+          <button class="switch" data-switch="behavior.proactive" aria-label="主动消息"></button>
+        </div>
+        <div class="row">
+          <span class="row-label">间隔</span>
+          <div class="range-pair">
+            <input class="num" type="number" min="1" max="1440" data-input="behavior.proactiveMin">
+            <span class="tilde">—</span>
+            <input class="num" type="number" min="1" max="1440" data-input="behavior.proactiveMax">
+            <span class="unit">分</span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="row-label">已读不回</span>
+          <button class="switch" data-switch="behavior.readSkip" aria-label="已读不回"></button>
+        </div>
+        <div class="row">
+          <span class="row-label">概率</span>
+          <div class="slider-row">
+            <input type="range" min="0" max="100" step="5" class="range" id="readSkipRate">
+            <span class="range-val" id="readSkipVal"></span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="row-label">引用</span>
+          <button class="switch" data-switch="behavior.quote" aria-label="引用"></button>
+        </div>
+        <div class="row">
+          <span class="row-label">连句</span>
+          <button class="switch" data-switch="behavior.chain" aria-label="连句"></button>
+        </div>
+        <div class="row">
+          <span class="row-label">输入文案</span>
+          <input class="input mini" id="typingText" maxlength="20" placeholder="正在输入">
+        </div>
+        <div class="row">
+          <span class="row-label">音效</span>
+          <button class="switch" data-switch="behavior.sound" aria-label="音效"></button>
+        </div>
+        <div class="row">
+          <span class="row-label">随机音效</span>
+          <button class="switch" data-switch="behavior.soundRandom" aria-label="随机音效"></button>
+        </div>
+        <div class="sound-list" id="soundList"></div>
+        <button class="ghost-btn wide" id="soundAdd">添加音效</button>
+        <div class="row">
+          <span class="row-label">通知</span>
+          <button class="switch" id="notifySwitch" aria-label="通知"></button>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">群聊</h2>
+        <div class="row">
+          <span class="row-label">群聊</span>
+          <button class="switch" data-switch="group.enabled" aria-label="群聊"></button>
+        </div>
+        <div class="member-list" id="memberList"></div>
+        <button class="ghost-btn wide" id="memberAdd">添加群员</button>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">数据</h2>
+        <div class="data-actions">
+          <button class="ghost-btn" id="exportAll">导出</button>
+          <button class="ghost-btn" id="importAll">导入</button>
+          <button class="ghost-btn danger-text" id="resetAll">重置</button>
+        </div>
+      </section>
+
+    </div>
+  </section>
+
+  <!-- 弹层 -->
+  <div class="layer" id="sheetLayer" hidden>
+    <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+  </div>
+  <div class="toast" id="toast" hidden></div>
+  <style id="bubble-style"></style>
+  <style id="user-font"></style>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
