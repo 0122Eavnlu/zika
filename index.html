@@ -20,7 +20,7 @@
         <circle cx="60" cy="60" r="43"/>
       </svg>
       <span class="splash-dot"></span>
-      <div class="splash-title"><span>字</span><span>卡</span></div>
+      <div class="splash-title"><span>雨</span><span>沉</span></div>
     </div>
   </div>
 
@@ -92,7 +92,6 @@
         <span class="avatar sm" id="chatAvatar"></span>
         <div class="identity-text">
           <span class="identity-name" id="chatName">阿墨</span>
-          <span class="identity-handle" id="chatHandle">@阿墨</span>
           <span class="identity-status" id="chatStatus">寻找灵魂伴侣</span>
         </div>
       </div>
@@ -336,6 +335,17 @@
             </button>
           </div>
         </div>
+        <div class="persona-row me-row">
+          <button class="avatar-wrap" id="meAvatar" aria-label="我的头像">
+            <span class="avatar lg" id="meAvatarView"></span>
+            <span class="avatar-edit">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            </span>
+          </button>
+          <div class="persona-fields">
+            <input class="input" id="meName" placeholder="我的昵称" maxlength="12">
+          </div>
+        </div>
       </section>
 
       <section class="group">
@@ -425,42 +435,32 @@
 
   <!-- 通话 -->
   <div class="call-layer" id="callLayer" hidden>
-    <div class="call-top">
-      <span class="call-title">视频通话</span>
-      <div class="call-top-actions">
-        <button class="call-top-btn" data-call-hide aria-label="最小化">
+    <div class="call-card">
+      <div class="call-top">
+        <span class="call-title">视频通话</span>
+        <button class="call-min" data-call-min aria-label="缩小">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 4.5v4a1 1 0 0 1-1 1h-4M14.5 4.5v4a1 1 0 0 0 1 1h4M9.5 19.5v-4a1 1 0 0 0-1-1h-4M14.5 19.5v-4a1 1 0 0 1 1-1h4"/></svg>
         </button>
-        <button class="call-top-btn" data-call-hide aria-label="关闭">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7l-10 10"/></svg>
-        </button>
       </div>
-    </div>
-    <div class="call-card">
-      <div class="call-eyebrow">Just the two of us</div>
       <span class="avatar call-avatar" id="callAvatar"></span>
       <div class="call-name" id="callName">阿墨</div>
       <div class="call-status" id="callStatus">正在等待对方接听…</div>
       <div class="call-timer" id="callTimer">00:00</div>
-      <div class="call-self" id="callSelf">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5h3l1.4-2h7.2L17 8.5h3v10H4z"/><circle cx="12" cy="13" r="3.2"/></svg>
-      </div>
-    </div>
-    <div class="call-actions">
-      <button class="call-btn" id="callMute" aria-label="静音">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="9" y="3.5" width="6" height="9.5" rx="3"/>
-          <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3.5M8.5 20.5h7"/>
-          <path class="slash" d="M4.5 4.5l15 15"/>
-        </svg>
-      </button>
-      <button class="call-btn hangup" id="callHangup" aria-label="挂断">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg>
-      </button>
-      <button class="call-btn" data-call-hide aria-label="最小化">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="12" height="12" rx="3.5"/><path d="M8 3.5h10a2.5 2.5 0 0 1 2.5 2.5v12"/></svg>
+      <button class="call-hangup" id="callHangup" aria-label="挂断">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 3.7l2.3 2.3c.5.5.5 1.3 0 1.8l-.8.8c1 1.8 2.6 3.4 4.4 4.4l.8-.8c.5-.5 1.3-.5 1.8 0l2.3 2.3c.5.5.5 1.3 0 1.8l-1 1c-1 1-2.4 1.4-3.7 1-4.5-1.6-8.5-5.6-10.1-10.1-.4-1.3 0-2.7 1-3.7l1-1c.5-.5 1.3-.5 1.8 0z"/></svg>
+        <span>挂断</span>
       </button>
     </div>
+  </div>
+  <div class="call-pill" id="callPill" hidden>
+    <span class="avatar" id="callPillAvatar"></span>
+    <div class="call-pill-text">
+      <div class="call-pill-name" id="callPillName"></div>
+      <div class="call-pill-timer" id="callPillTimer">00:00</div>
+    </div>
+    <button class="call-pill-hang" id="callPillHangup" aria-label="挂断">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 3.7l2.3 2.3c.5.5.5 1.3 0 1.8l-.8.8c1 1.8 2.6 3.4 4.4 4.4l.8-.8c.5-.5 1.3-.5 1.8 0l2.3 2.3c.5.5.5 1.3 0 1.8l-1 1c-1 1-2.4 1.4-3.7 1-4.5-1.6-8.5-5.6-10.1-10.1-.4-1.3 0-2.7 1-3.7l1-1c.5-.5 1.3-.5 1.8 0z"/></svg>
+    </button>
   </div>
 
   <!-- 弹层 -->

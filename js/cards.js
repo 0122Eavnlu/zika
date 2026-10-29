@@ -297,7 +297,7 @@ export function openCardSheet({ text = '', groupId = '', title = '新字卡', ca
   openSheet(`
     ${sheetTitle(title)}
     <div class="sheet-form">
-      <textarea id="cardText" class="input area" rows="4" placeholder="字卡内容" maxlength="2000">${escapeHtml(text)}</textarea>
+      <textarea id="cardText" class="input area" rows="4" placeholder="字卡内容，一行一张" maxlength="2000">${escapeHtml(text)}</textarea>
       <select id="cardGroup" class="input">${groupOptions(defaultGroup)}</select>
     </div>
     <div class="sheet-actions">
@@ -309,22 +309,36 @@ export function openCardSheet({ text = '', groupId = '', title = '新字卡', ca
   setTimeout(() => { area.focus(); area.setSelectionRange(area.value.length, area.value.length); }, 100);
   $('#cardCancel').onclick = closeSheet;
   $('#cardSave').onclick = () => {
-    const value = area.value.trim();
-    if (!value) return;
+    const raw = area.value;
+    if (!raw.trim()) return;
     const gid = $('#cardGroup').value;
-    const n = norm(value);
-    const dup = get().cards.items.some(c => c.id !== cardId && norm(c.text) === n);
-    if (dup) { toast('字卡已存在'); return; }
-    commit(s => {
-      if (cardId) {
+    if (cardId) {
+      const value = raw.trim();
+      const n = norm(value);
+      const dup = get().cards.items.some(c => c.id !== cardId && norm(c.text) === n);
+      if (dup) { toast('字卡已存在'); return; }
+      commit(s => {
         const t = s.cards.items.find(c => c.id === cardId);
         if (t) { t.text = value; t.groupId = gid; }
-      } else {
-        s.cards.items.unshift({ id: uid(), text: value, groupId: gid, blocked: false, at: Date.now() });
+      });
+      closeSheet();
+      toast('已保存');
+      return;
+    }
+    const lines = raw.split(/\r?\n/).map(t => t.trim()).filter(Boolean);
+    const existing = new Set(get().cards.items.map(c => norm(c.text)));
+    let added = 0;
+    commit(s => {
+      for (const line of lines) {
+        const n = norm(line);
+        if (existing.has(n)) continue;
+        existing.add(n);
+        s.cards.items.unshift({ id: uid(), text: line, groupId: gid, blocked: false, at: Date.now() + added });
+        added++;
       }
     });
     closeSheet();
-    toast(cardId ? '已保存' : '已加入');
+    toast(added === 1 ? '已加入' : added ? `已加入 ${added} 张` : '字卡已存在');
   };
 }
 

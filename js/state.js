@@ -35,6 +35,7 @@ function defaults(withSeed = true) {
   return {
     version: 1,
     persona: { name: '阿墨', avatar: '', status: '寻找灵魂伴侣', statusAt: 0, statusWait: 0, showName: true, showAvatar: true },
+    me: { name: '我', avatar: '' },
     ui: {
       theme: 'auto',
       fontSize: 16,

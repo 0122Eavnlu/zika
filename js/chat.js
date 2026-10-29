@@ -1,5 +1,5 @@
 import { get, commit, subscribe } from './state.js';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker } from './util.js';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js';
 import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet } from './ui.js';
 import * as router from './router.js';
 import { playSound } from './audio.js';
@@ -64,9 +64,6 @@ function updateIdentity() {
   avatarEl.style.display = p.showAvatar ? '' : 'none';
   nameEl.textContent = p.name || '';
   nameEl.style.display = p.showName ? '' : 'none';
-  const handle = `@${(p.name || '').replace(/\s+/g, '')}`;
-  $('#chatHandle').textContent = handle;
-  $('#chatHandle').style.display = p.showName ? '' : 'none';
   $('#chatStatus').textContent = p.status || '';
   $('#chatStatus').style.display = p.showName && p.status ? '' : 'none';
   $('#emptyName').textContent = p.name || '';
@@ -126,7 +123,9 @@ function buildMessage(msg) {
     inner = (msg.quote ? `<span class="quote">${escapeHtml(msg.quote)}</span>` : '') + escapeHtml(msg.text);
   }
 
-  return `<div class="msg ${isMe ? 'me' : 'them'} ${showAvatar ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${showAvatar ? `<span class="avatar" data-avatar="${msg.id}"></span>` : ''}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}<div class="${bubbleCls}">${inner}</div>${meta.length ? `<div class="meta">${meta.join('')}</div>` : ''}</div></div>`;
+  const avatarHtml = showAvatar ? `<span class="avatar" data-avatar="${msg.id}"></span>` : '';
+  const meAvatarHtml = isMe ? `<span class="avatar me-avatar" data-avatar="${msg.id}" aria-label="我的资料"></span>` : '';
+  return `<div class="msg ${isMe ? 'me' : 'them'} ${showAvatar || isMe ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${avatarHtml}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}<div class="${bubbleCls}">${inner}</div>${meta.length ? `<div class="meta">${meta.join('')}</div>` : ''}</div>${meAvatarHtml}</div>`;
 }
 
 function render(forceBottom = false) {
@@ -141,6 +140,11 @@ function render(forceBottom = false) {
   $$('.msg .avatar[data-avatar]', list).forEach(el => {
     const msg = messages.find(m => m.id === el.dataset.avatar);
     if (!msg) return;
+    if (msg.role === 'me') {
+      const me = get().me;
+      setAvatar(el, me.name, me.avatar);
+      return;
+    }
     const sender = senderOf(msg);
     setAvatar(el, sender.name, sender.avatar);
   });
@@ -246,6 +250,50 @@ function openMessageSheet(id) {
   actionSheet(msg.role === 'me' ? '我的消息' : '对方消息', actions);
 }
 
+export function openMeSheet() {
+  const me = get().me;
+  openSheet(`
+    ${sheetTitle('我的资料')}
+    <div class="me-edit">
+      <button class="avatar-wrap" id="meSheetAvatar" aria-label="更换头像">
+        <span class="avatar lg" id="meSheetAvatarView"></span>
+        <span class="avatar-edit">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </span>
+      </button>
+      <input class="input" id="meSheetName" maxlength="12" placeholder="我的昵称" value="${escapeHtml(me.name || '')}">
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-ghost" id="meSheetClose">关闭</button>
+      <button class="btn-ink" id="meSheetSave">保存</button>
+    </div>
+  `);
+  const view = $('#meSheetAvatarView');
+  const syncView = () => {
+    const m = get().me;
+    setAvatar(view, m.name, m.avatar);
+  };
+  syncView();
+  $('#meSheetAvatar').onclick = async () => {
+    const file = await pickFile('image/*');
+    if (!file) return;
+    try {
+      const data = await compressImage(file, 320, .85);
+      commit(s => { s.me.avatar = data; });
+      syncView();
+    } catch {
+      toast('图片处理失败');
+    }
+  };
+  $('#meSheetClose').onclick = closeSheet;
+  $('#meSheetSave').onclick = () => {
+    const name = $('#meSheetName').value.trim();
+    commit(s => { s.me.name = name || '我'; });
+    closeSheet();
+    toast('已保存');
+  };
+}
+
 function handleTap(row, id) {
   const msg = get().messages.find(m => m.id === id);
   if (!msg) return;
@@ -288,9 +336,11 @@ function bindMessageEvents() {
   list.addEventListener('pointercancel', clear);
 
   list.addEventListener('click', event => {
+    const myAvatar = event.target.closest('.msg.me .avatar');
+    if (myAvatar) { openMeSheet(); return; }
+    if (fired) { fired = false; return; }
     const bubble = event.target.closest('.bubble');
     if (!bubble) return;
-    if (fired) { fired = false; return; }
     const row = bubble.closest('.msg');
     if (row) handleTap(row, row.dataset.id);
   });
@@ -329,11 +379,11 @@ function setSpeakState(on) {
   btn.classList.toggle('busy', on);
 }
 
-export async function triggerReply({ proactive = false } = {}) {
+export async function triggerReply({ proactive = false, allowCall = true } = {}) {
   if (replying) return;
   const b = get().behavior;
 
-  if (!proactive && Math.random() * 100 < Number(b.callChance ?? 20)) {
+  if (!proactive && allowCall && Math.random() * 100 < Number(b.callChance ?? 20)) {
     startCall();
     return;
   }
@@ -498,6 +548,7 @@ function sendMessage() {
   playSound();
   render(true);
   input.focus();
+  triggerReply({ allowCall: false });
 }
 
 const ICON_STICKER = `<svg viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="4"/><circle cx="8" cy="10" r="1.6"/><path d="M5.4 15.6c.6-1.4 1.6-2.1 2.6-2.1s2 .7 2.6 2.1"/><path d="M14 9.5h5M14 13h5M14 16.5h3"/></svg>`;

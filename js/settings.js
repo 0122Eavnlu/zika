@@ -4,6 +4,7 @@ import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './
 import { playItem } from './audio.js';
 import * as router from './router.js';
 import { openStatusSheet } from './status.js';
+import { openMeSheet } from './chat.js';
 
 /* ---------- 通用控件 ---------- */
 
@@ -56,6 +57,8 @@ function syncControls() {
 
   const name = $('#personaName');
   if (document.activeElement !== name) name.value = get().persona.name || '';
+  const meName = $('#meName');
+  if (document.activeElement !== meName) meName.value = get().me.name || '';
 
   const statusText = $('#personaStatusText');
   if (statusText) statusText.textContent = get().persona.status || '添加状态';
@@ -88,6 +91,8 @@ async function uploadPersonaAvatar() {
 function renderPersona() {
   const p = get().persona;
   setAvatar($('#personaAvatarView'), p.name, p.avatar);
+  const me = get().me;
+  setAvatar($('#meAvatarView'), me.name, me.avatar);
 }
 
 /* ---------- 群员 ---------- */
@@ -274,6 +279,11 @@ export function initSettings() {
 
   $('#personaAvatar').onclick = uploadPersonaAvatar;
   $('#personaStatus').onclick = openStatusSheet;
+  $('#meAvatar').onclick = openMeSheet;
+  $('#meName').addEventListener('change', event => {
+    const value = event.target.value.trim();
+    commit(s => { s.me.name = value || '我'; });
+  });
   $('#personaName').addEventListener('change', event => {
     const value = event.target.value.trim();
     commit(s => { s.persona.name = value || '阿墨'; });

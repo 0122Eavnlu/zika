@@ -19,14 +19,19 @@ export function statusItems() {
   return get().cards.items.filter(c => c.groupId === gid && !c.blocked);
 }
 
-function addStatusCard(text) {
+function addStatusCards(texts) {
   let gid = statusGroupId();
+  const existing = new Set(get().cards.items.map(c => c.text.trim()));
+  const fresh = texts.filter(t => !existing.has(t));
+  if (!fresh.length) return;
   commit(s => {
     if (!gid) {
       gid = uid();
       s.cards.groups.push({ id: gid, name: '状态', blocked: false, at: Date.now() });
     }
-    s.cards.items.unshift({ id: uid(), text, groupId: gid, blocked: false, at: Date.now() });
+    fresh.forEach((text, i) => {
+      s.cards.items.unshift({ id: uid(), text, groupId: gid, blocked: false, at: Date.now() + i });
+    });
   });
 }
 
@@ -86,11 +91,17 @@ export function openStatusSheet() {
   const items = statusItems();
   const cur = get().persona.status;
   const rows = items.length
-    ? items.map(c => `<button data-status="${c.id}" class="${c.text === cur ? 'active' : ''}">${escapeHtml(c.text)}</button>`).join('')
+    ? items.map(c => `
+      <div class="status-item">
+        <button class="status-main ${c.text === cur ? 'active' : ''}" data-status="${c.id}">${escapeHtml(c.text)}</button>
+        <button class="status-del" data-status-del="${c.id}" aria-label="删除">
+          <svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7l-10 10"/></svg>
+        </button>
+      </div>`).join('')
     : '<div class="card-empty">空</div>';
   openSheet(`
     ${sheetTitle('状态')}
-    <div class="group-pick">${rows}</div>
+    <div class="status-list">${rows}</div>
     <div class="sheet-actions">
       <button class="btn-ghost" id="statusClose">关闭</button>
       <button class="btn-ink" id="statusAdd">添加字卡</button>
@@ -98,14 +109,23 @@ export function openStatusSheet() {
   `);
   $('#statusClose').onclick = closeSheet;
   $('#statusAdd').onclick = () => {
-    promptSheet({ title: '状态字卡', placeholder: '例如：在等一场雨', confirm: '添加' }).then(text => {
+    promptSheet({ title: '状态字卡', placeholder: '一行一条状态', confirm: '添加', multiline: true }).then(text => {
       if (!text || !text.trim()) return;
-      const value = text.trim();
-      addStatusCard(value);
-      setStatus(value);
+      const lines = text.split(/\r?\n/).map(t => t.trim()).filter(Boolean);
+      if (!lines.length) return;
+      addStatusCards(lines);
+      setStatus(lines[lines.length - 1]);
+      toast('已添加');
       setTimeout(openStatusSheet, 280);
     });
   };
+  $$('#sheet [data-status-del]').forEach(btn => {
+    btn.onclick = () => {
+      commit(s => { s.cards.items = s.cards.items.filter(c => c.id !== btn.dataset.statusDel); });
+      openStatusSheet();
+      toast('已删除');
+    };
+  });
   $$('#sheet [data-status]').forEach(btn => {
     btn.onclick = () => {
       const card = get().cards.items.find(c => c.id === btn.dataset.status);
