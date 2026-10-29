@@ -5,9 +5,9 @@ import { initChat } from './chat.js';
 import { initCall, hideCall } from './call.js';
 import { initStatus } from './status.js';
 import { bindBackButtons, open, close, currentScreen } from './router.js';
-import { closeSheet } from './ui.js';
-import { $, $$, setAvatar } from './util.js';
-import { get, subscribe } from './state.js';
+import { openSheet, closeSheet, sheetTitle } from './ui.js';
+import { $, $$, setAvatar, toast } from './util.js';
+import { get, subscribe, commit } from './state.js';
 
 const WEEK = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
 
@@ -37,7 +37,7 @@ function renderHome() {
   const a = s.anniversary || {};
   const card = $('#annivCard');
   if (!card) return;
-  const show = Boolean(a.enabled && a.date);
+  const show = Boolean(a.enabled);
   card.hidden = !show;
   if (!show) return;
 
@@ -45,6 +45,11 @@ function renderHome() {
   setAvatar($('#annivThem'), s.persona.name, s.persona.avatar);
   $('#annivMeName').textContent = s.me.name || '我';
   $('#annivThemName').textContent = s.persona.name || '';
+  if (!a.date) {
+    $('#annivDays').textContent = '—';
+    $('#annivDate').textContent = '点这里设置纪念日';
+    return;
+  }
   const start = new Date(`${a.date}T00:00:00`);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -53,7 +58,41 @@ function renderHome() {
   $('#annivDate').textContent = `${a.date.replace(/-/g, '.')} 起 · ${a.text || '我们在一起'}`;
 }
 
+function openAnnivSheet() {
+  const a = get().anniversary || {};
+  openSheet(`
+    ${sheetTitle('纪念日')}
+    <div class="field"><input class="input" type="date" id="annivDateInput" value="${a.date || ''}"></div>
+    <div class="field"><input class="input" id="annivTextInput" maxlength="20" placeholder="我们在一起" value="${(a.text || '').replace(/"/g, '&quot;')}"></div>
+    <div class="sheet-actions">
+      <button class="btn-ghost" id="annivCancel">取消</button>
+      <button class="btn-ink" id="annivSave">保存</button>
+    </div>
+  `);
+  $('#annivCancel').onclick = closeSheet;
+  $('#annivSave').onclick = () => {
+    const date = $('#annivDateInput').value;
+    const text = $('#annivTextInput').value.trim();
+    if (!date) {
+      toast('请选择开始日期');
+      return;
+    }
+    commitAnniv(date, text);
+    closeSheet();
+    toast('已保存');
+  };
+}
+
+function commitAnniv(date, text) {
+  commit(s => {
+    s.anniversary.date = date;
+    s.anniversary.text = text || '我们在一起';
+  });
+  renderHome();
+}
+
 function bindHome() {
+  $('#annivCard')?.addEventListener('click', openAnnivSheet);
   $$('.app[data-app]').forEach(btn => {
     btn.addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate(4);
