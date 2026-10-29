@@ -291,6 +291,7 @@ function setTab(name) {
 }
 
 function bind() {
+  $('#homeMusic').onclick = () => router.open('music');
   $('#musicAdd').onclick = openAdd;
   $('#musicPlay').onclick = playPause;
   $('#musicPrev').onclick = () => step(-1);
