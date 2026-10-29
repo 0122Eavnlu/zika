@@ -378,6 +378,7 @@ export function openMoments(from = 'home') {
 }
 
 export function initMoments() {
+  $('.app[data-app="moments"]')?.addEventListener('click', () => { origin = 'home'; });
   $('#momentAdd').onclick = openCompose;
   $('#momentsBgPick').onclick = pickBg;
   $('[data-moments-back]').onclick = () => {
