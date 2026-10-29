@@ -20,8 +20,8 @@ export function applyVisuals() {
   root.style.setProperty('--fs', String(ui.fontSize));
   root.style.setProperty('--avatar-size', `${Number(ui.avatarSize) || 28}px`);
   const frost = Math.min(100, Math.max(0, Number(ui.frost ?? 65)));
-  root.style.setProperty('--frost-alpha', `${(100 - frost * .8).toFixed(0)}%`);
-  root.style.setProperty('--frost-blur', `${(frost * .3).toFixed(1)}px`);
+  root.style.setProperty('--frost-alpha', `${Math.max(0, 100 - frost * 1.15).toFixed(0)}%`);
+  root.style.setProperty('--frost-blur', `${(frost * .12).toFixed(1)}px`);
 
   const font = (ui.font || '').trim();
   if (!font) {
