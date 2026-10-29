@@ -107,15 +107,15 @@ function reactToMyPost(postId) {
 /* ---------- 渲染 ---------- */
 
 function shotHtml(shot) {
-  const name = me().name || '我';
   const rows = shot.map(m => {
-    const mine = m.role === 'me';
+    const self = m.role === 'them'; // 对方视角：对方自己发的在右侧
     const body = m.type === 'sticker' && m.stickerUrl
       ? `<img src="${escapeHtml(m.stickerUrl)}" alt="">`
       : escapeHtml(m.text || '');
-    return `<div class="shot-row ${mine ? 'me' : 'them'}"><span class="shot-bubble ${m.type === 'sticker' ? 'pic' : ''}">${body}</span></div>`;
+    const avatar = `<span class="avatar shot-avatar" data-shot-role="${self ? 'them' : 'me'}"></span>`;
+    return `<div class="shot-row ${self ? 'right' : 'left'}">${self ? '' : avatar}<span class="shot-bubble ${m.type === 'sticker' ? 'pic' : ''}">${body}</span>${self ? avatar : ''}</div>`;
   }).join('');
-  return `<div class="moment-shot"><div class="shot-head">${escapeHtml(name)}</div><div class="shot-body">${rows}</div></div>`;
+  return `<div class="moment-shot"><div class="shot-head"><span class="avatar shot-head-avatar" data-shot-role="me"></span><span class="shot-name">${escapeHtml(me().name || '我')}</span></div><div class="shot-body">${rows}</div></div>`;
 }
 
 function postHtml(post) {
@@ -133,10 +133,12 @@ function postHtml(post) {
   if (post.shot && post.shot.length) body += shotHtml(post.shot);
   if (post.fromCards && post.text) body += `<div class="moment-tag">来自字卡</div>`;
 
+  const whoName = c => (c.by === 'me' ? (me().name || '我') : (persona().name || '对方'));
   const commentHtml = comments.length
-    ? `<div class="moment-comments">${comments.map(c => `
-        <div class="comment-line"><b>${escapeHtml(c.by === 'me' ? (me().name || '我') : (persona().name || '对方'))}</b>：${escapeHtml(c.text)}</div>
-      `).join('')}</div>`
+    ? `<div class="moment-comments">${comments.map(c => {
+        const prefix = c.to ? `${whoName(c)} 回复 ${c.toName || ''}：` : `${whoName(c)}：`;
+        return `<div class="comment-line ${c.to ? 'reply' : ''}" data-reply="${post.id}|${c.id}"><b>${escapeHtml(prefix)}</b>${escapeHtml(c.text)}</div>`;
+      }).join('')}</div>`
     : '';
 
   return `<article class="moment" data-post="${post.id}">
@@ -184,6 +186,10 @@ function render() {
     const el = $(`.moment[data-post="${p.id}"] .moment-avatar`);
     const who = p.by === 'me' ? me() : persona();
     setAvatar(el, who.name, who.avatar);
+    document.querySelectorAll(`.moment[data-post="${p.id}"] .shot-avatar[data-shot-role], .moment[data-post="${p.id}"] .shot-head-avatar[data-shot-role]`).forEach(av => {
+      const who2 = av.dataset.shotRole === 'me' ? me() : persona();
+      setAvatar(av, who2.name, who2.avatar);
+    });
   });
 }
 
@@ -323,16 +329,24 @@ function toggleLike(id) {
   render();
 }
 
-async function addComment(id) {
+async function addComment(id, targetCommentId = '') {
   const post = get().moments.posts.find(p => p.id === id);
   if (!post) return;
-  const text = await promptSheet({ title: '评论', placeholder: '写点评论…', confirm: '发送' });
+  const target = targetCommentId ? (post.comments || []).find(c => c.id === targetCommentId) : null;
+  const who = target ? (target.by === 'me' ? (me().name || '我') : (persona().name || '对方')) : '';
+  const title = target ? `回复 ${who}` : '评论';
+  const text = await promptSheet({ title, placeholder: target ? '写下回复…' : '写点评论…', confirm: '发送' });
   if (!text || !text.trim()) return;
   commit(s => {
     const p = s.moments.posts.find(x => x.id === id);
     if (!p) return;
     p.comments = p.comments || [];
-    p.comments.push({ id: uid(), by: 'me', text: text.trim(), ts: Date.now() });
+    const entry = { id: uid(), by: 'me', text: text.trim(), ts: Date.now() };
+    if (target) {
+      entry.to = target.id;
+      entry.toName = who;
+    }
+    p.comments.push(entry);
   });
   render();
 }
@@ -368,6 +382,12 @@ export function initMoments() {
   $('#momentsList').addEventListener('click', event => {
     const likeBtn = event.target.closest('[data-like]');
     if (likeBtn) { toggleLike(likeBtn.dataset.like); return; }
+    const line = event.target.closest('[data-reply]');
+    if (line) {
+      const [postId, commentId] = line.dataset.reply.split('|');
+      addComment(postId, commentId);
+      return;
+    }
     const commentBtn = event.target.closest('[data-comment]');
     if (commentBtn) { addComment(commentBtn.dataset.comment); }
   });

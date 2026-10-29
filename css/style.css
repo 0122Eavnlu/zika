@@ -1910,15 +1910,20 @@ select.input option { background: var(--surface); color: var(--ink); }
   padding: 12px 12px 14px;
 }
 .shot-head {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   font-size: 11.5px;
   color: #9b9b9b;
   padding-bottom: 8px;
   letter-spacing: .06em;
 }
-.shot-body { display: flex; flex-direction: column; gap: 7px; }
-.shot-row { display: flex; }
-.shot-row.me { justify-content: flex-end; }
+.shot-head-avatar { width: 18px; height: 18px; border-radius: 50%; overflow: hidden; }
+.shot-avatar { width: 22px; height: 22px; border-radius: 50%; overflow: hidden; flex: 0 0 auto; }
+.shot-body { display: flex; flex-direction: column; gap: 9px; }
+.shot-row { display: flex; align-items: flex-end; gap: 7px; }
+.shot-row.right { justify-content: flex-end; }
 .shot-bubble {
   max-width: 74%;
   padding: 7px 11px;
@@ -1931,7 +1936,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   white-space: pre-wrap;
   word-break: break-word;
 }
-.shot-row.me .shot-bubble { background: #1c1c1e; color: #f2f2f2; }
+.shot-row.right .shot-bubble { background: #1c1c1e; color: #f2f2f2; }
 .shot-bubble.pic { padding: 0; background: none; box-shadow: none; }
 .shot-bubble.pic img { max-width: 92px; border-radius: 8px; display: block; }
 .moment-foot {
@@ -1987,7 +1992,10 @@ select.input option { background: var(--surface); color: var(--ink); }
   line-height: 1.7;
   color: #2b2b2b;
   word-break: break-word;
+  cursor: pointer;
 }
+.comment-line.reply { padding-left: 14px; }
+.comment-line:active { opacity: .7; }
 .comment-line b { font-weight: 600; color: #57688a; }
 .moment-fab {
   position: absolute;
