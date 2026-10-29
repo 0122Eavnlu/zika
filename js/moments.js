@@ -263,7 +263,7 @@ function openStickerPick() {
 
 function openCompose() {
   draft = { text: '', stickerUrl: '', imageUrl: '', fromCards: false };
-  openSheet(`
+  const sheet = openSheet(`
     ${sheetTitle('发布朋友圈')}
     <div class="sheet-form">
       <textarea class="input area" id="momentText" rows="4" placeholder="这一刻的想法…" maxlength="4000"></textarea>
@@ -280,6 +280,7 @@ function openCompose() {
       <button class="btn-ink" id="momentPublish">发布</button>
     </div>
   `);
+  sheet.classList.add('sheet-white');
 
   $('#momentText').addEventListener('input', e => {
     draft.text = e.target.value;

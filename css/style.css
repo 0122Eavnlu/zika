@@ -1271,6 +1271,9 @@ select.input option { background: var(--surface); color: var(--ink); }
   animation: sheetUp .42s var(--ease) both;
   scrollbar-width: none;
 }
+
+.sheet.sheet-white { background: #fff; }
+.sheet.sheet-white .input.area { background: #f7f7f7; border-color: rgba(0,0,0,.08); }
 .sheet::-webkit-scrollbar { display: none; }
 @keyframes sheetUp { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
 .sheet.closing { animation: sheetDown .25s var(--ease) both; }
@@ -1778,9 +1781,12 @@ select.input option { background: var(--surface); color: var(--ink); }
 .moments-screen {
   background: #fff;
   color: #141414;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 .moments-cover {
   position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   height: calc(206px + env(safe-area-inset-top));
   background: linear-gradient(160deg, #f3f2ef, #e7e6e3);
@@ -1838,8 +1844,12 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .moments-scroll {
   flex: 1;
+  position: relative;
+  z-index: 2;
+  background: #fff;
   overflow-y: auto;
   overscroll-behavior: contain;
+  touch-action: pan-y;
   padding: 4px 0 calc(90px + env(safe-area-inset-bottom));
   scrollbar-width: none;
 }

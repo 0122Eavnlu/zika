@@ -8,6 +8,7 @@ export function openSheet(inner) {
   const layer = $('#sheetLayer');
   const sheet = $('#sheet');
   sheet.innerHTML = `<div class="grabber"></div>${inner}`;
+  sheet.classList.remove('sheet-white');
   layer.classList.remove('closing');
   sheet.classList.remove('closing');
   layer.hidden = false;
