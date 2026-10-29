@@ -75,7 +75,10 @@ function maybePost() {
   const b = get().behavior;
   const posts = get().moments.posts;
   const last = posts.filter(p => p.by === 'them').sort((a, c) => c.ts - a.ts)[0];
-  if (last && Date.now() - last.ts < 20 * 60 * 1000) return;
+  const minGap = Math.min(1440, Math.max(5, Number(b.momentPostGapMin) || 20));
+  const maxGap = Math.max(minGap, Math.min(1440, Number(b.momentPostGapMax) || minGap));
+  const gapMs = randInt(minGap, maxGap) * 60 * 1000;
+  if (last && Date.now() - last.ts < gapMs) return;
   if (randInt(0, 99) >= (Number(b.momentChance) || 70)) return;
   const post = makeThemPost();
   if (!post) return;
@@ -85,6 +88,8 @@ function maybePost() {
 
 function reactToMyPost(postId) {
   const b = get().behavior;
+  const dMin = Math.min(300, Math.max(30, Number(b.momentReplyDelayMin) || 30));
+  const dMax = Math.max(dMin, Math.min(300, Number(b.momentReplyDelayMax) || dMin));
   setTimeout(() => {
     const post = get().moments.posts.find(p => p.id === postId);
     if (!post) return;
@@ -101,7 +106,7 @@ function reactToMyPost(postId) {
       }
     });
     render();
-  }, randInt(1500, 4000));
+  }, randInt(dMin, dMax) * 1000);
 }
 
 /* ---------- 渲染 ---------- */
