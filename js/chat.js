@@ -82,6 +82,7 @@ function updateIdentity() {
     chatBg.style.backgroundImage = '';
     chatBg.classList.add('empty');
   }
+  $('#screen-chat').classList.toggle('has-bg', Boolean(bg));
 }
 
 function callSub(msg) {
