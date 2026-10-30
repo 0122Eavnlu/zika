@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261031a';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261031a';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261031a';
-import * as router from './router.js?v=20261031a';
+import { get, commit, subscribe } from './state.js?v=20261031b';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261031b';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261031b';
+import * as router from './router.js?v=20261031b';
 
 const session = [];
 const lyricsMap = new Map();
@@ -66,25 +66,44 @@ async function onAudioError() {
   recoverAudio(track);
 }
 
+async function searchSongUrl(track) {
+  if (!track || !track.name) return '';
+  const keyword = encodeURIComponent(`${track.name} ${track.artist || ''}`.trim());
+  try {
+    const res = await fetch(`${API}&type=search&id=${keyword}&_=${Date.now()}`);
+    if (!res.ok) return '';
+    const data = await res.json();
+    if (!Array.isArray(data) || !data.length) return '';
+    const hit = data.find(item => item && item.url) || data[0];
+    return hit && hit.url ? toInjahow(httpsUrl(hit.url)) : '';
+  } catch {
+    return '';
+  }
+}
+
 async function recoverAudio(track) {
   if (!track || !track.url) {
     toast('这首歌暂时放不了');
     return;
   }
   recoveredIds.add(track.id);
-  const src = resolveUrl(track);
-  if (!src) {
-    toast('这首歌暂时放不了');
+  try {
+    const res = await fetch(resolveUrl(track), { cache: 'no-store' });
+    if (!res.ok) throw new Error(String(res.status));
+    const blob = await res.blob();
+    const a = ensureAudio();
+    a.src = URL.createObjectURL(blob);
+    await a.play();
+    toast('已切换备用播放');
     return;
-  }
-  for (const host of PLAY_HOSTS) {
-    const id = metingId(src);
-    const url = id ? `${host}&type=url&id=${id}&_=${Date.now()}` : src;
+  } catch {}
+  // 直链过期（如登录导入的网易云直链）→ 用歌名搜一个可播版本
+  const searched = await searchSongUrl(track);
+  if (searched) {
     try {
-      const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) continue;
+      const res = await fetch(searched, { cache: 'no-store' });
+      if (!res.ok) throw new Error(String(res.status));
       const blob = await res.blob();
-      if (!blob.size || blob.type && !/audio|octet-stream/.test(blob.type)) continue;
       const a = ensureAudio();
       a.src = URL.createObjectURL(blob);
       await a.play();
@@ -110,7 +129,7 @@ function updateMediaSession(track) {
   } catch {}
 }
 
-async function loadTrack(i, autoplay) {
+function loadTrack(i, autoplay) {
   const list = allTracks();
   if (!list.length) {
     if (audio) audio.pause();
@@ -120,7 +139,6 @@ async function loadTrack(i, autoplay) {
   index = ((i % list.length) + list.length) % list.length;
   const track = list[index];
   const a = ensureAudio();
-  recoveredIds.delete(track.id);
   a.src = resolveUrl(track);
   updateMediaSession(track);
   render();
@@ -208,7 +226,7 @@ function hiRes(url) {
 }
 
 function applyCover(el, track) {
-  const url = hiRes(normalizeMetingUrl(track && track.cover));
+  const url = hiRes(httpsUrl(track && track.cover));
   const quiet = () => {
     el.classList.remove('has-art');
     el.style.backgroundImage = COVER_GRADIENT;
@@ -282,6 +300,7 @@ function render() {
 
 /* ---------- 添加音乐 ---------- */
 
+const API = 'https://api.injahow.cn/meting/?server=netease';
 const HOT_ID = '3778678';
 const HEADPHONES = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.2 14.5v-2.2a7.8 7.8 0 0 1 15.6 0v2.2"/><path d="M4.2 14.2h1.6a1.4 1.4 0 0 1 1.4 1.4v4a1.4 1.4 0 0 1-1.4 1.4H5a1.2 1.2 0 0 1-1.2-1.2v-4.2a1.4 1.4 0 0 1 .4-1.4z"/><path d="M19.8 14.2h-1.6a1.4 1.4 0 0 0-1.4 1.4v4a1.4 1.4 0 0 0 1.4 1.4H19a1.2 1.2 0 0 0 1.2-1.2v-4.2a1.4 1.4 0 0 0-.4-1.4z"/></svg>`;
 
@@ -390,48 +409,28 @@ function httpsUrl(url) {
   return text.replace(/^http:\/\//i, 'https://');
 }
 
-const METING_HOST = 'https://api.injahow.cn/meting/?server=netease';
-const PLAY_HOSTS = [
-  'https://api.injahow.cn/meting/?server=netease',
-  'https://api.i-meto.com/meting/api?server=netease',
-];
-
-function metingId(url) {
-  const m = String(url || '').match(/[?&]id=(\d+)/);
-  return m ? m[1] : '';
-}
-
-function metingType(url) {
-  const m = String(url || '').match(/[?&]type=(\w+)/);
-  return m ? m[1] : 'url';
-}
-
-// 统一把 meting 链接重写到可用主机，避免 i-meto 等失效源
-function normalizeMetingUrl(url) {
-  const text = httpsUrl(url);
-  const id = metingId(text);
-  if (!id) return text;
-  const type = metingType(text) || 'url';
-  return `${METING_HOST}&type=${type}&id=${id}`;
-}
-
 function freshUrl(url) {
   const text = httpsUrl(url);
   if (!text) return '';
-  const isMeting = /meting|injiahow|i-meto|w4t/.test(text);
-  const hasType = /type=url|type=song|type=playlist|type=album/.test(text);
-  if (hasType && isMeting) {
+  if (/type=url|type=song|type=playlist|type=album/.test(text) && /meting|injiahow|i-meto|w4t/.test(text)) {
     return `${text}${text.includes('?') ? '&' : '?'}_=${Date.now()}`;
   }
   return text;
 }
 
+function toInjahow(url) {
+  return String(url || '')
+    .replace('api.i-meto.com/meting/api', 'api.injahow.cn/meting')
+    .replace('api.i-meto.com/meting/', 'api.injahow.cn/meting/');
+}
+
 function resolveUrl(track) {
   if (!track) return '';
-  const url = freshUrl(normalizeMetingUrl(track.url));
-  if (/meting|injiahow|i-meto/.test(url)) return url;
+  let url = freshUrl(track.url);
+  url = toInjahow(url);
+  if (/meting|injahow|i-meto/.test(url)) return url;
   const idMatch = String(track.lrcUrl || '').match(/[?&]id=(\d+)/);
-  if (idMatch) return `${METING_HOST}&type=url&id=${idMatch[1]}&_=${Date.now()}`;
+  if (idMatch) return `${API}&type=url&id=${idMatch[1]}&_=${Date.now()}`;
   return url;
 }
 
@@ -443,10 +442,10 @@ function pushTracks(items) {
         id: uid(),
         name: item.name || '未命名',
         artist: item.artist || '',
-        url: normalizeMetingUrl(item.url),
+        url: toInjahow(httpsUrl(item.url)),
         cover: httpsUrl(item.cover),
         lyrics: '',
-        lrcUrl: normalizeMetingUrl(item.lrcUrl || ''),
+        lrcUrl: item.lrcUrl || '',
       });
     });
   });
@@ -467,7 +466,6 @@ function neteaseTarget(raw) {
 
 const METING_HOSTS = [
   { base: 'https://api.injahow.cn/meting/?server=netease' },
-  { base: 'https://api.i-meto.com/meting/api?server=netease' },
 ];
 
 async function fetchMetingList(target) {
@@ -485,9 +483,9 @@ async function fetchMetingList(target) {
           .map(item => ({
             name: String(item.name || item.title).trim(),
             artist: String(item.artist || item.author || '').trim(),
-            url: normalizeMetingUrl(item.url),
-            cover: hiRes(normalizeMetingUrl(item.pic)),
-            lrcUrl: normalizeMetingUrl(item.lrc || ''),
+            url: toInjahow(httpsUrl(item.url)),
+            cover: hiRes(httpsUrl(item.pic)),
+            lrcUrl: httpsUrl(item.lrc || ''),
           }));
         if (items.length) return items;
       } catch {}
@@ -768,6 +766,7 @@ async function importPrivatePlaylist(playlistId) {
         artist: (t.ar || []).map(a => a.name).join(' / '),
         url: httpsUrl(urls[t.id]),
         cover: hiRes(httpsUrl(t.al?.picUrl)),
+        lrcUrl: `${API}&type=lrc&id=${t.id}`,
       }));
     if (!items.length) throw new Error('empty');
     pushTracks(items);
@@ -1357,19 +1356,10 @@ export async function pickLyric() {
 
 function migrateCovers() {
   const tracks = music().tracks || [];
-  const needsMigrate = tracks.some(t => {
-    if (t.cover && t.cover !== httpsUrl(t.cover)) return true;
-    if (t.cover && /i-meto/.test(t.cover)) return true;
-    if (t.url && /i-meto/.test(t.url)) return true;
-    if (t.lrcUrl && /i-meto/.test(t.lrcUrl)) return true;
-    return false;
-  });
-  if (!needsMigrate) return;
+  if (!tracks.some(t => t.cover && t.cover !== httpsUrl(t.cover))) return;
   commit(s => {
     s.music.tracks.forEach(t => {
-      if (t.cover) t.cover = hiRes(normalizeMetingUrl(t.cover));
-      if (t.url) t.url = normalizeMetingUrl(t.url);
-      if (t.lrcUrl) t.lrcUrl = normalizeMetingUrl(t.lrcUrl);
+      if (t.cover) t.cover = httpsUrl(t.cover);
     });
   });
 }
