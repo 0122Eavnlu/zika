@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030x';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030x';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030x';
-import * as router from './router.js?v=20261030x';
+import { get, commit, subscribe } from './state.js?v=20261030y';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030y';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030y';
+import * as router from './router.js?v=20261030y';
 
 const session = [];
 const lyricsMap = new Map();
@@ -73,7 +73,9 @@ async function recoverAudio(track) {
   }
   recoveredIds.add(track.id);
   try {
-    const res = await fetch(resolveUrl(track), { cache: 'no-store' });
+    const url = await resolveAudioUrl(track);
+    if (!url) throw new Error('nourl');
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error(String(res.status));
     const blob = await res.blob();
     const a = ensureAudio();
@@ -100,7 +102,7 @@ function updateMediaSession(track) {
   } catch {}
 }
 
-function loadTrack(i, autoplay) {
+async function loadTrack(i, autoplay) {
   const list = allTracks();
   if (!list.length) {
     if (audio) audio.pause();
@@ -110,7 +112,9 @@ function loadTrack(i, autoplay) {
   index = ((i % list.length) + list.length) % list.length;
   const track = list[index];
   const a = ensureAudio();
-  a.src = resolveUrl(track);
+  recoveredIds.delete(track.id);
+  const url = await resolveAudioUrl(track);
+  a.src = url;
   updateMediaSession(track);
   render();
   if (autoplay) a.play().catch(() => {});
@@ -197,7 +201,7 @@ function hiRes(url) {
 }
 
 function applyCover(el, track) {
-  const url = hiRes(httpsUrl(track && track.cover));
+  const url = hiRes(normalizeMetingUrl(track && track.cover));
   const quiet = () => {
     el.classList.remove('has-art');
     el.style.backgroundImage = COVER_GRADIENT;
@@ -271,7 +275,6 @@ function render() {
 
 /* ---------- 添加音乐 ---------- */
 
-const API = 'https://api.injahow.cn/meting/?server=netease';
 const HOT_ID = '3778678';
 const HEADPHONES = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.2 14.5v-2.2a7.8 7.8 0 0 1 15.6 0v2.2"/><path d="M4.2 14.2h1.6a1.4 1.4 0 0 1 1.4 1.4v4a1.4 1.4 0 0 1-1.4 1.4H5a1.2 1.2 0 0 1-1.2-1.2v-4.2a1.4 1.4 0 0 1 .4-1.4z"/><path d="M19.8 14.2h-1.6a1.4 1.4 0 0 0-1.4 1.4v4a1.4 1.4 0 0 0 1.4 1.4H19a1.2 1.2 0 0 0 1.2-1.2v-4.2a1.4 1.4 0 0 0-.4-1.4z"/></svg>`;
 
@@ -380,10 +383,37 @@ function httpsUrl(url) {
   return text.replace(/^http:\/\//i, 'https://');
 }
 
+const METING_HOST = 'https://api.injahow.cn/meting/?server=netease';
+const PLAY_HOSTS = [
+  'https://api.injahow.cn/meting/?server=netease',
+  'https://api.i-meto.com/meting/api?server=netease',
+];
+
+function metingId(url) {
+  const m = String(url || '').match(/[?&]id=(\d+)/);
+  return m ? m[1] : '';
+}
+
+function metingType(url) {
+  const m = String(url || '').match(/[?&]type=(\w+)/);
+  return m ? m[1] : 'url';
+}
+
+// 统一把 meting 链接重写到可用主机，避免 i-meto 等失效源
+function normalizeMetingUrl(url) {
+  const text = httpsUrl(url);
+  const id = metingId(text);
+  if (!id) return text;
+  const type = metingType(text) || 'url';
+  return `${METING_HOST}&type=${type}&id=${id}`;
+}
+
 function freshUrl(url) {
   const text = httpsUrl(url);
   if (!text) return '';
-  if (/type=url|type=song|type=playlist|type=album/.test(text) && /meting|injiahow|i-meto|w4t/.test(text)) {
+  const isMeting = /meting|injiahow|i-meto|w4t/.test(text);
+  const hasType = /type=url|type=song|type=playlist|type=album/.test(text);
+  if (hasType && isMeting) {
     return `${text}${text.includes('?') ? '&' : '?'}_=${Date.now()}`;
   }
   return text;
@@ -391,11 +421,35 @@ function freshUrl(url) {
 
 function resolveUrl(track) {
   if (!track) return '';
-  const url = freshUrl(track.url);
+  const url = freshUrl(normalizeMetingUrl(track.url));
   if (/meting|injiahow|i-meto/.test(url)) return url;
   const idMatch = String(track.lrcUrl || '').match(/[?&]id=(\d+)/);
-  if (idMatch) return `${API}&type=url&id=${idMatch[1]}&_=${Date.now()}`;
+  if (idMatch) return `${METING_HOST}&type=url&id=${idMatch[1]}&_=${Date.now()}`;
   return url;
+}
+
+// 解析出真实的 MP3 直链，避开浏览器对 302 的缓存
+async function resolveAudioUrl(track) {
+  const src = resolveUrl(track);
+  if (!src) return '';
+  if (!/meting|injiahow|i-meto/.test(src) || !/type=url/.test(src)) return src;
+  const id = metingId(src);
+  if (!id) return src;
+  for (const host of PLAY_HOSTS) {
+    const url = `${host}&type=url&id=${id}&_=${Date.now()}`;
+    const controller = new AbortController();
+    try {
+      const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
+      if (res.ok && res.url && res.url !== url) {
+        const finalUrl = res.url;
+        controller.abort(); // 只取直链，不下载整个音频
+        return finalUrl;
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') continue;
+    }
+  }
+  return src;
 }
 
 function pushTracks(items) {
@@ -406,10 +460,10 @@ function pushTracks(items) {
         id: uid(),
         name: item.name || '未命名',
         artist: item.artist || '',
-        url: httpsUrl(item.url),
+        url: normalizeMetingUrl(item.url),
         cover: httpsUrl(item.cover),
         lyrics: '',
-        lrcUrl: item.lrcUrl || '',
+        lrcUrl: normalizeMetingUrl(item.lrcUrl || ''),
       });
     });
   });
@@ -448,9 +502,9 @@ async function fetchMetingList(target) {
           .map(item => ({
             name: String(item.name || item.title).trim(),
             artist: String(item.artist || item.author || '').trim(),
-            url: httpsUrl(item.url),
-            cover: hiRes(httpsUrl(item.pic)),
-            lrcUrl: httpsUrl(item.lrc || ''),
+            url: normalizeMetingUrl(item.url),
+            cover: hiRes(normalizeMetingUrl(item.pic)),
+            lrcUrl: normalizeMetingUrl(item.lrc || ''),
           }));
         if (items.length) return items;
       } catch {}
@@ -1320,10 +1374,19 @@ export async function pickLyric() {
 
 function migrateCovers() {
   const tracks = music().tracks || [];
-  if (!tracks.some(t => t.cover && t.cover !== httpsUrl(t.cover))) return;
+  const needsMigrate = tracks.some(t => {
+    if (t.cover && t.cover !== httpsUrl(t.cover)) return true;
+    if (t.cover && /i-meto/.test(t.cover)) return true;
+    if (t.url && /i-meto/.test(t.url)) return true;
+    if (t.lrcUrl && /i-meto/.test(t.lrcUrl)) return true;
+    return false;
+  });
+  if (!needsMigrate) return;
   commit(s => {
     s.music.tracks.forEach(t => {
-      if (t.cover) t.cover = httpsUrl(t.cover);
+      if (t.cover) t.cover = hiRes(normalizeMetingUrl(t.cover));
+      if (t.url) t.url = normalizeMetingUrl(t.url);
+      if (t.lrcUrl) t.lrcUrl = normalizeMetingUrl(t.lrcUrl);
     });
   });
 }
