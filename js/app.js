@@ -8,18 +8,9 @@ import { initMoments } from './moments.js';
 import { initMusic, hideQrModal } from './music.js';
 import { bindBackButtons, open, close, currentScreen } from './router.js';
 import { openSheet, closeSheet, sheetTitle } from './ui.js';
-import { $, $$, setAvatar, toast } from './util.js';
+import { $, $$, setAvatar, toast, pickFile, compressImage } from './util.js';
 import { get, subscribe, commit } from './state.js';
-
-const WEEK = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-
-function tickClock() {
-  const now = new Date();
-  const clock = $('#clock');
-  const date = $('#date');
-  if (clock) clock.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  if (date) date.textContent = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日　${WEEK[now.getDay()]}`;
-}
+import { openMeSheet } from './chat.js';
 
 function renderHome() {
   const s = get();
@@ -35,6 +26,35 @@ function renderHome() {
     }
   }
   home?.classList.toggle('has-bg', Boolean(s.ui.homeBg));
+
+  const cover = $('#homeCover');
+  if (cover) {
+    const img = s.ui.homeCover || s.ui.homeBg || '';
+    if (img) {
+      cover.style.backgroundImage = `url("${img}")`;
+      cover.classList.add('has-img');
+    } else {
+      cover.style.backgroundImage = '';
+      cover.classList.remove('has-img');
+    }
+  }
+
+  setAvatar($('#homeAvatarView'), s.me.name, s.me.avatar);
+  const name = $('#homeName');
+  if (name) name.textContent = s.me.name || '我';
+  const status = $('#homeStatus');
+  if (status) status.textContent = s.me.status || '添加状态';
+
+  const pin = $('#homePin');
+  if (pin) {
+    if (s.ui.homePin) {
+      pin.style.backgroundImage = `url("${s.ui.homePin}")`;
+      pin.classList.add('has-img');
+    } else {
+      pin.style.backgroundImage = '';
+      pin.classList.remove('has-img');
+    }
+  }
 
   const a = s.anniversary || {};
   const card = $('#annivCard');
@@ -93,8 +113,37 @@ function commitAnniv(date, text) {
   renderHome();
 }
 
+async function pickHomeImage() {
+  const file = await pickFile('image/*', false);
+  if (!file) return '';
+  try {
+    return await compressImage(file, 1280, .82);
+  } catch {
+    return '';
+  }
+}
+
 function bindHome() {
   $('#annivCard')?.addEventListener('click', openAnnivSheet);
+  $('#homeCover')?.addEventListener('click', async () => {
+    const url = await pickHomeImage();
+    if (!url) return;
+    commit(s => {
+      s.ui.homeCover = url;
+      s.ui.homeBg = url;
+    });
+    renderHome();
+    toast('已更换封面');
+  });
+  $('#homePin')?.addEventListener('click', async () => {
+    const url = await pickHomeImage();
+    if (!url) return;
+    commit(s => { s.ui.homePin = url; });
+    renderHome();
+    toast('已更换图片');
+  });
+  $('#homeAvatar')?.addEventListener('click', () => openMeSheet());
+  $('#homeStatusBtn')?.addEventListener('click', () => openMeSheet());
   $$('.app[data-app]').forEach(btn => {
     btn.addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate(4);

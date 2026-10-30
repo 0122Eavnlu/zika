@@ -27,93 +27,112 @@
   <!-- 主屏幕 -->
   <section class="home" id="home">
     <div class="home-bg" id="homeBg"></div>
-    <div class="home-top">
-      <div class="clock" id="clock">--:--</div>
-      <div class="date" id="date"></div>
-    </div>
-    <button class="home-music" id="homeMusic" aria-label="一起听歌">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4.2 14.5v-2.2a7.8 7.8 0 0 1 15.6 0v2.2"/>
-        <path d="M4.2 14.2h1.6a1.4 1.4 0 0 1 1.4 1.4v4a1.4 1.4 0 0 1-1.4 1.4H5a1.2 1.2 0 0 1-1.2-1.2v-4.2a1.4 1.4 0 0 1 .4-1.4z"/>
-        <path d="M19.8 14.2h-1.6a1.4 1.4 0 0 0-1.4 1.4v4a1.4 1.4 0 0 0 1.4 1.4H19a1.2 1.2 0 0 0 1.2-1.2v-4.2a1.4 1.4 0 0 0-.4-1.4z"/>
-      </svg>
-    </button>
-    <div class="anniv-card" id="annivCard" hidden>
-      <div class="anniv-row">
-        <div class="anniv-person">
-          <span class="avatar anniv-avatar" id="annivMe"></span>
-          <span class="anniv-name" id="annivMeName">我</span>
-        </div>
-        <svg class="anniv-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2c-.3 0-.6-.1-.8-.3C6.9 16 3.6 13.2 2.1 10.7 1 8.8 1 6.3 2.4 4.7c1.6-1.8 4.4-1.9 6.2-.3.5.4 1 1 1.4 1.6.4-.6.9-1.2 1.4-1.6 1.8-1.6 4.6-1.5 6.2.3 1.4 1.6 1.4 4.1.3 6-1.5 2.5-4.8 5.3-9.1 9.2-.2.2-.5.3-.8.3z"/></svg>
-        <div class="anniv-person">
-          <span class="avatar anniv-avatar" id="annivThem"></span>
-          <span class="anniv-name" id="annivThemName"></span>
+
+    <div class="home-scroll">
+      <div class="profile-card">
+        <button class="profile-cover" id="homeCover" aria-label="更换封面">
+          <span class="cover-empty">＋ 选择封面</span>
+        </button>
+        <div class="profile-body">
+          <button class="profile-avatar" id="homeAvatar" aria-label="我的头像">
+            <span class="avatar xl" id="homeAvatarView"></span>
+          </button>
+          <div class="profile-name" id="homeName">我</div>
+          <button class="profile-status" id="homeStatusBtn">
+            <span class="status-dot"></span>
+            <span id="homeStatus">添加状态</span>
+          </button>
         </div>
       </div>
-      <div class="anniv-sep"></div>
-      <div class="anniv-days">
-        <b id="annivDays">0</b><span class="anniv-unit">天</span>
-        <span class="anniv-since" id="annivDate"></span>
+
+      <div class="anniv-card" id="annivCard" hidden>
+        <div class="anniv-row">
+          <div class="anniv-person">
+            <span class="avatar anniv-avatar" id="annivMe"></span>
+            <span class="anniv-name" id="annivMeName">我</span>
+          </div>
+          <svg class="anniv-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2c-.3 0-.6-.1-.8-.3C6.9 16 3.6 13.2 2.1 10.7 1 8.8 1 6.3 2.4 4.7c1.6-1.8 4.4-1.9 6.2-.3.5.4 1 1 1.4 1.6.4-.6.9-1.2 1.4-1.6 1.8-1.6 4.6-1.5 6.2.3 1.4 1.6 1.4 4.1.3 6-1.5 2.5-4.8 5.3-9.1 9.2-.2.2-.5.3-.8.3z"/></svg>
+          <div class="anniv-person">
+            <span class="avatar anniv-avatar" id="annivThem"></span>
+            <span class="anniv-name" id="annivThemName"></span>
+          </div>
+        </div>
+        <div class="anniv-sep"></div>
+        <div class="anniv-days">
+          <b id="annivDays">0</b><span class="anniv-unit">天</span>
+          <span class="anniv-since" id="annivDate"></span>
+        </div>
       </div>
-    </div>
-    <div class="home-grid">
-      <button class="app" data-app="chat" aria-label="对话">
-        <span class="tile">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="3" y="4.5" width="12.5" height="9.5" rx="4.75"/>
-            <rect x="8.5" y="10" width="12.5" height="9.5" rx="4.75" class="ghost"/>
-            <circle cx="6.6" cy="9.2" r="1" class="dot"/>
-          </svg>
-        </span>
-        <span class="app-name">对话</span>
-        <span class="badge" id="chatBadge" hidden>0</span>
+
+      <button class="pin-card" id="homePin" aria-label="更换图片">
+        <span class="pin-empty">＋ 放一张照片</span>
       </button>
-      <button class="app" data-app="cards" aria-label="字卡库">
-        <span class="tile">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="6.5" y="3" width="14.5" height="17" rx="3"/>
-            <path d="M3.6 6.4v11.2c0 1.9 1.3 3.1 3.1 3.1h8.6"/>
-            <path d="M10 8.2h7.5M10 11.4h7.5"/>
-            <circle cx="10.4" cy="15.2" r="1" class="dot"/>
-          </svg>
-        </span>
-        <span class="app-name">字卡</span>
-      </button>
-      <button class="app" data-app="appearance" aria-label="外观">
-        <span class="tile">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="6.2"/>
-            <path class="half" d="M12 5.8a6.2 6.2 0 0 1 0 12.4z"/>
-            <path d="M12 1.8v2.2M12 20v2.2M1.8 12h2.2M20 12h2.2M4.8 4.8l1.6 1.6M17.6 17.6l1.6 1.6M19.2 4.8l-1.6 1.6M6.4 17.6l-1.6 1.6" class="ray"/>
-          </svg>
-        </span>
-        <span class="app-name">外观</span>
-      </button>
-      <button class="app" data-app="settings" aria-label="设定">
-        <span class="tile">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3.2 6.6h17.6M3.2 12h17.6M3.2 17.4h17.6" class="rail"/>
-            <circle cx="8" cy="6.6" r="2.1" class="knob"/>
-            <circle cx="16" cy="12" r="2.1" class="knob"/>
-            <circle cx="10.5" cy="17.4" r="2.1" class="knob dot-ring"/>
-          </svg>
-        </span>
-        <span class="app-name">设定</span>
-      </button>
-      <button class="app" data-app="moments" aria-label="朋友圈">
-        <span class="tile">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="3.5" y="4.5" width="17" height="15" rx="4"/>
-            <circle cx="8.6" cy="9.6" r="1.5" class="dot"/>
-            <path d="M4.6 16.4l4.6-4.3a1 1 0 0 1 1.4 0l3.3 3.1M13.6 14.2l1.7-1.6a1 1 0 0 1 1.4 0l1.9 1.8"/>
-          </svg>
-        </span>
-        <span class="app-name">朋友圈</span>
-      </button>
-    </div>
-    <div class="home-mark">
-      <svg class="home-glyph" viewBox="0 0 200 200" aria-hidden="true"><text x="100" y="148" text-anchor="middle">字</text></svg>
-      <span class="mark-dot"></span>
+
+      <div class="home-grid">
+        <button class="app" data-app="chat" aria-label="对话">
+          <span class="tile">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="4.5" width="12.5" height="9.5" rx="4.75"/>
+              <rect x="8.5" y="10" width="12.5" height="9.5" rx="4.75" class="ghost"/>
+              <circle cx="6.6" cy="9.2" r="1" class="dot"/>
+            </svg>
+          </span>
+          <span class="app-name">对话</span>
+          <span class="badge" id="chatBadge" hidden>0</span>
+        </button>
+        <button class="app" data-app="moments" aria-label="朋友圈">
+          <span class="tile">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3.5" y="4.5" width="17" height="15" rx="4"/>
+              <circle cx="8.6" cy="9.6" r="1.5" class="dot"/>
+              <path d="M4.6 16.4l4.6-4.3a1 1 0 0 1 1.4 0l3.3 3.1M13.6 14.2l1.7-1.6a1 1 0 0 1 1.4 0l1.9 1.8"/>
+            </svg>
+          </span>
+          <span class="app-name">朋友圈</span>
+        </button>
+        <button class="app" id="homeMusic" data-app="music" aria-label="一起听歌">
+          <span class="tile">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4.2 14.5v-2.2a7.8 7.8 0 0 1 15.6 0v2.2"/>
+              <path d="M4.2 14.2h1.6a1.4 1.4 0 0 1 1.4 1.4v4a1.4 1.4 0 0 1-1.4 1.4H5a1.2 1.2 0 0 1-1.2-1.2v-4.2a1.4 1.4 0 0 1 .4-1.4z"/>
+              <path d="M19.8 14.2h-1.6a1.4 1.4 0 0 0-1.4 1.4v4a1.4 1.4 0 0 0 1.4 1.4H19a1.2 1.2 0 0 0 1.2-1.2v-4.2a1.4 1.4 0 0 0-.4-1.4z"/>
+            </svg>
+          </span>
+          <span class="app-name">听歌</span>
+        </button>
+        <button class="app" data-app="appearance" aria-label="外观">
+          <span class="tile">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="6.2"/>
+              <path class="half" d="M12 5.8a6.2 6.2 0 0 1 0 12.4z"/>
+              <path d="M12 1.8v2.2M12 20v2.2M1.8 12h2.2M20 12h2.2M4.8 4.8l1.6 1.6M17.6 17.6l1.6 1.6M19.2 4.8l-1.6 1.6M6.4 17.6l-1.6 1.6" class="ray"/>
+            </svg>
+          </span>
+          <span class="app-name">外观</span>
+        </button>
+        <button class="app" data-app="settings" aria-label="设定">
+          <span class="tile">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3.2 6.6h17.6M3.2 12h17.6M3.2 17.4h17.6" class="rail"/>
+              <circle cx="8" cy="6.6" r="2.1" class="knob"/>
+              <circle cx="16" cy="12" r="2.1" class="knob"/>
+              <circle cx="10.5" cy="17.4" r="2.1" class="knob dot-ring"/>
+            </svg>
+          </span>
+          <span class="app-name">设定</span>
+        </button>
+        <button class="app" data-app="cards" aria-label="字卡库">
+          <span class="tile">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="6.5" y="3" width="14.5" height="17" rx="3"/>
+              <path d="M3.6 6.4v11.2c0 1.9 1.3 3.1 3.1 3.1h8.6"/>
+              <path d="M10 8.2h7.5M10 11.4h7.5"/>
+              <circle cx="10.4" cy="15.2" r="1" class="dot"/>
+            </svg>
+          </span>
+          <span class="app-name">字卡</span>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -606,68 +625,142 @@
 
   <!-- 一起听歌 -->
   <section class="screen music-screen" id="screen-music" aria-hidden="true">
-    <header class="music-head">
-      <button class="icon-btn" data-music-back aria-label="返回">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>
-      </button>
-      <div class="music-head-title">
-        <span class="music-kicker">LISTENING TOGETHER</span>
-        <span class="music-title">一起听歌</span>
+    <div class="music-bg" id="musicBg"></div>
+
+    <div class="ml-pages" id="musicPager">
+
+      <div class="ml-page ml-invite" id="musicPageInvite">
+        <div class="invite-top">
+          <button class="icon-btn" data-music-back aria-label="返回">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>
+          </button>
+        </div>
+        <div class="invite-pair">
+          <span class="avatar xl" id="musicMeAvatar"></span>
+          <span class="invite-wave">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 13.4v-1.9a7.5 7.5 0 0 1 15 0v1.9"/><path d="M4.5 13.2h1.3a1.2 1.2 0 0 1 1.2 1.2v3.2a1.2 1.2 0 0 1-1.2 1.2h-.3a1 1 0 0 1-1-1v-3.4a1.2 1.2 0 0 1 .3-1.2z"/><path d="M19.5 13.2h-1.3a1.2 1.2 0 0 0-1.2 1.2v3.2a1.2 1.2 0 0 0 1.2 1.2h.3a1 1 0 0 0 1-1v-3.4a1.2 1.2 0 0 0-.3-1.2z"/></svg>
+          </span>
+          <span class="avatar xl" id="musicThemAvatar"></span>
+        </div>
+        <div class="invite-caption">耳机分你一半</div>
+        <div class="invite-spacer"></div>
+        <button class="invite-start" id="musicStart">开始一起听</button>
+        <button class="invite-link" id="musicBgBtn">换一张背景图</button>
       </div>
-      <button class="icon-btn" id="musicAdd" aria-label="添加音乐">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg>
-      </button>
-    </header>
-    <div class="music-tabs" id="musicTabs">
-      <button class="music-tab active" data-music-tab="play">正在播放</button>
-      <button class="music-tab" data-music-tab="lyrics">歌词</button>
-      <button class="music-tab" data-music-tab="home">主页</button>
-    </div>
-    <div class="music-body">
-      <div class="music-panel" id="musicPanelPlay">
-        <div class="music-cover" id="musicCover">
-          <span class="cover-note">♪</span>
-        </div>
-        <div class="music-title-line" id="musicNow">还没有歌曲</div>
-        <div class="music-artist-line" id="musicArtist">点右上角 ＋ 添加音乐</div>
-        <div class="music-progress-row">
-          <span class="music-time" id="musicCur">0:00</span>
-          <input class="music-range" type="range" min="0" max="1000" value="0" id="musicSeek" aria-label="进度">
-          <span class="music-time" id="musicDur">0:00</span>
-        </div>
-        <div class="music-controls">
-          <button class="mctl small" id="musicMode" aria-label="播放模式">顺序</button>
-          <button class="mctl" id="musicPrev" aria-label="上一首">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5.5v13M18 6.4v11.2L8.6 12z"/></svg>
-          </button>
-          <button class="mctl play" id="musicPlay" aria-label="播放">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 5.6v12.8l10.2-6.4z"/></svg>
-          </button>
-          <button class="mctl" id="musicNext" aria-label="下一首">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5.5v13M6 6.4v11.2L15.4 12z"/></svg>
-          </button>
-          <button class="mctl small" id="musicListBtn" aria-label="歌单">歌单</button>
-        </div>
-        <div class="together-row">
-          <span class="together-dot"></span>
-          <div class="together-text">
-            <div class="together-title">和你一起听</div>
-            <div class="together-sub">偶尔预约下一首，偶尔安静地陪着你。</div>
+
+      <div class="ml-page ml-listen" id="musicPageListen">
+        <div class="ml-top">
+          <div class="ml-song">
+            <div class="ml-title" id="musicNow">还没有歌曲</div>
+            <div class="ml-artist" id="musicArtist">点右上角歌单按钮添加音乐</div>
           </div>
-          <button class="switch" id="musicTogether" aria-label="和你一起听"></button>
+          <div class="ml-actions">
+            <button class="icon-btn" id="musicBgBtn2" aria-label="更换背景">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="3.5"/><circle cx="8.5" cy="10" r="1.6" class="dot"/><path d="M4.5 16.6l4.8-4.4a1 1 0 0 1 1.4 0l3.4 3.2M14 14.4l1.6-1.5a1 1 0 0 1 1.4 0l2.4 2.2"/></svg>
+            </button>
+            <button class="icon-btn" id="musicListBtn" aria-label="歌单">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h11M4 12h11M4 17.5h7"/><circle cx="18" cy="17.5" r="2.6"/><path d="M20.6 17.5V9.5l-2.2.9"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="ml-stage">
+          <div class="ml-people">
+            <span class="avatar ml-av" id="musicMeAvatar2"></span>
+            <span class="avatar ml-av" id="musicThemAvatar2"></span>
+          </div>
+          <div class="music-msgs" id="musicMsgs"></div>
+          <div class="ml-disc">
+            <div class="music-cover" id="musicCover">
+              <span class="cover-note">♪</span>
+            </div>
+          </div>
+          <div class="music-lyrics-line" id="musicLyrics">暂未导入歌词</div>
+        </div>
+
+        <div class="ml-foot">
+          <div class="music-progress-row">
+            <span class="music-time" id="musicCur">0:00</span>
+            <input class="music-range" type="range" min="0" max="1000" value="0" id="musicSeek" aria-label="进度">
+            <span class="music-time" id="musicDur">0:00</span>
+          </div>
+          <div class="ml-compose" id="mlCompose" hidden>
+            <input class="ml-input" id="musicMsgInput" placeholder="说点什么…" autocomplete="off">
+            <button class="ml-send" id="musicMsgSend">发送</button>
+          </div>
+          <div class="ml-controls music-controls">
+            <button class="mctl small" id="musicMode" aria-label="播放模式">顺序</button>
+            <button class="mctl" id="musicPrev" aria-label="上一首">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5.5v13M18 6.4v11.2L8.6 12z"/></svg>
+            </button>
+            <button class="mctl play" id="musicPlay" aria-label="播放">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 5.6v12.8l10.2-6.4z"/></svg>
+            </button>
+            <button class="mctl" id="musicNext" aria-label="下一首">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5.5v13M6 6.4v11.2L15.4 12z"/></svg>
+            </button>
+            <button class="mctl small" id="musicMsgBtn" aria-label="发消息">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 11.4a7.5 7.5 0 0 1 15 0v4.2a3 3 0 0 1-3 3h-5.4l-3.4 2.4v-2.6A7.4 7.4 0 0 1 4.5 11.4z"/></svg>
+            </button>
+          </div>
+          <button class="ghost-btn wide music-import-btn" id="musicLyricsImport">导入歌词（LRC / TXT）</button>
         </div>
       </div>
-      <div class="music-panel" id="musicPanelLyrics" hidden>
-        <div class="lyrics" id="musicLyrics">暂未导入歌词</div>
-        <button class="ghost-btn wide" id="musicLyricsImport">导入歌词（LRC / TXT）</button>
-      </div>
-      <div class="music-panel" id="musicPanelHome" hidden>
-        <div class="music-stats">
-          <div class="stat"><b id="musicCount">0</b><span>首歌曲</span></div>
-          <div class="stat"><b id="musicTogetherCount">0</b><span>次一起听</span></div>
+
+      <div class="ml-page music-widgets" id="musicPageWidgets">
+        <div class="widgets-head">
+          <button class="icon-btn" data-music-back aria-label="返回">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>
+          </button>
         </div>
-        <div class="music-hint">在主屏向右滑动可打开这一页，向左滑动返回。离开这一页后音乐仍会继续播放。</div>
+        <div class="widget-music">
+          <div class="widget-cover" id="wCover"></div>
+          <div class="widget-info">
+            <div class="widget-title" id="wNow">还没有歌曲</div>
+            <div class="widget-artist" id="wArtist">一起听歌</div>
+            <div class="widget-controls">
+              <button class="wctl" id="wPrev" aria-label="上一首">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6v12M18 7v10L8.8 12z"/></svg>
+              </button>
+              <button class="wctl" id="wPlay" aria-label="播放">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 5.6v12.8l10.2-6.4z"/></svg>
+              </button>
+              <button class="wctl" id="wNext" aria-label="下一首">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6v12M6 7v10l9.2-5z"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="widget-side">
+            <div class="widget-pair">
+              <span class="avatar xs" id="wMeAvatar"></span>
+              <span class="widget-heart">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2c-.3 0-.6-.1-.8-.3C6.9 16 3.6 13.2 2.1 10.7 1 8.8 1 6.3 2.4 4.7c1.6-1.8 4.4-1.9 6.2-.3.5.4 1 1 1.4 1.6.4-.6.9-1.2 1.4-1.6 1.8-1.6 4.6-1.5 6.2.3 1.4 1.6 1.4 4.1.3 6-1.5 2.5-4.8 5.3-9.1 9.2-.2.2-.5.3-.8.3z"/></svg>
+              </span>
+              <span class="avatar xs" id="wThemAvatar"></span>
+            </div>
+            <div class="widget-sub" id="wSub">一起听 0 次</div>
+          </div>
+        </div>
+
+        <div class="widget-anniv">
+          <div class="widget-anniv-label">在一起第</div>
+          <div class="widget-anniv-days" id="wDays">—</div>
+          <div class="widget-anniv-foot" id="wDaysDate"></div>
+        </div>
+
+        <div class="widget-stats">
+          <span><b id="musicCount">0</b> 首歌曲</span>
+          <span class="widget-dot">·</span>
+          <span>一起听 <b id="musicTogetherCount">0</b> 次</span>
+        </div>
+        <div class="music-hint">主屏向右滑动进入这一页；在这里向右滑到小组件，向左滑返回。</div>
       </div>
+    </div>
+
+    <div class="music-dots" id="musicDots">
+      <span class="dot active" data-mpage="0"></span>
+      <span class="dot" data-mpage="1"></span>
+      <span class="dot" data-mpage="2"></span>
     </div>
   </section>
 

@@ -9,6 +9,10 @@ let draft = { text: '', stickerUrl: '', imageUrl: '', fromCards: false };
 const HEART = `<svg viewBox="0 0 24 24"><path d="M12 20.2c-.3 0-.6-.1-.8-.3C6.9 16 3.6 13.2 2.1 10.7 1 8.8 1 6.3 2.4 4.7c1.6-1.8 4.4-1.9 6.2-.3.5.4 1 1 1.4 1.6.4-.6.9-1.2 1.4-1.6 1.8-1.6 4.6-1.5 6.2.3 1.4 1.6 1.4 4.1.3 6-1.5 2.5-4.8 5.3-9.1 9.2-.2.2-.5.3-.8.3z"/></svg>`;
 const BUBBLE = `<svg viewBox="0 0 24 24"><path d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H10l-4.6 3.1a.6.6 0 0 1-.9-.5V16.5H4A1.5 1.5 0 0 1 2.5 15V7A1.5 1.5 0 0 1 4 5.5z"/></svg>`;
 
+const POST_CHANCE = 85;   // 对方发朋友圈
+const SHOT_CHANCE = 55;   // 拼字卡 / 聊天截图发朋友圈
+const REPLY_CHANCE = 96;  // 回复我的朋友圈、回复我的评论
+
 function persona() { return get().persona; }
 function me() { return get().me; }
 
@@ -49,7 +53,7 @@ function makeThemPost() {
     imageUrl: '',
     shot,
   };
-  if (shot.length >= 4 && randInt(0, 99) < (Number(b.momentShotChance) || 25)) {
+  if (shot.length >= 4 && randInt(0, 99) < SHOT_CHANCE) {
     post.shot = shot;
     return post;
   }
@@ -79,7 +83,7 @@ function maybePost() {
   const maxGap = Math.max(minGap, Math.min(1440, Number(b.momentPostGapMax) || minGap));
   const gapMs = randInt(minGap, maxGap) * 60 * 1000;
   if (last && Date.now() - last.ts < gapMs) return;
-  if (randInt(0, 99) >= (Number(b.momentChance) || 70)) return;
+  if (randInt(0, 99) >= POST_CHANCE) return;
   const post = makeThemPost();
   if (!post) return;
   commit(s => { s.moments.posts.unshift(post); });
@@ -93,7 +97,7 @@ function reactToMyPost(postId) {
   setTimeout(() => {
     const post = get().moments.posts.find(p => p.id === postId);
     if (!post) return;
-    const reply = randInt(0, 99) < (Number(b.momentReplyChance) || 90);
+    const reply = randInt(0, 99) < REPLY_CHANCE;
     const cards = cardsPool();
     const text = reply && cards.length ? pick(cards).text : '';
     commit(s => {
@@ -366,7 +370,7 @@ function reactToMyComment(postId, commentId) {
   setTimeout(() => {
     const post = get().moments.posts.find(p => p.id === postId);
     if (!post) return;
-    if (randInt(0, 99) >= (Number(b.momentReplyChance) || 90)) return;
+    if (randInt(0, 99) >= REPLY_CHANCE) return;
     const cards = cardsPool();
     if (!cards.length) return;
     const text = pick(cards).text;
