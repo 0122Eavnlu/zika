@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030q';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030q';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030q';
-import * as router from './router.js?v=20261030q';
+import { get, commit, subscribe } from './state.js?v=20261030r';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030r';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030r';
+import * as router from './router.js?v=20261030r';
 
 const session = [];
 const lyricsMap = new Map();
@@ -829,7 +829,8 @@ function parseLrc(text) {
     const tags = [...line.matchAll(/\[(\d{1,3}):(\d{2})(?:[.:](\d{1,3}))?\]/g)];
     const body = line.replace(/\[[^\]]*\]/g, '').trim();
     if (!tags.length) {
-      if (line) out.push({ t: null, text: line });
+      if (/^\[[a-zA-Z#]+:/i.test(line)) return;
+      out.push({ t: null, text: line });
       return;
     }
     if (!body) return;

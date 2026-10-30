@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261030q';
-import { initSettings } from './settings.js?v=20261030q';
-import { initCards } from './cards.js?v=20261030q';
-import { initChat } from './chat.js?v=20261030q';
-import { initCall, hideCall } from './call.js?v=20261030q';
-import { initStatus } from './status.js?v=20261030q';
-import { initMoments } from './moments.js?v=20261030q';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261030q';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030q';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030q';
-import { $, $$, setAvatar, toast, pickFile, compressImage } from './util.js?v=20261030q';
-import { get, subscribe, commit } from './state.js?v=20261030q';
-import { openMeSheet } from './chat.js?v=20261030q';
+import { initAppearance } from './appearance.js?v=20261030r';
+import { initSettings } from './settings.js?v=20261030r';
+import { initCards } from './cards.js?v=20261030r';
+import { initChat } from './chat.js?v=20261030r';
+import { initCall, hideCall } from './call.js?v=20261030r';
+import { initStatus } from './status.js?v=20261030r';
+import { initMoments } from './moments.js?v=20261030r';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261030r';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030r';
+import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261030r';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml } from './util.js?v=20261030r';
+import { get, subscribe, commit } from './state.js?v=20261030r';
+import { openMeSheet } from './chat.js?v=20261030r';
 
 function renderHome() {
   const s = get();
@@ -67,7 +67,7 @@ function renderHome() {
     }
   }
   const pinCap = $('#homePinCaption');
-  if (pinCap) pinCap.textContent = s.me.status || '添加签名';
+  if (pinCap) pinCap.textContent = s.ui.homePinCaption || '添加签名';
 
   renderWidgets(s);
   updateHomeDots();
@@ -239,6 +239,33 @@ async function pickHomeImage() {
   }
 }
 
+function openFavSheet() {
+  const favs = () => get().favorites || { his: [], mine: [] };
+  const rows = list => list.length
+    ? list.map(item => `
+        <div class="fav-row">
+          <span class="fav-kind">${item.kind === 'sticker' ? '表情' : item.kind === 'moment' ? '朋友圈' : '消息'}</span>
+          ${item.url
+            ? `<img class="fav-img" src="${escapeHtml(item.url)}" alt="">`
+            : `<span class="fav-text">${escapeHtml(item.text || '')}</span>`}
+        </div>`).join('')
+    : '<p class="fav-empty">还没有收藏</p>';
+  openSheet(`
+    ${sheetTitle('收藏')}
+    <div class="fav-tabs">
+      <button class="fav-tab active" data-favtab="his">他的收藏</button>
+      <button class="fav-tab" data-favtab="mine">我的收藏</button>
+    </div>
+    <div class="fav-list" id="favList">${rows(favs().his)}</div>
+  `);
+  $$('.fav-tab').forEach(btn => {
+    btn.onclick = () => {
+      $$('.fav-tab').forEach(b => b.classList.toggle('active', b === btn));
+      $('#favList').innerHTML = rows(favs()[btn.dataset.favtab]);
+    };
+  });
+}
+
 function bindHome() {
   bindPager();
   $('#hp2Anniv')?.addEventListener('click', openAnnivSheet);
@@ -270,7 +297,13 @@ function bindHome() {
   $('#homeName')?.addEventListener('click', () => openMeSheet());
   $('#homeBioEdit')?.addEventListener('click', () => openMeSheet());
   $('#homeStatus')?.addEventListener('click', () => openMeSheet());
-  $('#homePinCaption')?.addEventListener('click', () => openMeSheet());
+  $('#homePinCaption')?.addEventListener('click', async () => {
+    const value = await promptSheet({ title: '拍立得签名', value: get().ui.homePinCaption || '', placeholder: '写一句给这张照片的话' });
+    if (value == null) return;
+    commit(s => { s.ui.homePinCaption = value.trim(); });
+    renderHome();
+  });
+  $('#homeFav')?.addEventListener('click', openFavSheet);
   $$('.app[data-app]').forEach(btn => {
     btn.addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate(4);
@@ -331,7 +364,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261030q', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261030r', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {

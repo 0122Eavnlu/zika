@@ -1,12 +1,11 @@
-import { get, commit, subscribe } from './state.js?v=20261030q';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261030q';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet } from './ui.js?v=20261030q';
-import * as router from './router.js?v=20261030q';
-import { playSound } from './audio.js?v=20261030q';
-import { startCall } from './call.js?v=20261030q';
-import { openCardSheet } from './cards.js?v=20261030q';
-import { openMoments } from './moments.js?v=20261030q';
-import { pickLyric, isListening } from './music.js?v=20261030q';
+import { get, commit, subscribe } from './state.js?v=20261030r';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261030r';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261030r';
+import * as router from './router.js?v=20261030r';
+import { playSound } from './audio.js?v=20261030r';
+import { startCall } from './call.js?v=20261030r';
+import { openMoments } from './moments.js?v=20261030r';
+import { pickLyric, isListening } from './music.js?v=20261030r';
 
 let busy = false;
 let replying = false;
@@ -93,6 +92,12 @@ function callSub(msg) {
   return `通话时长 ${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
 }
 
+const FA_COPY = `<svg viewBox="0 0 24 24"><rect x="8.5" y="3.5" width="11" height="12" rx="3"/><path d="M15.5 19.5H7A3 3 0 0 1 4.5 16.5V9"/></svg>`;
+const FA_QUOTE = `<svg viewBox="0 0 24 24"><path d="M9 6.5L4.5 11l4.5 4.5M4.8 11h8.7a5.5 5.5 0 0 1 5.5 5.5v1.6"/></svg>`;
+const FA_BUBBLE = `<svg viewBox="0 0 24 24"><path d="M20.5 11.6a8.5 8.5 0 0 1-12.4 7.5L3.5 20.5l1.4-4.6a8.5 8.5 0 1 1 15.6-4.3z"/><circle cx="8.6" cy="11.7" r="1"/><circle cx="12" cy="11.7" r="1"/><circle cx="15.4" cy="11.7" r="1"/></svg>`;
+const FA_STAR = `<svg viewBox="0 0 24 24"><path d="M12 3.8l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/></svg>`;
+const FA_TRASH = `<svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.2 7V5.2a1.4 1.4 0 0 1 1.4-1.4h2.8a1.4 1.4 0 0 1 1.4 1.4V7M6.5 7l.9 12a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.9-12"/></svg>`;
+
 function buildMessage(msg) {
   const p = persona();
   const isMe = msg.role === 'me';
@@ -136,7 +141,15 @@ function buildMessage(msg) {
 
   const avatarHtml = showAvatar ? `<span class="avatar" data-avatar="${msg.id}"></span>` : '';
   const meAvatarHtml = isMe ? `<span class="avatar me-avatar" data-avatar="${msg.id}" aria-label="我的资料"></span>` : '';
-  return `<div class="msg ${isMe ? 'me' : 'them'} ${showAvatar || isMe ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${avatarHtml}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}<div class="${bubbleCls}">${inner}</div>${meta.length ? `<div class="meta">${meta.join('')}</div>` : ''}</div>${meAvatarHtml}</div>`;
+  const mini = msg.bubbleText ? `<span class="msg-mini">${escapeHtml(msg.bubbleText)}</span>` : '';
+  const actions = `<div class="msg-actions">
+      <button data-fa="copy" aria-label="复制">${FA_COPY}</button>
+      <button data-fa="quote" aria-label="引用">${FA_QUOTE}</button>
+      <button data-fa="bubble" aria-label="添加小气泡">${FA_BUBBLE}</button>
+      <button data-fa="fav" aria-label="收藏">${FA_STAR}</button>
+      <button data-fa="del" class="danger" aria-label="删除">${FA_TRASH}</button>
+    </div>`;
+  return `<div class="msg ${isMe ? 'me' : 'them'} ${showAvatar || isMe ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${avatarHtml}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}${mini}<div class="${bubbleCls}">${inner}</div>${meta.length ? `<div class="meta">${meta.join('')}</div>` : ''}${actions}</div>${meAvatarHtml}</div>`;
 }
 
 function render(forceBottom = false) {
@@ -247,21 +260,93 @@ function deleteMessage(id) {
   openMeta.delete(id);
 }
 
-function openMessageSheet(id) {
+function handleTap(row, id) {
   const msg = get().messages.find(m => m.id === id);
   if (!msg) return;
-  const isText = !msg.type || msg.type === 'text';
-  const actions = [];
-  if (msg.role === 'me' && isText) {
-    actions.push({ label: '加入字卡', onClick: () => openCardSheet({ text: msg.text, title: '加入字卡' }) });
+  if (openMeta.has(id)) openMeta.delete(id); else openMeta.add(id);
+  row.classList.toggle('show-meta');
+}
+
+let pendingQuote = '';
+
+function clearQuote() {
+  pendingQuote = '';
+  const bar = $('#quoteBar');
+  if (bar) bar.hidden = true;
+}
+
+function setQuote(msg) {
+  pendingQuote = msg.type === 'sticker' ? '[表情包]' : (msg.text || '').slice(0, 40);
+  const bar = $('#quoteBar');
+  if (!bar) return;
+  $('#quoteText').textContent = `引用：${pendingQuote}`;
+  bar.hidden = false;
+  closeActions();
+}
+
+function closeActions() {
+  openMeta.clear();
+  $$('.msg.show-meta').forEach(el => el.classList.remove('show-meta'));
+}
+
+function favoriteMessage(msg) {
+  const isMe = msg.role === 'me';
+  const item = {
+    id: msg.id,
+    kind: msg.type === 'sticker' ? 'sticker' : 'text',
+    text: msg.text || '',
+    url: msg.stickerUrl || '',
+    at: Date.now(),
+  };
+  commit(s => {
+    s.favorites = s.favorites || { his: [], mine: [] };
+    const list = s.favorites[isMe ? 'mine' : 'his'];
+    if (!list.some(x => x.id === item.id)) list.unshift(item);
+  });
+  toast('已收藏');
+}
+
+function editBubble(id) {
+  const msg = get().messages.find(m => m.id === id);
+  if (!msg) return;
+  openSheet(`
+    <div class="bubble-sheet-head">
+      <h2 class="bubble-sheet-title">添加小气泡</h2>
+      <button class="bubble-sheet-x" id="bubbleX" aria-label="关闭">×</button>
+    </div>
+    <textarea class="bubble-sheet-input" id="bubbleInput" rows="2" maxlength="60" placeholder="输入小气泡内容...">${escapeHtml(msg.bubbleText || '')}</textarea>
+    <p class="bubble-sheet-hint">自己输入的小气泡只在这条消息上显示；联系人会从字卡库「小气泡」随机抽内容</p>
+    <button class="bubble-sheet-ok" id="bubbleOk">确定</button>
+  `);
+  $('#bubbleX').onclick = closeSheet;
+  setTimeout(() => $('#bubbleInput').focus(), 120);
+  $('#bubbleOk').onclick = () => {
+    const text = $('#bubbleInput').value.trim();
+    commit(s => {
+      const m = s.messages.find(x => x.id === id);
+      if (m) m.bubbleText = text;
+    });
+    closeSheet();
+    render();
+  };
+}
+
+function runAction(action, id) {
+  const msg = get().messages.find(m => m.id === id);
+  if (!msg) return;
+  closeActions();
+  if (action === 'copy') {
+    const text = msg.type === 'sticker' ? (msg.stickerUrl || '') : (msg.text || '');
+    navigator.clipboard?.writeText(text).then(() => toast('已复制')).catch(() => toast('复制失败'));
+  } else if (action === 'quote') {
+    setQuote(msg);
+  } else if (action === 'bubble') {
+    editBubble(id);
+  } else if (action === 'fav') {
+    favoriteMessage(msg);
+  } else if (action === 'del') {
+    deleteMessage(id);
   }
-  if (isText) {
-    actions.push({ label: '复制', onClick: async () => {
-      try { await navigator.clipboard.writeText(msg.text); toast('已复制'); } catch { toast('复制失败'); }
-    } });
-  }
-  actions.push({ label: '删除', danger: true, onClick: () => deleteMessage(id) });
-  actionSheet(msg.role === 'me' ? '我的消息' : '对方消息', actions);
 }
 
 export function openMeSheet() {
@@ -315,16 +400,6 @@ export function openMeSheet() {
   };
 }
 
-function handleTap(row, id) {
-  const msg = get().messages.find(m => m.id === id);
-  if (!msg) return;
-  if (openMeta.has(id)) openMeta.delete(id); else openMeta.add(id);
-  row.classList.toggle('show-meta');
-  if (msg.role === 'me' && (!msg.type || msg.type === 'text')) {
-    openCardSheet({ text: msg.text, title: '加入字卡' });
-  }
-}
-
 function bindMessageEvents() {
   const list = $('#msgList');
   let pressTimer = null;
@@ -345,7 +420,9 @@ function bindMessageEvents() {
     clearTimeout(pressTimer);
     pressTimer = setTimeout(() => {
       fired = true;
-      openMessageSheet(pressId);
+      openMeta.add(pressId);
+      const row = document.querySelector(`.msg[data-id="${pressId}"]`);
+      row?.classList.add('show-meta');
     }, 540);
   });
 
@@ -357,6 +434,12 @@ function bindMessageEvents() {
   list.addEventListener('pointercancel', clear);
 
   list.addEventListener('click', event => {
+    const fa = event.target.closest('[data-fa]');
+    if (fa) {
+      const row = fa.closest('.msg');
+      if (row) runAction(fa.dataset.fa, row.dataset.id);
+      return;
+    }
     const myAvatar = event.target.closest('.msg.me .avatar');
     if (myAvatar) { openMeSheet(); return; }
     if (fired) { fired = false; return; }
@@ -396,7 +479,7 @@ function pickQuote() {
 }
 
 function setSpeakState(on) {
-  const btn = $('#speakBtn');
+  const btn = $('#micBtn');
   btn.classList.toggle('busy', on);
 }
 
@@ -410,7 +493,7 @@ export async function triggerReply({ proactive = false, allowCall = true } = {})
   }
 
   if (!proactive && b.readSkip && Math.random() < b.readSkipRate) {
-    const btn = $('#speakBtn');
+    const btn = $('#micBtn');
     btn.classList.remove('pulse');
     void btn.offsetWidth;
     btn.classList.add('pulse');
@@ -426,7 +509,7 @@ export async function triggerReply({ proactive = false, allowCall = true } = {})
 
   replying = true;
   setSpeakState(true);
-  const btn = $('#speakBtn');
+  const btn = $('#micBtn');
   btn.classList.remove('pulse');
   void btn.offsetWidth;
   btn.classList.add('pulse');
@@ -546,26 +629,32 @@ function autoGrow() {
   const input = $('#msgInput');
   input.style.height = 'auto';
   input.style.height = Math.min(96, input.scrollHeight) + 'px';
-  $('#sendBtn').disabled = !input.value.trim();
 }
 
-function sendMessage() {
-  const input = $('#msgInput');
-  const text = input.value.trim();
-  if (!text) return;
+function pushSelf(parts) {
   const id = uid();
   fresh.add(id);
   commit(s => {
     s.messages.push({
       id,
       role: 'me',
-      text,
+      text: '',
       ts: Date.now(),
       read: false,
       seen: true,
       senderId: '',
+      ...parts,
     });
   });
+  return id;
+}
+
+function sendMessage() {
+  const input = $('#msgInput');
+  const text = input.value.trim();
+  if (!text) return;
+  pushSelf({ text, quote: pendingQuote });
+  clearQuote();
   input.value = '';
   autoGrow();
   playSound();
@@ -574,9 +663,12 @@ function sendMessage() {
   triggerReply({ allowCall: false });
 }
 
-const ICON_STICKER = `<svg viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="4"/><circle cx="8" cy="10" r="1.6"/><path d="M5.4 15.6c.6-1.4 1.6-2.1 2.6-2.1s2 .7 2.6 2.1"/><path d="M14 9.5h5M14 13h5M14 16.5h3"/></svg>`;
-const ICON_VIDEO = `<svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="12.5" height="10" rx="3"/><path d="M15 11.2l5.4-3.1a.6.6 0 0 1 .9.5v6.8a.6.6 0 0 1-.9.5l-5.4-3.1z"/></svg>`;
-const ICON_VOICE = `<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="9.5" rx="3"/><path d="M6.5 11a5.5 5.5 0 0 0 11 0M12 16.5v4M8.5 20.5h7"/></svg>`;
+const ICON_STICKER = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.4 13.6c.9 1.6 2.2 2.4 3.6 2.4s2.7-.8 3.6-2.4"/><circle cx="9" cy="9.4" r="1.1"/><circle cx="15" cy="9.4" r="1.1"/></svg>`;
+const ICON_TRANSFER = `<svg viewBox="0 0 24 24"><path d="M12 19V5M6.6 10.4L12 5l5.4 5.4"/></svg>`;
+const ICON_HAND = `<svg viewBox="0 0 24 24"><path d="M8 13.4V7.6a1.5 1.5 0 0 1 3 0v4.2V5.6a1.5 1.5 0 0 1 3 0v6.2V7a1.5 1.5 0 0 1 3 0v7.6a5.6 5.6 0 0 1-5.6 5.6h-1a4.4 4.4 0 0 1-4.4-4.4v-1.5l-1.7 1a1.5 1.5 0 0 1-2-2.2z"/></svg>`;
+const ICON_LIST = `<svg viewBox="0 0 24 24"><path d="M4 7h11M4 12h11M4 17h7"/><path d="M18.4 15.5l1.6 1.6 3-3.4"/></svg>`;
+const ICON_IMAGE = `<svg viewBox="0 0 24 24"><rect x="3.2" y="5" width="17.6" height="14" rx="3"/><path d="M4.4 16.6l4.3-4.2a1.2 1.2 0 0 1 1.7 0l3.4 3.3M12.4 14.4l1.8-1.7a1.2 1.2 0 0 1 1.7 0l2.3 2.2"/><circle cx="8" cy="9.4" r="1.3"/></svg>`;
+const ICON_RECORD = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.6V12l3.2 1.9"/></svg>`;
 
 function sendSticker(url) {
   const id = uid();
@@ -633,23 +725,79 @@ function openStickerPicker() {
 
 function openAttachPanel() {
   openSheet(`
-    ${sheetTitle('添加')}
-    <div class="attach-grid">
-      <button class="attach-item" data-attach="sticker">${ICON_STICKER}<span>表情包</span></button>
-      <button class="attach-item" data-attach="video">${ICON_VIDEO}<span>视频</span></button>
-      <button class="attach-item" data-attach="voice">${ICON_VOICE}<span>语音</span></button>
+    <div class="attach-list">
+      <button class="attach-row" data-attach="sticker">${ICON_STICKER}<span>表情包</span></button>
+      <button class="attach-row" data-attach="transfer">${ICON_TRANSFER}<span>转账</span></button>
+      <button class="attach-row" data-attach="nudge">${ICON_HAND}<span>拍一拍</span></button>
+      <button class="attach-row" data-attach="burst">${ICON_LIST}<span>连发</span></button>
+      <button class="attach-row" data-attach="image">${ICON_IMAGE}<span>图片</span></button>
+      <button class="attach-row" data-attach="record">${ICON_RECORD}<span>记录</span></button>
     </div>
   `);
   $$('#sheet [data-attach]').forEach(btn => {
     btn.onclick = () => {
-      if (btn.dataset.attach === 'sticker') {
-        openStickerPicker();
+      const kind = btn.dataset.attach;
+      if (kind === 'sticker') { openStickerPicker(); return; }
+      if (kind === 'transfer') { openTransfer(); return; }
+      if (kind === 'nudge') {
+        closeSheet();
+        pushSelf({ type: 'nudge', text: `你拍了拍「${persona().name || 'TA'}」` });
+        render(true);
+        setTimeout(() => addIncoming({ text: '干嘛', senderName: persona().name }), 900);
         return;
       }
+      if (kind === 'burst') {
+        closeSheet();
+        ['想你了', '在干嘛', '理理我'].forEach((text, i) => {
+          setTimeout(() => {
+            pushSelf({ text });
+            render(true);
+          }, 260 * i);
+        });
+        return;
+      }
+      if (kind === 'image') { pickChatImage(); return; }
+      if (kind === 'record') { openRecord(); return; }
       closeSheet();
-      setTimeout(() => startCall(), 260);
     };
   });
+}
+
+async function openTransfer() {
+  const value = await promptSheet({ title: '转账', placeholder: '输入金额', confirm: '转账' });
+  if (!value || !value.trim()) return;
+  closeSheet();
+  pushSelf({ text: `[转账] ¥${value.trim()}` });
+  render(true);
+  setTimeout(() => addIncoming({ text: '收到啦，谢谢你', senderName: persona().name }), 1200);
+}
+
+async function pickChatImage() {
+  const file = await pickFile('image/*');
+  if (!file) return;
+  try {
+    const url = await compressImage(file, 900, .8);
+    closeSheet();
+    sendSticker(url);
+  } catch {
+    toast('图片处理失败');
+  }
+}
+
+function openRecord() {
+  const all = get().messages;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayCount = all.filter(m => m.ts >= today.getTime()).length;
+  const favCount = ((get().favorites?.his || []).length + (get().favorites?.mine || []).length);
+  openSheet(`
+    ${sheetTitle('记录')}
+    <div class="record-stats">
+      <div class="record-stat"><b>${all.length}</b><span>全部消息</span></div>
+      <div class="record-stat"><b>${todayCount}</b><span>今天</span></div>
+      <div class="record-stat"><b>${favCount}</b><span>收藏</span></div>
+    </div>
+  `);
 }
 
 async function pickChatBg() {
@@ -692,12 +840,13 @@ function openChatMenu() {
 
 export function initChat() {
   bindMessageEvents();
-  $('#speakBtn').onclick = () => {
+  $('#micBtn').onclick = () => {
     if (navigator.vibrate) navigator.vibrate(6);
     triggerReply();
   };
   $('#sendBtn').onclick = sendMessage;
   $('#plusBtn').onclick = openAttachPanel;
+  $('#quoteCancel').onclick = clearQuote;
   $('#chatMore').onclick = openChatMenu;
   $('#chatAvatar').onclick = () => openMoments('chat');
 
