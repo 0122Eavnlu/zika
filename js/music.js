@@ -727,6 +727,10 @@ function updateDots() {
   });
 }
 
+export function isListening() {
+  return Boolean(audio && audio.src && !audio.paused);
+}
+
 /* ---------- 取一句歌词 ---------- */
 
 const LYRIC_LEADS = ['我想给你的', '想把这首送给你', '听到这句就想起了你'];

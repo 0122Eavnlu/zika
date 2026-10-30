@@ -49,7 +49,7 @@ function makeThemPost() {
     imageUrl: '',
     shot,
   };
-  if (shot.length >= 4 && randInt(0, 99) < (Number(b.momentShotChance) || 50)) {
+  if (shot.length >= 4 && randInt(0, 99) < (Number(b.momentShotChance) || 25)) {
     post.shot = shot;
     return post;
   }
@@ -60,7 +60,7 @@ function makeThemPost() {
   const roll = Math.random();
   if (canSticker && (!canCard || roll < .4)) {
     post.stickerUrl = pick(stickers).url;
-  } else if (canCard && (!canSticker || roll < .75)) {
+  } else if (canCard && (!canSticker || roll < .7)) {
     post.text = pick(cards).text;
     post.fromCards = true;
   } else {
@@ -93,7 +93,7 @@ function reactToMyPost(postId) {
   setTimeout(() => {
     const post = get().moments.posts.find(p => p.id === postId);
     if (!post) return;
-    const reply = randInt(0, 99) < (Number(b.momentReplyChance) || 70);
+    const reply = randInt(0, 99) < (Number(b.momentReplyChance) || 90);
     const cards = cardsPool();
     const text = reply && cards.length ? pick(cards).text : '';
     commit(s => {
@@ -343,11 +343,12 @@ async function addComment(id, targetCommentId = '') {
   const title = target ? `回复 ${who}` : '评论';
   const text = await promptSheet({ title, placeholder: target ? '写下回复…' : '写点评论…', confirm: '发送' });
   if (!text || !text.trim()) return;
+  const entryId = uid();
   commit(s => {
     const p = s.moments.posts.find(x => x.id === id);
     if (!p) return;
     p.comments = p.comments || [];
-    const entry = { id: uid(), by: 'me', text: text.trim(), ts: Date.now() };
+    const entry = { id: entryId, by: 'me', text: text.trim(), ts: Date.now() };
     if (target) {
       entry.to = target.id;
       entry.toName = who;
@@ -355,6 +356,30 @@ async function addComment(id, targetCommentId = '') {
     p.comments.push(entry);
   });
   render();
+  if (post.by === 'them') reactToMyComment(id, entryId);
+}
+
+function reactToMyComment(postId, commentId) {
+  const b = get().behavior;
+  const dMin = Math.min(300, Math.max(30, Number(b.momentReplyDelayMin) || 30));
+  const dMax = Math.max(dMin, Math.min(300, Number(b.momentReplyDelayMax) || dMin));
+  setTimeout(() => {
+    const post = get().moments.posts.find(p => p.id === postId);
+    if (!post) return;
+    if (randInt(0, 99) >= (Number(b.momentReplyChance) || 90)) return;
+    const cards = cardsPool();
+    if (!cards.length) return;
+    const text = pick(cards).text;
+    commit(s => {
+      const p = s.moments.posts.find(x => x.id === postId);
+      if (!p) return;
+      const target = (p.comments || []).find(c => c.id === commentId);
+      p.comments = p.comments || [];
+      p.comments.push({ id: uid(), by: 'them', text, ts: Date.now(), to: commentId, toName: me().name || '我' });
+      if (target && target.by === 'them') p.likedByThem = true;
+    });
+    render();
+  }, randInt(dMin, dMax) * 1000);
 }
 
 /* ---------- 背景 ---------- */

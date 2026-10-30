@@ -6,7 +6,7 @@ import { playSound } from './audio.js';
 import { startCall } from './call.js';
 import { openCardSheet } from './cards.js';
 import { openMoments } from './moments.js';
-import { pickLyric } from './music.js';
+import { pickLyric, isListening } from './music.js';
 
 let busy = false;
 let replying = false;
@@ -494,7 +494,7 @@ async function afterReply() {
     });
   }
 
-  if (Math.random() < .3) {
+  if (isListening() && Math.random() < .3) {
     try {
       const l = await pickLyric();
       if (l) {

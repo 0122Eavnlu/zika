@@ -396,15 +396,18 @@ function doMove(ids, groupId) {
 /* ---------- 表情包 ---------- */
 
 async function uploadSticker() {
-  const file = await pickFile('image/*');
-  if (!file) return;
-  try {
-    const url = await prepareSticker(file);
-    commit(s => { s.stickers.unshift({ id: uid(), url, at: Date.now() }); });
-    toast('已添加');
-  } catch {
-    toast('图片处理失败');
+  const files = await pickFile('image/*', true);
+  if (!files || !files.length) return;
+  const list = Array.from(files).slice(0, 100);
+  let added = 0;
+  for (const file of list) {
+    try {
+      const url = await prepareSticker(file);
+      commit(s => { s.stickers.unshift({ id: uid(), url, at: Date.now() }); });
+      added++;
+    } catch {}
   }
+  toast(added ? `已添加 ${added} 张` : '图片处理失败');
 }
 
 /* ---------- 拍一拍 ---------- */
