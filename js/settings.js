@@ -1,10 +1,10 @@
-import { get, commit, subscribe, getPath, setPath, exportState, importState, resetState } from './state.js?v=20261030u';
-import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, compressDataUrl, setAvatar, getInputNumber } from './util.js?v=20261030u';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js?v=20261030u';
-import { playItem } from './audio.js?v=20261030u';
-import * as router from './router.js?v=20261030u';
-import { openStatusSheet } from './status.js?v=20261030u';
-import { openMeSheet } from './chat.js?v=20261030u';
+import { get, commit, subscribe, getPath, setPath, exportState, importState, resetState } from './state.js?v=20261030v';
+import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, compressDataUrl, setAvatar, getInputNumber } from './util.js?v=20261030v';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js?v=20261030v';
+import { playItem } from './audio.js?v=20261030v';
+import * as router from './router.js?v=20261030v';
+import { openStatusSheet } from './status.js?v=20261030v';
+import { openMeSheet } from './chat.js?v=20261030v';
 
 /* ---------- 通用控件 ---------- */
 
