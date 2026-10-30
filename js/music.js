@@ -1,10 +1,11 @@
-import { get, commit, subscribe } from './state.js?v=20261030k';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030k';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030k';
-import * as router from './router.js?v=20261030k';
+import { get, commit, subscribe } from './state.js?v=20261030l';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030l';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030l';
+import * as router from './router.js?v=20261030l';
 
 const session = [];
 const lyricsMap = new Map();
+const lyricsTried = new Set();
 let audio = null;
 let index = 0;
 
@@ -689,7 +690,11 @@ function clearAll() {
 async function ensureLyrics() {
   const track = currentTrack();
   if (!track) return;
-  if (track.lyrics || lyricsMap.get(track.id) || !track.lrcUrl) return;
+  const cached = track.lyrics || lyricsMap.get(track.id) || '';
+  if (!track.lrcUrl) return;
+  if (/\[\d{1,3}:\d{2}(?:[.:]\d{1,3})?\]/.test(cached)) return;
+  if (lyricsTried.has(track.id) && cached) return;
+  lyricsTried.add(track.id);
   try {
     const res = await fetch(track.lrcUrl);
     if (!res.ok) return;
@@ -708,8 +713,8 @@ function cleanLyrics(text) {
   return text
     .replace(/\r/g, '')
     .split('\n')
-    .map(line => line.replace(/\[[^\]]*\]/g, '').trim())
-    .filter(Boolean)
+    .map(line => line.trim())
+    .filter(line => line && !/^\[(ar|ti|al|by|offset|re|ve|kana|length|#)[:\]]/i.test(line))
     .join('\n');
 }
 
@@ -723,12 +728,7 @@ async function importLyrics() {
   if (!file) return;
   let text = '';
   try { text = await file.text(); } catch { toast('读取失败'); return; }
-  const cleaned = text
-    .replace(/\r/g, '')
-    .split('\n')
-    .map(line => line.replace(/\[[^\]]*\]/g, '').trim())
-    .filter(Boolean)
-    .join('\n');
+  const cleaned = cleanLyrics(text);
   if (track.local) lyricsMap.set(track.id, cleaned);
   else commit(s => {
     const t = s.music.tracks.find(x => x.id === track.id);
