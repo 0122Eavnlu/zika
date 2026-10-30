@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030d';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030d';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030d';
-import * as router from './router.js?v=20261030d';
+import { get, commit, subscribe } from './state.js?v=20261030e';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030e';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030e';
+import * as router from './router.js?v=20261030e';
 
 const session = [];
 const lyricsMap = new Map();
@@ -751,6 +751,17 @@ async function importLyrics() {
 /* ---------- 交互 ---------- */
 
 let page = 0;
+let widgetOnly = false;
+
+export function openWidgets() {
+  widgetOnly = true;
+  router.open('music');
+}
+
+export function openMusic() {
+  widgetOnly = false;
+  router.open('music');
+}
 let lyricKey = '';
 let lyricIdx = 0;
 let lyricTimer = null;
@@ -952,7 +963,8 @@ function bindSwipe() {
     if (!t) return;
     const dx = t.clientX - sx;
     const dy = t.clientY - sy;
-    if (dx > 70 && Math.abs(dy) < Math.abs(dx) * .6) router.open('music');
+    if (dx > 70 && Math.abs(dy) < Math.abs(dx) * .6) openMusic();
+    if (dx < -70 && Math.abs(dy) < Math.abs(dx) * .6) openWidgets();
   }, { passive: true });
 
   const screen = $('#screen-music');
@@ -969,6 +981,10 @@ function bindSwipe() {
     const dx = t.clientX - mx;
     const dy = t.clientY - my;
     if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * .6) return;
+    if (widgetOnly) {
+      if (dx > 0) router.close();
+      return;
+    }
     if (dx > 0) {
       if (page < 2) goPage(page + 1);
     } else if (page > 0) {
@@ -1062,6 +1078,12 @@ export function initMusic() {
 
   router.register('music', { onOpen: () => {
     render();
+    const dots = $('#musicDots');
+    if (dots) dots.style.display = widgetOnly ? 'none' : '';
+    if (widgetOnly) {
+      goPage(2);
+      return;
+    }
     if (music().together && allTracks().length) {
       startChatLoop();
       goPage(1);

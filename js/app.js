@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261030d';
-import { initSettings } from './settings.js?v=20261030d';
-import { initCards } from './cards.js?v=20261030d';
-import { initChat } from './chat.js?v=20261030d';
-import { initCall, hideCall } from './call.js?v=20261030d';
-import { initStatus } from './status.js?v=20261030d';
-import { initMoments } from './moments.js?v=20261030d';
-import { initMusic, hideQrModal } from './music.js?v=20261030d';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030d';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030d';
-import { $, $$, setAvatar, toast, pickFile, compressImage } from './util.js?v=20261030d';
-import { get, subscribe, commit } from './state.js?v=20261030d';
-import { openMeSheet } from './chat.js?v=20261030d';
+import { initAppearance } from './appearance.js?v=20261030e';
+import { initSettings } from './settings.js?v=20261030e';
+import { initCards } from './cards.js?v=20261030e';
+import { initChat } from './chat.js?v=20261030e';
+import { initCall, hideCall } from './call.js?v=20261030e';
+import { initStatus } from './status.js?v=20261030e';
+import { initMoments } from './moments.js?v=20261030e';
+import { initMusic, hideQrModal, openMusic, openWidgets } from './music.js?v=20261030e';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030e';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030e';
+import { $, $$, setAvatar, toast, pickFile, compressImage } from './util.js?v=20261030e';
+import { get, subscribe, commit } from './state.js?v=20261030e';
+import { openMeSheet } from './chat.js?v=20261030e';
 
 function renderHome() {
   const s = get();
@@ -147,7 +147,8 @@ function bindHome() {
   $$('.app[data-app]').forEach(btn => {
     btn.addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate(4);
-      open(btn.dataset.app);
+      if (btn.dataset.app === 'music') openMusic();
+      else open(btn.dataset.app);
     });
   });
 }
@@ -203,7 +204,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261030d', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261030e', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
