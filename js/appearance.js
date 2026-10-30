@@ -137,6 +137,26 @@ export function initAppearance() {
     cssTimer = setTimeout(() => commit(s => { s.ui.bubbleCss = value; }), 700);
   });
 
+  $('#bubbleCssSave').onclick = () => {
+    clearTimeout(cssTimer);
+    const value = $('#bubbleCss').value;
+    if (/^https?:\/\/\S+$/.test(value.trim())) {
+      toast('这里要填 CSS 代码，不是链接');
+      return;
+    }
+    commit(s => { s.ui.bubbleCss = value; });
+    applyVisuals();
+    toast('气泡样式已应用');
+  };
+
+  $('#bubbleCssClear').onclick = () => {
+    clearTimeout(cssTimer);
+    $('#bubbleCss').value = '';
+    commit(s => { s.ui.bubbleCss = ''; });
+    applyVisuals();
+    toast('已清除气泡样式');
+  };
+
   $('#bgPick').onclick = async () => {
     const file = await pickFile('image/*');
     if (!file) return;

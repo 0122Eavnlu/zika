@@ -650,6 +650,9 @@ svg { display: block; }
 }
 .bubble:active { transform: scale(.98); }
 .bubble > .content-wrapper { display: block; position: relative; }
+.bubble-actions { display: flex; gap: 10px; margin-top: 10px; }
+.bubble-actions .ghost-btn { flex: 1; }
+.bubble-actions .btn-ink { flex: 1.4; }
 
 .quote {
   display: block;
