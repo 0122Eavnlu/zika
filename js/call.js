@@ -1,5 +1,5 @@
-import { get, commit } from './state.js?v=20261030v';
-import { $, setAvatar, uid, randInt, toast } from './util.js?v=20261030v';
+import { get, commit } from './state.js?v=20261030w';
+import { $, setAvatar, uid, randInt, toast } from './util.js?v=20261030w';
 
 let active = false;
 let connected = false;
@@ -64,6 +64,10 @@ function minimize() {
   minimized = true;
   $('#callLayer').hidden = true;
   $('#callPill').hidden = false;
+  const pill = $('#callPill');
+  pill.style.left = '';
+  pill.style.top = '';
+  pill.style.right = '';
 }
 
 function end() {
@@ -152,7 +156,86 @@ export function initCall() {
     hangUp();
   };
   $('[data-call-min]').onclick = minimize;
-  $('#callPill').addEventListener('click', () => {
+
+  const pill = $('#callPill');
+  let drag = null;       // { startX, startY, origLeft, origTop }
+  let justDragged = false;
+
+  function pointOf(e) {
+    return e.touches && e.touches[0] ? e.touches[0]
+      : e.changedTouches && e.changedTouches[0] ? e.changedTouches[0]
+      : e;
+  }
+
+  function onDown(e) {
+    if (e.target.closest('#callPillHangup')) return;
+    const p = pointOf(e);
+    const rect = pill.getBoundingClientRect();
+    drag = {
+      startX: p.clientX,
+      startY: p.clientY,
+      origLeft: rect.left,
+      origTop: rect.top,
+      moved: false,
+    };
+    pill.style.transition = 'none';
+    if (e.cancelable) e.preventDefault();
+  }
+
+  function onMove(e) {
+    if (!drag) return;
+    const p = pointOf(e);
+    const dx = p.clientX - drag.startX;
+    const dy = p.clientY - drag.startY;
+    if (!drag.moved && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+      drag.moved = true;
+      justDragged = true;
+    }
+    if (!drag.moved) return;
+    const app = $('#app');
+    const appRect = app.getBoundingClientRect();
+    const w = pill.offsetWidth;
+    const h = pill.offsetHeight;
+    let left = drag.origLeft - appRect.left + dx;
+    let top = drag.origTop - appRect.top + dy;
+    left = Math.max(0, Math.min(left, appRect.width - w));
+    top = Math.max(0, Math.min(top, appRect.height - h));
+    pill.style.left = left + 'px';
+    pill.style.top = top + 'px';
+    pill.style.right = 'auto';
+    if (e.cancelable) e.preventDefault();
+  }
+
+  function onUp() {
+    if (!drag) return;
+    pill.style.transition = '';
+    if (drag.moved) {
+      // snap to nearest horizontal edge within #app
+      const app = $('#app');
+      const appRect = app.getBoundingClientRect();
+      const rect = pill.getBoundingClientRect();
+      const centerX = rect.left - appRect.left + rect.width / 2;
+      const targetX = centerX < appRect.width / 2
+        ? 0
+        : appRect.width - rect.width;
+      pill.style.left = targetX + 'px';
+      setTimeout(() => { justDragged = false; }, 0);
+    } else {
+      justDragged = false;
+    }
+    drag = null;
+  }
+
+  pill.addEventListener('touchstart', onDown, { passive: false });
+  pill.addEventListener('touchmove', onMove, { passive: false });
+  pill.addEventListener('touchend', onUp);
+  pill.addEventListener('touchcancel', onUp);
+  pill.addEventListener('mousedown', onDown);
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+
+  pill.addEventListener('click', () => {
+    if (justDragged) return;
     if (active) expand();
   });
 }

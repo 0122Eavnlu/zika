@@ -1,5 +1,5 @@
-import { get } from './state.js?v=20261030v';
-import { pick } from './util.js?v=20261030v';
+import { get } from './state.js?v=20261030w';
+import { pick } from './util.js?v=20261030w';
 
 let ctx = null;
 

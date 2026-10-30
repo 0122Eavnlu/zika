@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261030v';
-import { initSettings } from './settings.js?v=20261030v';
-import { initCards } from './cards.js?v=20261030v';
-import { initChat } from './chat.js?v=20261030v';
-import { initCall, hideCall } from './call.js?v=20261030v';
-import { initStatus } from './status.js?v=20261030v';
-import { initMoments } from './moments.js?v=20261030v';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261030v';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030v';
-import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261030v';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml } from './util.js?v=20261030v';
-import { get, subscribe, commit } from './state.js?v=20261030v';
-import { openMeSheet } from './chat.js?v=20261030v';
+import { initAppearance } from './appearance.js?v=20261030w';
+import { initSettings } from './settings.js?v=20261030w';
+import { initCards } from './cards.js?v=20261030w';
+import { initChat } from './chat.js?v=20261030w';
+import { initCall, hideCall, startCall } from './call.js?v=20261030w';
+import { initStatus } from './status.js?v=20261030w';
+import { initMoments } from './moments.js?v=20261030w';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261030w';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030w';
+import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261030w';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml } from './util.js?v=20261030w';
+import { get, subscribe, commit } from './state.js?v=20261030w';
+import { openMeSheet } from './chat.js?v=20261030w';
 
 function renderHome() {
   const s = get();
@@ -306,6 +306,10 @@ function bindHome() {
     renderHome();
   });
   $('#homeFav')?.addEventListener('click', openFavSheet);
+  $('#homeCallBtn')?.addEventListener('click', () => {
+    if (navigator.vibrate) navigator.vibrate(4);
+    startCall();
+  });
   $$('.app[data-app]').forEach(btn => {
     btn.addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate(4);
@@ -366,7 +370,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261030v', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261030w', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
