@@ -1,4 +1,4 @@
-import { uid, toast } from './util.js?v=20261030f';
+import { uid, toast } from './util.js?v=20261030g';
 
 const KEY = 'zika.state.v1';
 const VERSION = 2;
@@ -97,7 +97,7 @@ function defaults(withSeed = true) {
     },
     stickers: [],
     moments: { bg: '', posts: [] },
-    music: { tracks: [], mode: 'sequence', together: false, togetherCount: 0, current: 0, apiBase: '', cookie: '', uid: '', nickname: '' },
+    music: { tracks: [], mode: 'sequence', together: false, togetherCount: 0, current: 0, apiBase: '', cookie: '', uid: '', nickname: '', msgStay: 5, sessionStart: 0, history: [] },
     messages: [],
   };
 }

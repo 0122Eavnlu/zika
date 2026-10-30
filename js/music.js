@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030f';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030f';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030f';
-import * as router from './router.js?v=20261030f';
+import { get, commit, subscribe } from './state.js?v=20261030g';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030g';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030g';
+import * as router from './router.js?v=20261030g';
 
 const session = [];
 const lyricsMap = new Map();
@@ -151,6 +151,7 @@ function syncPlayButton() {
   if (!btn) return;
   const playing = audio && !audio.paused && !!audio.src;
   btn.innerHTML = playing ? PAUSE_ICON : PLAY_ICON;
+  btn.classList.toggle('is-paused-icon', Boolean(playing));
   const wBtn = $('#wPlay');
   if (wBtn) wBtn.innerHTML = playing ? PAUSE_ICON : PLAY_ICON;
   $('#screen-music')?.classList.toggle('playing-audio', Boolean(playing));
@@ -202,26 +203,14 @@ function render() {
   if ($('#musicArtist')) $('#musicArtist').textContent = track ? (track.artist || '一起听歌') : '点右上角歌单按钮添加音乐';
   if ($('#wNow')) $('#wNow').textContent = track ? track.name : '还没有歌曲';
   if ($('#wArtist')) $('#wArtist').textContent = track ? (track.artist || '一起听歌') : '一起听歌';
-  if ($('#musicMode')) $('#musicMode').textContent = (MODES.find(m => m.key === music().mode) || MODES[0]).label;
+  if ($('#musicModeLabel')) $('#musicModeLabel').textContent = (MODES.find(m => m.key === music().mode) || MODES[0]).label;
 
-  const lyr = track ? (track.lyrics || lyricsMap.get(track.id) || '') : '';
-  const lines = lyr.split('\n').map(l => l.trim()).filter(Boolean);
   const lyrEl = $('#musicLyrics');
   if (lyrEl) {
-    if (lines.length > 1) {
-      if (lyricKey !== track.id) {
-        lyricKey = track.id;
-        lyricIdx = 0;
-      }
-      lyrEl.textContent = lines[lyricIdx % lines.length];
-      lyrEl.classList.remove('roll');
-      void lyrEl.offsetWidth;
-      lyrEl.classList.add('roll');
-    } else {
-      lyrEl.textContent = lines[0] || '暂未导入歌词';
-    }
+    renderLyrics(track);
+    startLyricRoll();
   }
-  startLyricRoll();
+  updateListenCaption();
 
   if ($('#musicCount')) $('#musicCount').textContent = String(list.length);
   if ($('#musicTogetherCount')) $('#musicTogetherCount').textContent = String(music().togetherCount || 0);
@@ -759,26 +748,57 @@ export function openWidgets() {
 export function openMusic() {
   router.open('music');
 }
-let lyricKey = '';
+let lyricTrack = '';
 let lyricIdx = 0;
 let lyricTimer = null;
+
+function renderLyrics(track) {
+  const box = $('#musicLyrics');
+  if (!box) return;
+  const txt = track ? (track.lyrics || lyricsMap.get(track.id) || '') : '';
+  const lines = txt.split('\n').map(l => l.trim()).filter(Boolean);
+  const key = `${track ? track.id : ''}|${lines.join('\n')}`;
+  if (lyricTrack !== key || !box.children.length) {
+    lyricTrack = key;
+    lyricIdx = 0;
+    box.innerHTML = (lines.length ? lines : ['暂未导入歌词'])
+      .map(l => `<span class="lyric-line">${escapeHtml(l)}</span>`)
+      .join('');
+    box.scrollTop = 0;
+  }
+  markLyric();
+}
+
+function markLyric() {
+  const box = $('#musicLyrics');
+  if (!box) return;
+  const items = [...box.children];
+  if (!items.length) return;
+  const active = Math.min(lyricIdx, items.length - 1);
+  items.forEach((el, i) => el.classList.toggle('active', i === active));
+  const el = items[active];
+  if (el) box.scrollTop = Math.max(0, el.offsetTop - box.clientHeight / 2 + el.offsetHeight / 2);
+}
+
+function updateListenCaption() {
+  const el = $('#listenSince');
+  if (!el) return;
+  const st = music();
+  const start = Number(st.sessionStart) || 0;
+  const mins = st.together && start ? Math.floor((Date.now() - start) / 60000) : 0;
+  el.textContent = `TA就在你的身边 一起听了 ${mins} 分钟`;
+}
 
 function startLyricRoll() {
   if (lyricTimer) return;
   lyricTimer = setInterval(() => {
     if (page !== 1) return;
-    const t = currentTrack();
-    const txt = t ? (t.lyrics || lyricsMap.get(t.id) || '') : '';
-    const lines = txt.split('\n').map(s => s.trim()).filter(Boolean);
-    if (lines.length < 2) return;
-    lyricIdx = (lyricIdx + 1) % lines.length;
-    const el = $('#musicLyrics');
-    if (!el) return;
-    el.textContent = lines[lyricIdx];
-    el.classList.remove('roll');
-    void el.offsetWidth;
-    el.classList.add('roll');
-  }, 6000);
+    updateListenCaption();
+    const box = $('#musicLyrics');
+    if (!box || box.children.length < 2) return;
+    lyricIdx = (lyricIdx + 1) % box.children.length;
+    markLyric();
+  }, 5000);
 }
 
 const OPEN_LINES = ['耳机分你一半', '这首刚好想听', '在听吗', '一起听一会儿'];
@@ -804,7 +824,10 @@ function goPage(next) {
 
 function backMusic() {
   if (page > 0) goPage(page - 1);
-  else router.close();
+  else {
+    endSession();
+    router.close();
+  }
 }
 
 function pushMusicMsg(who, text) {
@@ -814,7 +837,12 @@ function pushMusicMsg(who, text) {
   el.className = `music-msg ${who === 'me' ? 'me' : 'them'}`;
   el.textContent = text;
   box.appendChild(el);
-  while (box.children.length > 4) box.removeChild(box.firstChild);
+  while (box.children.length > 3) box.removeChild(box.firstChild);
+  const stay = Math.max(1, Number(music().msgStay) || 5);
+  setTimeout(() => {
+    el.classList.add('leaving');
+    setTimeout(() => el.remove(), 520);
+  }, stay * 1000);
 }
 
 function cardLine() {
@@ -828,10 +856,29 @@ function themSay(text) {
 }
 
 function openReply() {
-  const bar = $('#mlReply');
-  if (!bar) return;
-  bar.hidden = false;
-  $('#musicMsgInput')?.focus();
+  if (!$('#musicChatInput')) {
+    const sheet = openSheet(`
+      <div class="chat-sheet-head">
+        <h2>发消息</h2>
+        <button class="chat-sheet-x" id="musicChatClose" aria-label="关闭">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
+        </button>
+      </div>
+      <div class="chat-sheet-row">
+        <input class="chat-input" id="musicChatInput" placeholder="发消息..." autocomplete="off" maxlength="60">
+        <button class="chat-send" id="musicChatSend" aria-label="发送">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4.5a6.5 6.5 0 1 1-4.6 11.1M15.5 15.5l4 4"/></svg>
+        </button>
+      </div>
+    `);
+    sheet.classList.add('sheet-dark');
+    $('#musicChatClose').onclick = closeSheet;
+    $('#musicChatSend').onclick = sendMsg;
+    $('#musicChatInput').addEventListener('keydown', event => {
+      if (event.key === 'Enter') sendMsg();
+    });
+  }
+  setTimeout(() => $('#musicChatInput')?.focus(), 120);
 }
 
 let chatTimer = null;
@@ -848,6 +895,7 @@ function startTogether() {
   commit(s => {
     s.music.together = true;
     s.music.togetherCount = (s.music.togetherCount || 0) + 1;
+    if (!s.music.sessionStart) s.music.sessionStart = Date.now();
   });
   startChatLoop();
   goPage(1);
@@ -860,13 +908,122 @@ function startTogether() {
   if (first) setTimeout(() => themSay(cardLine()), 3200);
 }
 
+function endSession() {
+  const st = music();
+  if (!st.together) return;
+  const start = Number(st.sessionStart) || 0;
+  const minutes = start ? Math.max(1, Math.floor((Date.now() - start) / 60000)) : 0;
+  commit(s => {
+    s.music.together = false;
+    s.music.sessionStart = 0;
+    if (minutes) {
+      s.music.history = [...(s.music.history || []), { at: Date.now(), minutes }].slice(-60);
+    }
+  });
+}
+
+function openMusicLog() {
+  const el = $('#musicLog');
+  if (!el) return;
+  renderMusicLog();
+  el.hidden = false;
+}
+
+function renderMusicLog() {
+  const box = $('#musicLogList');
+  if (!box) return;
+  const list = (music().history || []).slice().reverse();
+  if (!list.length) {
+    box.innerHTML = '<p class="ml-log-empty">暂无一起听记录</p>';
+    return;
+  }
+  box.innerHTML = list.map(h => `
+    <div class="ml-log-item">
+      <span class="ml-log-dot"></span>
+      <div class="ml-log-text">
+        <b>一起听了 ${h.minutes} 分钟</b>
+        <span>${new Date(h.at).toLocaleString('zh-CN', { hour12: false })}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openMusicMore() {
+  const st = music();
+  const stay = Math.max(3, Number(st.msgStay) || 5);
+  const sheet = openSheet(`
+    ${sheetTitle('一起听')}
+    <button class="more-row" id="musicLogOpen">
+      <span>一起听记录</span>
+      <span class="more-count">${(st.history || []).length} 次</span>
+    </button>
+    <div class="more-card">
+      <h3>导入网易云歌单</h3>
+      <p>粘贴网易云歌单链接或歌单 ID，自动导入歌单内全部歌曲</p>
+      <div class="more-input-row">
+        <input class="input" id="morePlaylist" placeholder="如 https://music.163.com/playlist?id=…">
+        <button class="more-btn" id="moreImport">导入</button>
+      </div>
+      <button class="more-link" id="moreQr">扫码登录网易云，导入我的歌单</button>
+    </div>
+    <div class="more-card">
+      <h3>一起听消息停留时长</h3>
+      <p>消息气泡显示多少秒后自动消失（默认 5 秒）</p>
+      <div class="more-stepper">
+        <input class="input" type="number" min="3" max="600" id="moreStay" value="${stay}">
+        <span>秒</span>
+      </div>
+    </div>
+    <div class="more-card">
+      <h3>网易云背景图</h3>
+      <p>更换一起听页面的背景图片</p>
+      <div class="more-btns">
+        <button class="more-btn ghost" id="moreBg">点击选择图片</button>
+        <button class="more-btn ghost" id="moreBgClear">清除</button>
+      </div>
+    </div>
+    <button class="more-exit" id="moreExit">退出一起听</button>
+  `);
+
+  $('#musicLogOpen').onclick = () => {
+    closeSheet();
+    setTimeout(openMusicLog, 60);
+  };
+  $('#moreImport').onclick = () => {
+    const value = $('#morePlaylist').value.trim();
+    if (!value) { toast('请粘贴歌单链接'); return; }
+    importPlaylist(value);
+  };
+  $('#moreQr').onclick = () => {
+    closeSheet();
+    setTimeout(openConnect, 60);
+  };
+  $('#moreStay').addEventListener('change', event => {
+    const n = Math.max(3, Math.min(600, Number(event.target.value) || 5));
+    event.target.value = String(n);
+    commit(s => { s.music.msgStay = n; });
+  });
+  $('#moreBg').onclick = changeMusicBg;
+  $('#moreBgClear').onclick = () => {
+    commit(s => { s.ui.musicBg = ''; });
+    render();
+    toast('已清除背景');
+  };
+  $('#moreExit').onclick = () => {
+    closeSheet();
+    endSession();
+    router.close();
+  };
+}
+
 function sendMsg() {
-  const input = $('#musicMsgInput');
+  const input = $('#musicChatInput');
   if (!input) return;
   const text = input.value.trim();
   if (!text) return;
   input.value = '';
   pushMusicMsg('me', text);
+  closeSheet();
   if (Math.random() < .75) setTimeout(() => themSay(), 1400 + Math.random() * 1800);
 }
 
@@ -895,16 +1052,12 @@ function bind() {
   };
   $('#musicStart').onclick = startTogether;
   $('#musicBgBtn').onclick = changeMusicBg;
-  $('#musicBgBtn2').onclick = changeMusicBg;
-  $('#musicMsgBtn')?.addEventListener('click', openReply);
+  $('#musicMore').onclick = openMusicMore;
+  $('#musicLogBack').onclick = () => { $('#musicLog').hidden = true; };
+  $('#musicChatBtn').onclick = openReply;
   $('#musicMeAvatar2')?.addEventListener('click', openReply);
   $('#musicThemAvatar2')?.addEventListener('click', openReply);
   $('#musicThemAvatar')?.addEventListener('click', openReply);
-  $('#musicMsgSend').onclick = sendMsg;
-  $('#musicMsgInput').addEventListener('keydown', event => {
-    if (event.key === 'Enter') sendMsg();
-  });
-  $('#musicLyricsImport').onclick = importLyrics;
   $('#musicSeek').addEventListener('input', event => {
     const a = ensureAudio();
     if (!a.duration) return;
@@ -921,27 +1074,71 @@ function openPlaylist() {
     openAdd();
     return;
   }
-  openSheet(`
-    ${sheetTitle('歌单')}
-    <div class="music-playlist">
+  const sheet = openSheet(`
+    <div class="pl-head">
+      <h2>播放列表</h2>
+      <div class="pl-head-actions">
+        <button class="pl-clear" id="plClear">删除歌单</button>
+        <button class="pl-x" id="plClose" aria-label="关闭">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="pl-list">
       ${list.map((t, i) => `
-        <button class="playlist-row ${i === index ? 'current' : ''}" data-track="${i}">
-          <span class="pl-index">${String(i + 1).padStart(2, '0')}</span>
+        <div class="pl-row ${i === index ? 'current' : ''}" data-track="${i}">
+          <span class="pl-cover" style="background-image:url('${(httpsUrl(t.cover) || '').replace(/"/g, '%22')}')"></span>
           <span class="pl-info">
             <span class="pl-name">${escapeHtml(t.name)}</span>
             <span class="pl-artist">${escapeHtml(t.artist || (t.local ? '本次导入' : '链接'))}</span>
           </span>
-          ${i === index && !(audio && audio.paused) ? '<span class="pl-playing">播放中</span>' : ''}
-        </button>
+          ${i === index ? `<span class="pl-now">${audio && !audio.paused ? '播放中' : '当前'}</span>` : ''}
+          <button class="pl-del" data-del="${i}" aria-label="移除">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
+          </button>
+        </div>
       `).join('')}
     </div>
   `);
-  $$('[data-track]').forEach(row => {
-    row.onclick = () => {
+  sheet.classList.add('sheet-dark');
+  $('#plClose').onclick = closeSheet;
+  $('#plClear').onclick = clearAll;
+  $$('.pl-row').forEach(row => {
+    row.onclick = event => {
+      if (event.target.closest('[data-del]')) return;
       closeSheet();
       loadTrack(Number(row.dataset.track), true);
     };
   });
+  $$('[data-del]').forEach(btn => {
+    btn.onclick = event => {
+      event.stopPropagation();
+      removeTrack(Number(btn.dataset.del));
+    };
+  });
+}
+
+function removeTrack(i) {
+  const track = allTracks()[i];
+  if (!track) return;
+  if (track.local) {
+    const si = session.indexOf(track);
+    if (si >= 0) session.splice(si, 1);
+  } else {
+    commit(s => { s.music.tracks = (s.music.tracks || []).filter(t => t.id !== track.id); });
+  }
+  if (i === index) {
+    if (audio) {
+      audio.pause();
+      audio.removeAttribute('src');
+    }
+    index = 0;
+  } else if (i < index) {
+    index -= 1;
+  }
+  closeSheet();
+  render();
+  setTimeout(openPlaylist, 260);
 }
 
 /* ---------- 手势 ---------- */
@@ -1053,6 +1250,8 @@ export function initMusic() {
   $$('.screen').forEach(el => obs.observe(el, { attributes: true, attributeFilter: ['class'] }));
 
   router.register('music', { onOpen: () => {
+    const log = $('#musicLog');
+    if (log) log.hidden = true;
     render();
     const dots = $('#musicDots');
     if (dots) dots.style.display = '';
