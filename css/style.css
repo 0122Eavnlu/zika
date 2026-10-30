@@ -3111,15 +3111,30 @@ select.input option { background: var(--surface); color: var(--ink); }
 .hp1 {
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: 10px;
   min-height: 100%;
+}
+
+.hp-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hp-id {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
 }
 
 .hp-cover {
   position: relative;
-  width: 100%;
-  height: 168px;
-  border-radius: 26px;
+  flex: 0 0 auto;
+  width: 92px;
+  height: 92px;
+  border-radius: 20px;
   background: color-mix(in srgb, var(--surface-2) 70%, transparent) center / cover no-repeat;
   box-shadow: inset 0 0 0 1px var(--line-2), var(--shadow-sm);
   overflow: hidden;
@@ -3129,19 +3144,18 @@ select.input option { background: var(--surface); color: var(--ink); }
   inset: 0;
   display: grid;
   place-items: center;
-  font-size: 11px;
-  letter-spacing: .16em;
+  font-size: 18px;
   color: var(--ink-3);
 }
 .hp-cover.has-img .cover-empty { display: none; }
 
 .hp-avatar {
-  align-self: center;
-  margin-top: -40px;
+  flex: 0 0 auto;
+  margin: 0;
   position: relative;
   z-index: 2;
-  width: 62px;
-  height: 62px;
+  width: 54px;
+  height: 54px;
   padding: 3px;
   border-radius: 50%;
   display: grid;
@@ -3152,25 +3166,25 @@ select.input option { background: var(--surface); color: var(--ink); }
 .hp-avatar .avatar {
   width: 100%;
   height: 100%;
-  font-size: 22px;
+  font-size: 19px;
   box-shadow: none;
 }
 .hp-name {
-  margin-top: -4px;
-  text-align: center;
-  font-size: 15px;
-  letter-spacing: .12em;
+  margin: 0;
+  text-align: left;
+  font-size: 14px;
+  letter-spacing: .1em;
   color: var(--ink);
 }
 .hp-status {
-  align-self: center;
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 2px 8px;
+  gap: 5px;
+  padding: 0;
   background: none;
   box-shadow: none;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--ink-2);
 }
 .hp-status .status-dot {
@@ -3247,12 +3261,15 @@ select.input option { background: var(--surface); color: var(--ink); }
   color: var(--paper);
 }
 
-.hp1 .pin-card { height: 140px; margin: 0; }
+.hp1 .pin-card { width: 112px; height: 112px; margin: 0; flex: 0 0 auto; }
 .hp1 .home-grid {
   margin: 4px 0 0;
   padding: 4px 0 0;
-  gap: 16px 10px;
+  gap: 12px 8px;
 }
+.home-grid .tile { width: 50px; height: 50px; border-radius: 15px; }
+.home-grid .tile svg { width: 26px; height: 26px; }
+.home-grid .app-name { font-size: 11px; }
 
 .hp1 .hp-cover,
 .hp1 .hp-clock,
@@ -3448,24 +3465,21 @@ select.input option { background: var(--surface); color: var(--ink); }
   color: rgba(244, 244, 246, .42);
 }
 
+.listen-people { position: relative; }
 .music-bubbles {
   position: absolute;
-  top: calc(100% - 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: max-content;
-  max-width: 250px;
+  top: calc(100% - 4px);
+  left: -8px;
+  right: -8px;
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 6px;
+  flex-direction: column;
+  gap: 5px;
   z-index: 3;
   pointer-events: none;
 }
 .music-bubbles .music-msg {
-  max-width: 150px;
-  padding: 7px 11px;
+  max-width: 62%;
+  padding: 6px 11px;
   border-radius: 12px;
   font-size: 11.5px;
   line-height: 1.45;
@@ -3476,10 +3490,12 @@ select.input option { background: var(--surface); color: var(--ink); }
   -webkit-backdrop-filter: blur(8px);
 }
 .music-bubbles .music-msg.me {
+  align-self: flex-end;
   background: rgba(255, 255, 255, .3);
   color: #fff;
 }
 .music-bubbles .music-msg.them {
+  align-self: flex-start;
   background: rgba(255, 255, 255, .14);
 }
 .music-bubbles .music-msg.leaving { animation: bubbleOut .5s var(--ease) both; }
@@ -3684,6 +3700,21 @@ select.input option { background: var(--surface); color: var(--ink); }
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1);
 }
 .sheet-dark .input::placeholder { color: rgba(255, 255, 255, .38); }
+
+.sheet.sheet-center {
+  align-self: center;
+  width: min(88%, 380px);
+  max-height: 80%;
+  border-radius: 22px;
+  padding: 18px 20px calc(18px + env(safe-area-inset-bottom));
+  animation: sheetCenterIn .34s var(--ease) both;
+  box-shadow: 0 26px 70px -24px rgba(0, 0, 0, .65);
+}
+.sheet.sheet-center .grabber { display: none; }
+@keyframes sheetCenterIn {
+  from { transform: translateY(8px) scale(.94); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
 
 .chat-sheet-head {
   display: flex;

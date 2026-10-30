@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261030j';
-import { initSettings } from './settings.js?v=20261030j';
-import { initCards } from './cards.js?v=20261030j';
-import { initChat } from './chat.js?v=20261030j';
-import { initCall, hideCall } from './call.js?v=20261030j';
-import { initStatus } from './status.js?v=20261030j';
-import { initMoments } from './moments.js?v=20261030j';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261030j';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030j';
-import { closeSheet } from './ui.js?v=20261030j';
-import { $, $$, setAvatar, toast, pickFile, compressImage } from './util.js?v=20261030j';
-import { get, subscribe, commit } from './state.js?v=20261030j';
-import { openMeSheet } from './chat.js?v=20261030j';
+import { initAppearance } from './appearance.js?v=20261030k';
+import { initSettings } from './settings.js?v=20261030k';
+import { initCards } from './cards.js?v=20261030k';
+import { initChat } from './chat.js?v=20261030k';
+import { initCall, hideCall } from './call.js?v=20261030k';
+import { initStatus } from './status.js?v=20261030k';
+import { initMoments } from './moments.js?v=20261030k';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261030k';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030k';
+import { closeSheet } from './ui.js?v=20261030k';
+import { $, $$, setAvatar, toast, pickFile, compressImage } from './util.js?v=20261030k';
+import { get, subscribe, commit } from './state.js?v=20261030k';
+import { openMeSheet } from './chat.js?v=20261030k';
 
 function renderHome() {
   const s = get();
@@ -29,7 +29,7 @@ function renderHome() {
 
   const cover = $('#homeCover');
   if (cover) {
-    const img = s.ui.homeCover || s.ui.homeBg || '';
+    const img = (s.ui.homeCover || s.ui.homeBg || '').replace(/([?&]param=)\d+y\d+/i, (m, key) => `${key}1024y1024`);
     if (img) {
       cover.style.backgroundImage = `url("${img}")`;
       cover.classList.add('has-img');
@@ -100,6 +100,7 @@ function bindHome() {
     toast('已更换图片');
   });
   $('#homeAvatar')?.addEventListener('click', () => openMeSheet());
+  $('#homeName')?.addEventListener('click', () => openMeSheet());
   $('#homeStatusBtn')?.addEventListener('click', () => openMeSheet());
   $$('.app[data-app]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -161,7 +162,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261030j', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261030k', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {

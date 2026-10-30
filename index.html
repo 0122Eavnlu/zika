@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#efece5">
 <title>字卡</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=20261030j">
+<link rel="stylesheet" href="css/style.css?v=20261030k">
 </head>
 <body>
 
@@ -31,17 +31,21 @@
     <div class="home-pager" id="homePager">
       <div class="home-page" data-hpage="0">
         <div class="hp1">
-          <button class="hp-cover" id="homeCover" aria-label="更换封面">
-            <span class="cover-empty">＋ 选择封面</span>
-          </button>
-          <button class="hp-avatar" id="homeAvatar" aria-label="我的头像">
-            <span class="avatar xl" id="homeAvatarView"></span>
-          </button>
-          <div class="hp-name" id="homeName">我</div>
-          <button class="hp-status" id="homeStatusBtn">
-            <span class="status-dot"></span>
-            <span id="homeStatus">添加状态</span>
-          </button>
+          <div class="hp-head">
+            <button class="hp-avatar" id="homeAvatar" aria-label="我的头像">
+              <span class="avatar" id="homeAvatarView"></span>
+            </button>
+            <div class="hp-id">
+              <div class="hp-name" id="homeName">我</div>
+              <button class="hp-status" id="homeStatusBtn">
+                <span class="status-dot"></span>
+                <span id="homeStatus">添加状态</span>
+              </button>
+            </div>
+            <button class="hp-cover" id="homeCover" aria-label="更换封面">
+              <span class="cover-empty">＋</span>
+            </button>
+          </div>
 
           <div class="hp-clock">
             <div class="hp-clock-top">
@@ -777,6 +781,6 @@
   <style id="user-font"></style>
 </div>
 
-<script type="module" src="js/app.js?v=20261030j"></script>
+<script type="module" src="js/app.js?v=20261030k"></script>
 </body>
 </html>

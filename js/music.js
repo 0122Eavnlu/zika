@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030j';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030j';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030j';
-import * as router from './router.js?v=20261030j';
+import { get, commit, subscribe } from './state.js?v=20261030k';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030k';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030k';
+import * as router from './router.js?v=20261030k';
 
 const session = [];
 const lyricsMap = new Map();
@@ -144,6 +144,7 @@ function syncProgress() {
     const ratio = a.duration ? a.currentTime / a.duration : 0;
     seek.value = String(Math.round(ratio * 1000));
   }
+  syncLyric();
 }
 
 function syncPlayButton() {
@@ -160,7 +161,7 @@ function syncPlayButton() {
 const COVER_GRADIENT = 'linear-gradient(150deg, #a99a7c, #7d6f55 55%, #5d5343)';
 
 function hiRes(url) {
-  return url.replace(/([?&]param=)\d+y\d+/i, (m, key) => `${key}800y800`);
+  return url.replace(/([?&]param=)\d+y\d+/i, (m, key) => `${key}1024y1024`);
 }
 
 function applyCover(el, track) {
@@ -751,22 +752,47 @@ export function openMusic() {
 let lyricTrack = '';
 let lyricIdx = 0;
 let lyricTimer = null;
+let lyricTimes = [];
+
+function parseLrc(text) {
+  const out = [];
+  text.split('\n').forEach(raw => {
+    const line = raw.trim();
+    if (!line) return;
+    const tags = [...line.matchAll(/\[(\d{1,3}):(\d{2})(?:[.:](\d{1,3}))?\]/g)];
+    const body = line.replace(/\[[^\]]*\]/g, '').trim();
+    if (!tags.length) {
+      if (line) out.push({ t: null, text: line });
+      return;
+    }
+    if (!body) return;
+    tags.forEach(tag => {
+      const frac = tag[3] ? Number(`0.${tag[3]}`) : 0;
+      out.push({ t: Number(tag[1]) * 60 + Number(tag[2]) + frac, text: body });
+    });
+  });
+  return out;
+}
 
 function renderLyrics(track) {
   const box = $('#musicLyrics');
   if (!box) return;
   const txt = track ? (track.lyrics || lyricsMap.get(track.id) || '') : '';
-  const lines = txt.split('\n').map(l => l.trim()).filter(Boolean);
-  const key = `${track ? track.id : ''}|${lines.join('\n')}`;
+  const parsed = parseLrc(txt);
+  const timed = parsed.filter(p => p.t != null);
+  const use = timed.length ? timed : parsed.map(p => ({ t: null, text: p.text }));
+  const key = `${track ? track.id : ''}|${use.map(p => p.text).join('\n')}`;
   if (lyricTrack !== key || !box.children.length) {
     lyricTrack = key;
     lyricIdx = 0;
-    box.innerHTML = (lines.length ? lines : ['暂未导入歌词'])
-      .map(l => `<span class="lyric-line">${escapeHtml(l)}</span>`)
+    box.innerHTML = (use.length ? use : [{ text: '暂未导入歌词' }])
+      .map(p => `<span class="lyric-line">${escapeHtml(p.text)}</span>`)
       .join('');
     box.scrollTop = 0;
+    lyricTimes = use.map(p => p.t);
   }
-  markLyric();
+  if (lyricTimes.length) syncLyric();
+  else markLyric();
 }
 
 function markLyric() {
@@ -778,6 +804,18 @@ function markLyric() {
   items.forEach((el, i) => el.classList.toggle('active', i === active));
   const el = items[active];
   if (el) box.scrollTop = Math.max(0, el.offsetTop - box.clientHeight / 2 + el.offsetHeight / 2);
+}
+
+function syncLyric() {
+  if (!lyricTimes.length || !audio) return;
+  const t = (audio.currentTime || 0) + .25;
+  let i = 0;
+  while (i < lyricTimes.length && lyricTimes[i] <= t) i++;
+  const next = Math.max(0, i - 1);
+  if (next !== lyricIdx) {
+    lyricIdx = next;
+    markLyric();
+  }
 }
 
 function updateListenCaption() {
@@ -794,6 +832,7 @@ function startLyricRoll() {
   lyricTimer = setInterval(() => {
     if (page !== 1) return;
     updateListenCaption();
+    if (lyricTimes.length) return;
     if (!audio || audio.paused || !audio.src) return;
     const box = $('#musicLyrics');
     if (!box || box.children.length < 2) return;
@@ -872,7 +911,7 @@ function openReply() {
         </button>
       </div>
     `);
-    sheet.classList.add('sheet-dark');
+    sheet.classList.add('sheet-dark', 'sheet-center');
     $('#musicChatClose').onclick = closeSheet;
     $('#musicChatSend').onclick = sendMsg;
     $('#musicChatInput').addEventListener('keydown', event => {

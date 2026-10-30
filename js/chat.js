@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261030j';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261030j';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet } from './ui.js?v=20261030j';
-import * as router from './router.js?v=20261030j';
-import { playSound } from './audio.js?v=20261030j';
-import { startCall } from './call.js?v=20261030j';
-import { openCardSheet } from './cards.js?v=20261030j';
-import { openMoments } from './moments.js?v=20261030j';
-import { pickLyric, isListening } from './music.js?v=20261030j';
+import { get, commit, subscribe } from './state.js?v=20261030k';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261030k';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet } from './ui.js?v=20261030k';
+import * as router from './router.js?v=20261030k';
+import { playSound } from './audio.js?v=20261030k';
+import { startCall } from './call.js?v=20261030k';
+import { openCardSheet } from './cards.js?v=20261030k';
+import { openMoments } from './moments.js?v=20261030k';
+import { pickLyric, isListening } from './music.js?v=20261030k';
 
 let busy = false;
 let replying = false;
@@ -123,7 +123,7 @@ function buildMessage(msg) {
     inner = `<div class="call-msg"><span class="call-ic">${CALL_ICON}</span><div><div class="call-title">${escapeHtml(msg.text || '视频通话')}</div><div class="call-sub">${escapeHtml(callSub(msg))}</div></div></div>`;
   } else if (type === 'lyric') {
     bubbleCls = 'bubble lyric';
-    inner = escapeHtml(`${msg.lead || '我想给你的'}《${msg.song || ''}》${msg.lyric || ''}`);
+    inner = escapeHtml(msg.lyric || msg.text || '');
   } else {
     inner = (msg.quote ? `<span class="quote">${escapeHtml(msg.quote)}</span>` : '') + escapeHtml(msg.text);
   }
