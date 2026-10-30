@@ -684,8 +684,8 @@
             <input class="music-range" type="range" min="0" max="1000" value="0" id="musicSeek" aria-label="进度">
             <span class="music-time" id="musicDur">0:00</span>
           </div>
-          <div class="ml-compose" id="mlCompose" hidden>
-            <input class="ml-input" id="musicMsgInput" placeholder="说点什么…" autocomplete="off">
+          <div class="ml-reply" id="mlReply" hidden>
+            <input class="ml-input" id="musicMsgInput" placeholder="回复 TA…" autocomplete="off">
             <button class="ml-send" id="musicMsgSend">发送</button>
           </div>
           <div class="ml-controls music-controls">
@@ -698,9 +698,6 @@
             </button>
             <button class="mctl" id="musicNext" aria-label="下一首">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5.5v13M6 6.4v11.2L15.4 12z"/></svg>
-            </button>
-            <button class="mctl small" id="musicMsgBtn" aria-label="发消息">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 11.4a7.5 7.5 0 0 1 15 0v4.2a3 3 0 0 1-3 3h-5.4l-3.4 2.4v-2.6A7.4 7.4 0 0 1 4.5 11.4z"/></svg>
             </button>
           </div>
           <button class="ghost-btn wide music-import-btn" id="musicLyricsImport">导入歌词（LRC / TXT）</button>
@@ -741,19 +738,6 @@
             <div class="widget-sub" id="wSub">一起听 0 次</div>
           </div>
         </div>
-
-        <div class="widget-anniv">
-          <div class="widget-anniv-label">在一起第</div>
-          <div class="widget-anniv-days" id="wDays">—</div>
-          <div class="widget-anniv-foot" id="wDaysDate"></div>
-        </div>
-
-        <div class="widget-stats">
-          <span><b id="musicCount">0</b> 首歌曲</span>
-          <span class="widget-dot">·</span>
-          <span>一起听 <b id="musicTogetherCount">0</b> 次</span>
-        </div>
-        <div class="music-hint">主屏向右滑动进入这一页；在这里向右滑到小组件，向左滑返回。</div>
       </div>
     </div>
 

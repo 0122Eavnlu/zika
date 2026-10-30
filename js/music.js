@@ -198,7 +198,7 @@ function render() {
   if ($('#musicArtist')) $('#musicArtist').textContent = track ? (track.artist || '一起听歌') : '点右上角歌单按钮添加音乐';
   if ($('#wNow')) $('#wNow').textContent = track ? track.name : '还没有歌曲';
   if ($('#wArtist')) $('#wArtist').textContent = track ? (track.artist || '一起听歌') : '一起听歌';
-  $('#musicMode').textContent = (MODES.find(m => m.key === music().mode) || MODES[0]).label;
+  if ($('#musicMode')) $('#musicMode').textContent = (MODES.find(m => m.key === music().mode) || MODES[0]).label;
 
   const lyr = track ? (track.lyrics || lyricsMap.get(track.id) || '') : '';
   const lines = lyr.split('\n').map(l => l.trim()).filter(Boolean);
@@ -219,8 +219,8 @@ function render() {
   }
   startLyricRoll();
 
-  $('#musicCount').textContent = String(list.length);
-  $('#musicTogetherCount').textContent = String(music().togetherCount || 0);
+  if ($('#musicCount')) $('#musicCount').textContent = String(list.length);
+  if ($('#musicTogetherCount')) $('#musicTogetherCount').textContent = String(music().togetherCount || 0);
 
   const bgEl = $('#musicBg');
   if (bgEl) {
@@ -237,18 +237,6 @@ function render() {
     .forEach(([sel, who]) => setAvatar($(sel), who?.name, who?.avatar));
 
   if ($('#wSub')) $('#wSub').textContent = `一起听 ${music().togetherCount || 0} 次`;
-  const ann = s.anniversary || {};
-  if ($('#wDays')) {
-    if (ann.date) {
-      const start = new Date(`${ann.date}T00:00:00`);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      $('#wDays').textContent = String(Math.max(0, Math.floor((today - start) / 86400000)));
-    } else {
-      $('#wDays').textContent = '—';
-    }
-  }
-  if ($('#wDaysDate')) $('#wDaysDate').textContent = ann.date ? `${ann.date.replace(/-/g, '.')} 起` : '点主屏纪念日卡片设置';
 
   syncPlayButton();
   syncProgress();
@@ -794,7 +782,7 @@ function goPage(next) {
   page = Math.max(0, Math.min(2, next));
   const pager = $('#musicPager');
   if (pager) pager.style.transform = `translate3d(${-page * 33.3333}%, 0, 0)`;
-  $('#screen-music')?.classList.toggle('is-listen', page >= 1);
+  $('#screen-music')?.classList.toggle('is-listen', page === 1);
   updateMusicDots();
   if (page === 1) {
     render();
@@ -817,9 +805,30 @@ function pushMusicMsg(who, text) {
   while (box.children.length > 4) box.removeChild(box.firstChild);
 }
 
+function cardLine() {
+  const items = (get().cards?.items || []).filter(c => !c.blocked && c.text);
+  return items.length ? randPick(items).text : randPick(REPLY_LINES);
+}
+
 function themSay(text) {
   if (page !== 1) return;
-  pushMusicMsg('them', text || randPick(REPLY_LINES));
+  pushMusicMsg('them', text || cardLine());
+}
+
+function openReply() {
+  const bar = $('#mlReply');
+  if (!bar) return;
+  bar.hidden = false;
+  $('#musicMsgInput')?.focus();
+}
+
+let chatTimer = null;
+
+function startChatLoop() {
+  if (chatTimer) return;
+  chatTimer = setInterval(() => {
+    if (page === 1 && Math.random() < .5) themSay();
+  }, 60000);
 }
 
 function startTogether() {
@@ -828,6 +837,7 @@ function startTogether() {
     s.music.together = true;
     s.music.togetherCount = (s.music.togetherCount || 0) + 1;
   });
+  startChatLoop();
   goPage(1);
   if (!allTracks().length) {
     toast('先加一首歌吧');
@@ -835,7 +845,7 @@ function startTogether() {
   } else if (audio && !audio.src) {
     loadTrack(index, true);
   }
-  if (first) setTimeout(() => themSay(randPick(OPEN_LINES)), 3200);
+  if (first) setTimeout(() => themSay(cardLine()), 3200);
 }
 
 function sendMsg() {
@@ -874,12 +884,10 @@ function bind() {
   $('#musicStart').onclick = startTogether;
   $('#musicBgBtn').onclick = changeMusicBg;
   $('#musicBgBtn2').onclick = changeMusicBg;
-  $('#musicMsgBtn').onclick = () => {
-    const box = $('#mlCompose');
-    if (!box) return;
-    box.hidden = !box.hidden;
-    if (!box.hidden) $('#musicMsgInput').focus();
-  };
+  $('#musicMsgBtn')?.addEventListener('click', openReply);
+  $('#musicMeAvatar2')?.addEventListener('click', openReply);
+  $('#musicThemAvatar2')?.addEventListener('click', openReply);
+  $('#musicThemAvatar')?.addEventListener('click', openReply);
   $('#musicMsgSend').onclick = sendMsg;
   $('#musicMsgInput').addEventListener('keydown', event => {
     if (event.key === 'Enter') sendMsg();
@@ -1050,7 +1058,12 @@ export function initMusic() {
 
   router.register('music', { onOpen: () => {
     render();
-    goPage(music().together && allTracks().length ? 1 : 0);
+    if (music().together && allTracks().length) {
+      startChatLoop();
+      goPage(1);
+    } else {
+      goPage(0);
+    }
   } });
 
   subscribe(() => {
