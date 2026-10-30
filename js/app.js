@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261030t';
-import { initSettings } from './settings.js?v=20261030t';
-import { initCards } from './cards.js?v=20261030t';
-import { initChat } from './chat.js?v=20261030t';
-import { initCall, hideCall } from './call.js?v=20261030t';
-import { initStatus } from './status.js?v=20261030t';
-import { initMoments } from './moments.js?v=20261030t';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261030t';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030t';
-import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261030t';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml } from './util.js?v=20261030t';
-import { get, subscribe, commit } from './state.js?v=20261030t';
-import { openMeSheet } from './chat.js?v=20261030t';
+import { initAppearance } from './appearance.js?v=20261030u';
+import { initSettings } from './settings.js?v=20261030u';
+import { initCards } from './cards.js?v=20261030u';
+import { initChat } from './chat.js?v=20261030u';
+import { initCall, hideCall } from './call.js?v=20261030u';
+import { initStatus } from './status.js?v=20261030u';
+import { initMoments } from './moments.js?v=20261030u';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261030u';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030u';
+import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261030u';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml } from './util.js?v=20261030u';
+import { get, subscribe, commit } from './state.js?v=20261030u';
+import { openMeSheet } from './chat.js?v=20261030u';
 
 function renderHome() {
   const s = get();
@@ -131,6 +131,7 @@ function bindPager() {
     sy = event.touches[0].clientY;
     base = -homePage * (pager.offsetWidth / 2 || window.innerWidth);
     dragging = false;
+    pager.classList.add('dragging');
     pager.style.transition = 'none';
   }, { passive: true });
 
@@ -151,6 +152,7 @@ function bindPager() {
   }, { passive: true });
 
   pager.addEventListener('touchend', event => {
+    pager.classList.remove('dragging');
     const t = event.changedTouches[0];
     pager.style.transition = '';
     if (!t || !dragging) {
@@ -364,7 +366,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261030t', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261030u', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -396,11 +398,41 @@ function fitViewport() {
   }
 }
 
+function initKeepAlive() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  let ctx = null;
+  let started = false;
+  const ensure = () => {
+    try {
+      if (!ctx) {
+        ctx = new AC();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        gain.gain.value = 0.0015;
+        osc.frequency.value = 24;
+        osc.connect(gain).connect(ctx.destination);
+        osc.start();
+        started = true;
+      }
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    } catch {}
+  };
+  const kick = () => ensure();
+  ['pointerdown', 'touchstart', 'keydown'].forEach(name => {
+    document.addEventListener(name, kick, { once: true, passive: true });
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && started) ensure();
+  });
+}
+
 function boot() {
   fitViewport();
   window.visualViewport?.addEventListener('resize', fitViewport);
   window.visualViewport?.addEventListener('scroll', fitViewport);
   window.addEventListener('resize', fitViewport);
+  initKeepAlive();
   initAppearance();
   initSettings();
   initCards();

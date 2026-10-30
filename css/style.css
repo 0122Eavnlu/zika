@@ -4266,3 +4266,33 @@ select.input option { background: var(--surface); color: var(--ink); }
   box-shadow: 0 10px 26px -14px rgba(0, 0, 0, .8);
 }
 .listen-ctl.play svg * { fill: currentColor; stroke: none; }
+
+/* 第二页：外观 / 设定 */
+.hp2-apps {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 2px;
+  padding-bottom: 6px;
+}
+.hp2-apps .tile {
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+}
+.hp2-apps .tile svg { width: 24px; height: 24px; }
+.hp2-apps .app-name { font-size: 11px; color: var(--ink-3); }
+
+/* 流畅度优化 */
+:root { --frost-blur: 10px; --frost-alpha: 72%; }
+#app::after {
+  mix-blend-mode: normal;
+  opacity: .16;
+}
+[data-theme="dark"] #app::after { mix-blend-mode: normal; opacity: .1; }
+.home-pager { will-change: transform; transform: translateZ(0); }
+.home-pager.dragging { transition: none !important; }
+.tile, .anniv-card, .hp2-cover, .widget-music, .polaroid {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}

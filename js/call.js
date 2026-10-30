@@ -1,5 +1,5 @@
-import { get, commit } from './state.js?v=20261030t';
-import { $, setAvatar, uid, randInt, toast } from './util.js?v=20261030t';
+import { get, commit } from './state.js?v=20261030u';
+import { $, setAvatar, uid, randInt, toast } from './util.js?v=20261030u';
 
 let active = false;
 let connected = false;
@@ -107,15 +107,6 @@ function resolveOutcome() {
   if (roll < answer) {
     connected = true;
     setStatus('正在通话…');
-    resolveId = setTimeout(() => {
-      if (!active || !connected) return;
-      connected = false;
-      setStatus('通话结束');
-      const sec = elapsed();
-      record('ended', sec);
-      notify(`通话结束 · ${fmt(sec)}`);
-      setTimeout(end, 1200);
-    }, randInt(12000, 20000));
     return;
   }
 
