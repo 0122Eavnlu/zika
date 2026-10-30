@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030p';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030p';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030p';
-import * as router from './router.js?v=20261030p';
+import { get, commit, subscribe } from './state.js?v=20261030q';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030q';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030q';
+import * as router from './router.js?v=20261030q';
 
 const session = [];
 const lyricsMap = new Map();
@@ -73,7 +73,7 @@ async function recoverAudio(track) {
   }
   recoveredIds.add(track.id);
   try {
-    const res = await fetch(track.url);
+    const res = await fetch(resolveUrl(track), { cache: 'no-store' });
     if (!res.ok) throw new Error(String(res.status));
     const blob = await res.blob();
     const a = ensureAudio();
@@ -110,7 +110,7 @@ function loadTrack(i, autoplay) {
   index = ((i % list.length) + list.length) % list.length;
   const track = list[index];
   const a = ensureAudio();
-  a.src = httpsUrl(track.url);
+  a.src = resolveUrl(track);
   updateMediaSession(track);
   render();
   if (autoplay) a.play().catch(() => {});
@@ -378,6 +378,24 @@ function httpsUrl(url) {
   if (!text) return '';
   if (text.startsWith('//')) return `https:${text}`;
   return text.replace(/^http:\/\//i, 'https://');
+}
+
+function freshUrl(url) {
+  const text = httpsUrl(url);
+  if (!text) return '';
+  if (/type=url|type=song|type=playlist|type=album/.test(text) && /meting|injiahow|i-meto|w4t/.test(text)) {
+    return `${text}${text.includes('?') ? '&' : '?'}_=${Date.now()}`;
+  }
+  return text;
+}
+
+function resolveUrl(track) {
+  if (!track) return '';
+  const url = freshUrl(track.url);
+  if (/meting|injiahow|i-meto/.test(url)) return url;
+  const idMatch = String(track.lrcUrl || '').match(/[?&]id=(\d+)/);
+  if (idMatch) return `${API}&type=url&id=${idMatch[1]}&_=${Date.now()}`;
+  return url;
 }
 
 function pushTracks(items) {

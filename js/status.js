@@ -1,6 +1,6 @@
-import { get, commit, subscribe } from './state.js?v=20261030p';
-import { $, $$, escapeHtml, uid, pick, randInt, toast } from './util.js?v=20261030p';
-import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261030p';
+import { get, commit, subscribe } from './state.js?v=20261030q';
+import { $, $$, escapeHtml, uid, pick, randInt, toast } from './util.js?v=20261030q';
+import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261030q';
 
 const MIN_WAIT = 10 * 60 * 1000;
 const MAX_WAIT = 120 * 60 * 1000;
