@@ -1,13 +1,34 @@
-import { get, commit, subscribe } from './state.js?v=20261030r';
-import { $, escapeHtml, timeText, setAvatar, toast, uid, randInt, pick, pickFile, compressImage } from './util.js?v=20261030r';
-import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261030r';
-import * as router from './router.js?v=20261030r';
+import { get, commit, subscribe } from './state.js?v=20261030s';
+import { $, escapeHtml, timeText, setAvatar, toast, uid, randInt, pick, pickFile, compressImage } from './util.js?v=20261030s';
+import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261030s';
+import * as router from './router.js?v=20261030s';
 
 let origin = 'home';
 let draft = { text: '', stickerUrl: '', imageUrl: '', fromCards: false };
 
 const HEART = `<svg viewBox="0 0 24 24"><path d="M12 20.2c-.3 0-.6-.1-.8-.3C6.9 16 3.6 13.2 2.1 10.7 1 8.8 1 6.3 2.4 4.7c1.6-1.8 4.4-1.9 6.2-.3.5.4 1 1 1.4 1.6.4-.6.9-1.2 1.4-1.6 1.8-1.6 4.6-1.5 6.2.3 1.4 1.6 1.4 4.1.3 6-1.5 2.5-4.8 5.3-9.1 9.2-.2.2-.5.3-.8.3z"/></svg>`;
 const BUBBLE = `<svg viewBox="0 0 24 24"><path d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H10l-4.6 3.1a.6.6 0 0 1-.9-.5V16.5H4A1.5 1.5 0 0 1 2.5 15V7A1.5 1.5 0 0 1 4 5.5z"/></svg>`;
+const STAR = `<svg viewBox="0 0 24 24"><path d="M12 3.8l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/></svg>`;
+
+function saveMoment(id) {
+  const post = get().moments.posts.find(p => p.id === id);
+  if (!post) return;
+  const mine = post.by === 'me';
+  commit(s => {
+    s.favorites = s.favorites || { his: [], mine: [] };
+    const list = s.favorites[mine ? 'his' : 'mine'];
+    if (!list.some(x => x.id === id)) {
+      list.unshift({
+        id,
+        kind: 'moment',
+        text: post.text || '',
+        url: post.imageUrl || post.stickerUrl || '',
+        at: Date.now(),
+      });
+    }
+  });
+  toast('已收藏');
+}
 
 const POST_CHANCE = 85;   // 对方发朋友圈
 const SHOT_CHANCE = 55;   // 拼字卡 / 聊天截图发朋友圈
@@ -163,6 +184,7 @@ function postHtml(post) {
           <span class="heart ${liked ? 'on' : ''}">${HEART}</span>${escapeHtml(likedLabel)}
         </button>
         <button class="moment-act" data-comment="${post.id}"><span class="bubble-ic">${BUBBLE}</span>${commentCount || ''}</button>
+        <button class="moment-act" data-save="${post.id}" aria-label="收藏"><span class="save-ic">${STAR}</span></button>
       </div>
     </div>
     ${commentHtml}
@@ -428,7 +450,9 @@ export function initMoments() {
       return;
     }
     const commentBtn = event.target.closest('[data-comment]');
-    if (commentBtn) { addComment(commentBtn.dataset.comment); }
+    if (commentBtn) { addComment(commentBtn.dataset.comment); return; }
+    const saveBtn = event.target.closest('[data-save]');
+    if (saveBtn) saveMoment(saveBtn.dataset.save);
   });
 
   router.register('moments', { onOpen: () => { render(); maybePost(); } });

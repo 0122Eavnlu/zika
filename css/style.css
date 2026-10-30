@@ -2095,7 +2095,8 @@ select.input option { background: var(--surface); color: var(--ink); }
   place-items: center;
 }
 .moment-act .heart svg,
-.moment-act .bubble-ic svg {
+.moment-act .bubble-ic svg,
+.moment-act .save-ic svg {
   width: 15px; height: 15px;
   stroke: currentColor;
   stroke-width: 1.5;
@@ -2103,6 +2104,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+.moment-act .save-ic { display: grid; place-items: center; }
 .moment-act .heart.on svg { fill: #c8452f; stroke: #c8452f; }
 .moment-act .heart.on { color: #c8452f; }
 .moment-comments {

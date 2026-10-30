@@ -1,4 +1,4 @@
-import { $, escapeHtml } from './util.js?v=20261030r';
+import { $, escapeHtml } from './util.js?v=20261030s';
 
 let keyHandler = null;
 let closeToken = 0;
