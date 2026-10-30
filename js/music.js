@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030h';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030h';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030h';
-import * as router from './router.js?v=20261030h';
+import { get, commit, subscribe } from './state.js?v=20261030i';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030i';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030i';
+import * as router from './router.js?v=20261030i';
 
 const session = [];
 const lyricsMap = new Map();
@@ -794,6 +794,7 @@ function startLyricRoll() {
   lyricTimer = setInterval(() => {
     if (page !== 1) return;
     updateListenCaption();
+    if (!audio || audio.paused || !audio.src) return;
     const box = $('#musicLyrics');
     if (!box || box.children.length < 2) return;
     lyricIdx = (lyricIdx + 1) % box.children.length;
