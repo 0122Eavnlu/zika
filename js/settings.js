@@ -22,6 +22,16 @@ function bindControls() {
     });
   });
 
+  $$('[data-range]').forEach(el => {
+    el.addEventListener('input', () => {
+      const key = el.dataset.range;
+      const value = Number(el.value);
+      const label = $(`[data-range-val="${key}"]`);
+      if (label) label.textContent = `${value}%`;
+      commit(s => setPath(key, value));
+    });
+  });
+
   $$('[data-input]').forEach(el => {
     el.addEventListener('change', () => {
       const key = el.dataset.input;
@@ -46,6 +56,13 @@ function syncControls() {
   });
   $$('[data-select]').forEach(el => {
     if (document.activeElement !== el) el.value = String(getPath(el.dataset.select) ?? '');
+  });
+  $$('[data-range]').forEach(el => {
+    const key = el.dataset.range;
+    const value = Number(getPath(key) ?? 0);
+    if (document.activeElement !== el) el.value = String(value);
+    const label = $(`[data-range-val="${key}"]`);
+    if (label) label.textContent = `${value}%`;
   });
   $$('[data-input]').forEach(el => {
     if (document.activeElement !== el) {

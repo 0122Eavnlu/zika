@@ -1,6 +1,7 @@
 import { uid, toast } from './util.js';
 
 const KEY = 'zika.state.v1';
+const VERSION = 2;
 
 function seeds() {
   const g1 = uid(), g2 = uid(), g3 = uid();
@@ -33,7 +34,7 @@ function defaults(withSeed = true) {
     { id: uid(), name: '迟野', avatar: '' },
   ];
   return {
-    version: 1,
+    version: VERSION,
     persona: { name: '阿墨', avatar: '', status: '寻找灵魂伴侣', statusAt: 0, statusWait: 0, showName: true, showAvatar: true },
     me: { name: '我', avatar: '', status: '' },
     anniversary: { enabled: true, date: '', text: '我们在一起' },
@@ -58,8 +59,9 @@ function defaults(withSeed = true) {
       proactiveMin: 15,
       proactiveMax: 45,
       readSkip: false,
-      readSkipRate: 0.2,
+      readSkipRate: 0.1,
       quote: true,
+      quoteChance: 30,
       chain: false,
       notify: false,
       sound: true,
@@ -70,11 +72,11 @@ function defaults(withSeed = true) {
         { id: 's2', name: '风铃', preset: 'chime' },
         { id: 's3', name: '墨滴', preset: 'drop' },
       ],
-      stickerChance: 5,
-      emojiChance: 10,
-      callChance: 20,
-      callAnswer: 20,
-      callHangup: 5,
+      stickerChance: 20,
+      emojiChance: 20,
+      callChance: 10,
+      callAnswer: 85,
+      callHangup: 15,
       momentChance: 70,
       momentShotChance: 25,
       momentReplyChance: 90,
@@ -87,7 +89,7 @@ function defaults(withSeed = true) {
     cards: seed.cards,
     nudge: {
       enabled: true,
-      chance: 30,
+      chance: 3,
       items: [{ id: uid(), text: '拍了拍你', at: Date.now() }],
     },
     stickers: [],
@@ -114,19 +116,43 @@ function deepMerge(base, extra) {
   return extra !== undefined ? extra : base;
 }
 
+function migrate(state) {
+  state.behavior.stickerChance = 20;
+  state.behavior.emojiChance = 20;
+  state.behavior.callChance = 10;
+  state.behavior.callAnswer = 85;
+  state.behavior.callHangup = 15;
+  state.behavior.readSkipRate = 0.1;
+  state.behavior.quoteChance = 30;
+  if (state.nudge) state.nudge.chance = 3;
+  state.version = VERSION;
+}
+
+let pendingSave = false;
+
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return defaults(true);
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return defaults(true);
-    return deepMerge(defaults(false), parsed);
+    const merged = deepMerge(defaults(false), parsed);
+    const from = Number(parsed.version) || 1;
+    if (from < VERSION) {
+      migrate(merged);
+      pendingSave = true;
+    }
+    return merged;
   } catch {
     return defaults(true);
   }
 }
 
 let state = load();
+if (pendingSave) {
+  pendingSave = false;
+  save();
+}
 const listeners = new Set();
 
 export function get() { return state; }

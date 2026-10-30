@@ -454,7 +454,7 @@ export async function triggerReply({ proactive = false, allowCall = true } = {})
 
   const count = randInt(1, 3);
   const chosen = [...pool].sort(() => Math.random() - .5).slice(0, Math.min(count, pool.length));
-  const useQuote = b.quote && Math.random() < .65;
+  const useQuote = b.quote && Math.random() * 100 < Number(b.quoteChance ?? 30);
   const quote = useQuote ? pickQuote() : '';
   const groupOn = get().group.enabled;
   const randomSender = () => (groupOn ? pick(get().group.members) : null);

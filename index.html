@@ -230,7 +230,7 @@
           <div class="row">
             <span class="row-label">概率</span>
             <div class="slider-row">
-              <input type="range" min="20" max="50" step="5" class="range" id="nudgeChance">
+              <input type="range" min="0" max="100" step="1" class="range" id="nudgeChance">
               <span class="range-val" id="nudgeVal">30%</span>
             </div>
           </div>
@@ -477,6 +477,45 @@
         <div class="row">
           <span class="row-label">通知</span>
           <button class="switch" id="notifySwitch" aria-label="通知"></button>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">概率</h2>
+        <div class="row">
+          <span class="row-label">表情包</span>
+          <div class="slider-row">
+            <input type="range" min="0" max="100" step="1" class="range" data-range="behavior.stickerChance">
+            <span class="range-val" data-range-val="behavior.stickerChance"></span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="row-label">来电</span>
+          <div class="slider-row">
+            <input type="range" min="0" max="100" step="1" class="range" data-range="behavior.callChance">
+            <span class="range-val" data-range-val="behavior.callChance"></span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="row-label">接听</span>
+          <div class="slider-row">
+            <input type="range" min="0" max="100" step="1" class="range" data-range="behavior.callAnswer">
+            <span class="range-val" data-range-val="behavior.callAnswer"></span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="row-label">拒接</span>
+          <div class="slider-row">
+            <input type="range" min="0" max="100" step="1" class="range" data-range="behavior.callHangup">
+            <span class="range-val" data-range-val="behavior.callHangup"></span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="row-label">引用回复</span>
+          <div class="slider-row">
+            <input type="range" min="0" max="100" step="1" class="range" data-range="behavior.quoteChance">
+            <span class="range-val" data-range-val="behavior.quoteChance"></span>
+          </div>
         </div>
       </section>
 
