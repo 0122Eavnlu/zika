@@ -1,11 +1,11 @@
-import { get, commit, subscribe } from './state.js?v=20261030w';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261030w';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261030w';
-import * as router from './router.js?v=20261030w';
-import { playSound } from './audio.js?v=20261030w';
-import { startCall } from './call.js?v=20261030w';
-import { openMoments } from './moments.js?v=20261030w';
-import { pickLyric, isListening } from './music.js?v=20261030w';
+import { get, commit, subscribe } from './state.js?v=20261030x';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261030x';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261030x';
+import * as router from './router.js?v=20261030x';
+import { playSound } from './audio.js?v=20261030x';
+import { startCall } from './call.js?v=20261030x';
+import { openMoments } from './moments.js?v=20261030x';
+import { pickLyric, isListening } from './music.js?v=20261030x';
 
 let busy = false;
 let replying = false;
@@ -849,6 +849,10 @@ export function initChat() {
   $('#quoteCancel').onclick = clearQuote;
   $('#chatMore').onclick = openChatMenu;
   $('#chatAvatar').onclick = () => openMoments('chat');
+  $('#chatCallBtn').onclick = () => {
+    if (navigator.vibrate) navigator.vibrate(4);
+    startCall();
+  };
 
   const input = $('#msgInput');
   input.addEventListener('input', autoGrow);
