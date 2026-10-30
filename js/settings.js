@@ -1,5 +1,5 @@
 import { get, commit, subscribe, getPath, setPath, exportState, importState, resetState } from './state.js';
-import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, setAvatar, getInputNumber } from './util.js';
+import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, compressDataUrl, setAvatar, getInputNumber } from './util.js';
 import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js';
 import { playItem } from './audio.js';
 import * as router from './router.js';
@@ -287,11 +287,50 @@ function storageSections() {
   const s = get();
   return [
     { key: 'messages', label: '聊天记录', size: sizeOf(s.messages), clear: () => commit(st => { st.messages = []; }) },
-    { key: 'stickers', label: '表情包', size: sizeOf(s.stickers), clear: () => commit(st => { st.stickers = []; }) },
+    { key: 'stickers', label: '表情包', size: sizeOf(s.stickers),
+      clear: () => commit(st => { st.stickers = []; }),
+      compress: async () => {
+        const list = s.stickers || [];
+        if (!list.length) return 0;
+        const news = await Promise.all(list.map(async st => {
+          try {
+            const mime = st.url.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+            const out = await compressDataUrl(st.url, 640, mime === 'image/png' ? undefined : .8, mime);
+            return out.length < st.url.length ? out : st.url;
+          } catch { return st.url; }
+        }));
+        let changed = 0;
+        commit(st => { st.stickers.forEach((st, i) => { if (news[i] !== st.url) { st.url = news[i]; changed++; } }); });
+        return changed;
+      },
+    },
     { key: 'cards', label: '字卡库', size: sizeOf(s.cards.items), clear: () => commit(st => { st.cards.items = []; }) },
     { key: 'moments', label: '朋友圈', size: sizeOf(s.moments.posts), clear: () => commit(st => { st.moments.posts = []; }) },
     { key: 'music', label: '音乐', size: sizeOf(s.music.tracks), clear: () => commit(st => { st.music.tracks = []; }) },
-    { key: 'bgs', label: '背景 / 头像', size: sizeOf({ home: s.ui.homeBg, chat: s.ui.chatBg, moments: s.moments.bg, me: s.me.avatar, persona: s.persona.avatar }), clear: () => commit(st => { st.ui.homeBg = ''; st.ui.chatBg = ''; st.moments.bg = ''; st.me.avatar = ''; st.persona.avatar = ''; }) },
+    { key: 'bgs', label: '背景 / 头像', size: sizeOf({ home: s.ui.homeBg, chat: s.ui.chatBg, moments: s.moments.bg, me: s.me.avatar, persona: s.persona.avatar }),
+      clear: () => commit(st => { st.ui.homeBg = ''; st.ui.chatBg = ''; st.moments.bg = ''; st.me.avatar = ''; st.persona.avatar = ''; }),
+      compress: async () => {
+        const targets = [
+          { get: st => st.ui.homeBg, set: (st, v) => { st.ui.homeBg = v; } },
+          { get: st => st.ui.chatBg, set: (st, v) => { st.ui.chatBg = v; } },
+          { get: st => st.moments.bg, set: (st, v) => { st.moments.bg = v; } },
+          { get: st => st.me.avatar, set: (st, v) => { st.me.avatar = v; } },
+          { get: st => st.persona.avatar, set: (st, v) => { st.persona.avatar = v; } },
+        ];
+        const vals = targets.map(t => t.get(s));
+        const news = await Promise.all(vals.map(async url => {
+          if (!url) return url;
+          try {
+            const mime = url.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+            const out = await compressDataUrl(url, 1280, mime === 'image/png' ? undefined : .8, mime);
+            return out.length < url.length ? out : url;
+          } catch { return url; }
+        }));
+        let changed = 0;
+        commit(st => { targets.forEach((t, i) => { if (news[i] !== vals[i]) { t.set(st, news[i]); changed++; } }); });
+        return changed;
+      },
+    },
   ];
 }
 
@@ -305,14 +344,17 @@ function openStorageSheet() {
           <span class="storage-label">${escapeHtml(sec.label)}</span>
           <span class="storage-size">${fmtSize(sec.size)}</span>
         </div>
-        <button class="ghost-btn tiny danger-text" data-clear="${sec.key}">清空</button>
+        <div class="storage-actions">
+          ${sec.compress ? '<button class="ghost-btn tiny" data-compress="' + sec.key + '">压缩</button>' : ''}
+          <button class="ghost-btn tiny danger-text" data-clear="${sec.key}">清空</button>
+        </div>
       </div>`).join('');
     const body = document.querySelector('#storageBody');
     if (body) {
       body.innerHTML = `
         <div class="storage-total">占用 ${fmtSize(total)}</div>
         ${rows}
-        <p class="storage-hint">表情包和背景图通常占空间最大，可优先清理。</p>`;
+        <p class="storage-hint">表情包和背景图通常占空间最大，可优先清理或压缩。</p>`;
       body.querySelectorAll('[data-clear]').forEach(btn => {
         btn.onclick = async () => {
           const sec = sections.find(x => x.key === btn.dataset.clear);
@@ -321,6 +363,21 @@ function openStorageSheet() {
           if (!ok) return;
           sec.clear();
           toast(`已清空${sec.label}`);
+          render();
+        };
+      });
+      body.querySelectorAll('[data-compress]').forEach(btn => {
+        btn.onclick = async () => {
+          const sec = sections.find(x => x.key === btn.dataset.compress);
+          if (!sec || !sec.compress) return;
+          btn.disabled = true;
+          btn.textContent = '压缩中…';
+          try {
+            const n = await sec.compress();
+            toast(n > 0 ? `已压缩 ${n} 项` : '已经是最小尺寸');
+          } catch {
+            toast('压缩失败');
+          }
           render();
         };
       });

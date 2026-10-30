@@ -52,26 +52,30 @@ export function compressImage(file, maxSize = 1400, quality = .84, type = 'image
     if (!file || !file.type.startsWith('image/')) return reject(new Error('not-image'));
     const reader = new FileReader();
     reader.onerror = reject;
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = reject;
-      img.onload = () => {
-        let { width, height } = img;
-        const scale = Math.min(1, maxSize / Math.max(width, height));
-        width = Math.round(width * scale);
-        height = Math.round(height * scale);
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, 0, 0, width, height);
-        const mime = type === 'image/png' ? 'image/png' : 'image/jpeg';
-        resolve(canvas.toDataURL(mime, mime === 'image/jpeg' ? quality : undefined));
-      };
-      img.src = reader.result;
-    };
+    reader.onload = () => compressDataUrl(reader.result, maxSize, quality, type).then(resolve, reject);
     reader.readAsDataURL(file);
+  });
+}
+
+export function compressDataUrl(dataUrl, maxSize = 640, quality = .8, type = 'image/jpeg') {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onerror = reject;
+    img.onload = () => {
+      let { width, height } = img;
+      const scale = Math.min(1, maxSize / Math.max(width, height));
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, width, height);
+      const mime = type === 'image/png' ? 'image/png' : 'image/jpeg';
+      resolve(canvas.toDataURL(mime, mime === 'image/jpeg' ? quality : undefined));
+    };
+    img.src = dataUrl;
   });
 }
 
