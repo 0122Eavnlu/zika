@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030i';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030i';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030i';
-import * as router from './router.js?v=20261030i';
+import { get, commit, subscribe } from './state.js?v=20261030j';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030j';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030j';
+import * as router from './router.js?v=20261030j';
 
 const session = [];
 const lyricsMap = new Map();
@@ -814,9 +814,13 @@ function updateMusicDots() {
 function goPage(next) {
   page = Math.max(0, Math.min(1, next));
   const pager = $('#musicPager');
-  if (pager) pager.style.transform = `translate3d(${-page * 50}%, 0, 0)`;
+  if (pager) {
+    pager.style.transition = 'none';
+    pager.style.transform = `translate3d(${-page * 50}%, 0, 0)`;
+  }
   $('#screen-music')?.classList.toggle('is-listen', page === 1);
   updateMusicDots();
+  updateListenCaption();
   if (page === 1) {
     render();
     ensureLyrics();
@@ -1140,31 +1144,6 @@ function removeTrack(i) {
 
 /* ---------- 手势 ---------- */
 
-function bindSwipe() {
-  const screen = $('#screen-music');
-  let mx = 0;
-  let my = 0;
-  screen.addEventListener('touchstart', event => {
-    if (event.touches.length !== 1) return;
-    mx = event.touches[0].clientX;
-    my = event.touches[0].clientY;
-  }, { passive: true });
-  screen.addEventListener('touchend', event => {
-    const t = event.changedTouches[0];
-    if (!t) return;
-    const dx = t.clientX - mx;
-    const dy = t.clientY - my;
-    if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * .6) return;
-    if (dx > 0) {
-      if (page < 1) goPage(page + 1);
-    } else if (page > 0) {
-      goPage(page - 1);
-    } else {
-      router.close();
-    }
-  }, { passive: true });
-}
-
 function updateDots() {
   const dots = $('#pageDots');
   if (!dots) return;
@@ -1239,16 +1218,20 @@ function migrateCovers() {
 export function initMusic() {
   migrateCovers();
   bind();
-  bindSwipe();
 
   updateDots();
   const obs = new MutationObserver(updateDots);
   obs.observe($('#app'), { attributes: true, attributeFilter: ['class'] });
   $$('.screen').forEach(el => obs.observe(el, { attributes: true, attributeFilter: ['class'] }));
 
+  setInterval(updateListenCaption, 10000);
+
   router.register('music', { onOpen: () => {
     const log = $('#musicLog');
     if (log) log.hidden = true;
+    if (music().together && !music().sessionStart) {
+      commit(s => { s.music.sessionStart = Date.now(); });
+    }
     render();
     const dots = $('#musicDots');
     if (dots) dots.style.display = '';

@@ -2935,8 +2935,6 @@ select.input option { background: var(--surface); color: var(--ink); }
   z-index: 1;
   display: flex;
   width: 200%;
-  transition: transform .45s var(--ease);
-  will-change: transform;
 }
 .ml-page {
   width: 50%;
@@ -3375,19 +3373,19 @@ select.input option { background: var(--surface); color: var(--ink); }
 
 /* ============ 一起听 v5：黑胶播放页 ============ */
 .music-screen.is-listen { background: #0b0b0c; }
-.music-screen.is-listen .music-bg { opacity: .5; filter: brightness(.35) saturate(.85); }
+.music-screen.is-listen .music-bg { opacity: .95; filter: brightness(.72) saturate(.95); }
 .music-screen.is-listen::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(8, 8, 10, .78), rgba(8, 8, 10, .92));
+  background: linear-gradient(180deg, rgba(8, 8, 10, .5), rgba(8, 8, 10, .84));
 }
 .music-screen.is-listen .music-dots { display: none; }
 
 .ml-listen {
-  background: #0b0b0c;
+  background: transparent;
   color: #f4f4f6;
   gap: 10px;
   padding: calc(env(safe-area-inset-top) + 8px) 20px calc(env(safe-area-inset-bottom) + 16px);

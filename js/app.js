@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261030i';
-import { initSettings } from './settings.js?v=20261030i';
-import { initCards } from './cards.js?v=20261030i';
-import { initChat } from './chat.js?v=20261030i';
-import { initCall, hideCall } from './call.js?v=20261030i';
-import { initStatus } from './status.js?v=20261030i';
-import { initMoments } from './moments.js?v=20261030i';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261030i';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030i';
-import { closeSheet } from './ui.js?v=20261030i';
-import { $, $$, setAvatar, toast, pickFile, compressImage } from './util.js?v=20261030i';
-import { get, subscribe, commit } from './state.js?v=20261030i';
-import { openMeSheet } from './chat.js?v=20261030i';
+import { initAppearance } from './appearance.js?v=20261030j';
+import { initSettings } from './settings.js?v=20261030j';
+import { initCards } from './cards.js?v=20261030j';
+import { initChat } from './chat.js?v=20261030j';
+import { initCall, hideCall } from './call.js?v=20261030j';
+import { initStatus } from './status.js?v=20261030j';
+import { initMoments } from './moments.js?v=20261030j';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261030j';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030j';
+import { closeSheet } from './ui.js?v=20261030j';
+import { $, $$, setAvatar, toast, pickFile, compressImage } from './util.js?v=20261030j';
+import { get, subscribe, commit } from './state.js?v=20261030j';
+import { openMeSheet } from './chat.js?v=20261030j';
 
 function renderHome() {
   const s = get();
@@ -161,7 +161,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261030i', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261030j', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
