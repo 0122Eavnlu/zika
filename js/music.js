@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030l';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030l';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030l';
-import * as router from './router.js?v=20261030l';
+import { get, commit, subscribe } from './state.js?v=20261030m';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030m';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030m';
+import * as router from './router.js?v=20261030m';
 
 const session = [];
 const lyricsMap = new Map();
@@ -789,7 +789,7 @@ function renderLyrics(track) {
       .map(p => `<span class="lyric-line">${escapeHtml(p.text)}</span>`)
       .join('');
     box.scrollTop = 0;
-    lyricTimes = use.map(p => p.t);
+    lyricTimes = timed.length ? use.map(p => p.t) : [];
   }
   if (lyricTimes.length) syncLyric();
   else markLyric();
@@ -1084,6 +1084,12 @@ function bind() {
   $('#musicPlay').onclick = playPause;
   $('#musicPrev').onclick = () => step(-1);
   $('#musicNext').onclick = () => step(1);
+  const wPlay = $('#wPlay');
+  if (wPlay) wPlay.onclick = playPause;
+  const wPrev = $('#wPrev');
+  if (wPrev) wPrev.onclick = () => step(-1);
+  const wNext = $('#wNext');
+  if (wNext) wNext.onclick = () => step(1);
   $('#musicListBtn').onclick = openPlaylist;
   $('#musicMode').onclick = () => {
     const next = MODE_KEYS[(MODE_KEYS.indexOf(music().mode) + 1) % MODE_KEYS.length];

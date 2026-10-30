@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#efece5">
 <title>字卡</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=20261030l">
+<link rel="stylesheet" href="css/style.css?v=20261030m">
 </head>
 <body>
 
@@ -31,21 +31,18 @@
     <div class="home-pager" id="homePager">
       <div class="home-page" data-hpage="0">
         <div class="hp1">
-          <div class="hp-head">
-            <button class="hp-avatar" id="homeAvatar" aria-label="我的头像">
-              <span class="avatar" id="homeAvatarView"></span>
-            </button>
-            <div class="hp-id">
-              <div class="hp-name" id="homeName">我</div>
-              <button class="hp-status" id="homeStatusBtn">
-                <span class="status-dot"></span>
-                <span id="homeStatus">添加状态</span>
-              </button>
-            </div>
-            <button class="hp-cover" id="homeCover" aria-label="更换封面">
-              <span class="cover-empty">＋</span>
-            </button>
+          <button class="hp-cover" id="homeCover" aria-label="更换封面">
+            <span class="cover-empty">＋ 选择封面</span>
+          </button>
+          <button class="hp-avatar" id="homeAvatar" aria-label="我的头像">
+            <span class="avatar xl" id="homeAvatarView"></span>
+          </button>
+          <div class="hp-name" id="homeName">我</div>
+          <div class="hp-bio-row">
+            <div class="hp-bio" id="homeStatus">添加个性签名</div>
+            <button class="hp-edit" id="homeBioEdit" aria-label="修改个性签名">×</button>
           </div>
+          <div class="hp-loc"><span class="hp-loc-pin">⌖</span><span id="homeLoc">在你身边</span></div>
 
           <div class="hp-clock">
             <div class="hp-clock-top">
@@ -63,11 +60,15 @@
             </div>
           </div>
 
-          <button class="pin-card" id="homePin" aria-label="更换图片">
-            <span class="pin-empty">＋ 放一张照片</span>
-          </button>
+          <div class="hp-lower">
+            <div class="polaroid">
+              <button class="pin-card" id="homePin" aria-label="更换图片">
+                <span class="pin-empty">＋</span>
+              </button>
+              <button class="pin-caption" id="homePinCaption">添加签名</button>
+            </div>
 
-          <div class="home-grid">
+            <div class="home-grid">
             <button class="app" data-app="chat" aria-label="对话">
               <span class="tile">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -120,9 +121,60 @@
               </span>
               <span class="app-name">设定</span>
             </button>
+            </div>
           </div>
         </div>
       </div>
+
+      <div class="home-page" data-hpage="1">
+        <div class="hp2">
+          <div class="hp2-cover" id="hp2Cover">
+            <span class="avatar hp2-av" id="hp2Me"></span>
+            <span class="avatar hp2-av" id="hp2Them"></span>
+            <div class="hp2-caption">你在左边 我紧靠右</div>
+          </div>
+
+          <div class="widget-music">
+            <div class="widget-cover" id="wCover"></div>
+            <div class="widget-info">
+              <div class="widget-title" id="wNow">还没有歌曲</div>
+              <div class="widget-artist" id="wArtist">一起听歌</div>
+              <div class="widget-controls">
+                <button class="wctl" id="wPrev" aria-label="上一首">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6v12M18 7v10L8.8 12z"/></svg>
+                </button>
+                <button class="wctl" id="wPlay" aria-label="播放">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 5.6v12.8l10.2-6.4z"/></svg>
+                </button>
+                <button class="wctl" id="wNext" aria-label="下一首">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6v12M6 7v10l9.2-5z"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="widget-side">
+              <div class="widget-pair">
+                <span class="avatar xs" id="wMeAvatar"></span>
+                <span class="widget-heart">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.2c-.3 0-.6-.1-.8-.3C6.9 16 3.6 13.2 2.1 10.7 1 8.8 1 6.3 2.4 4.7c1.6-1.8 4.4-1.9 6.2-.3.5.4 1 1 1.4 1.6.4-.6.9-1.2 1.4-1.6 1.8-1.6 4.6-1.5 6.2.3 1.4 1.6 1.4 4.1.3 6-1.5 2.5-4.8 5.3-9.1 9.2-.2.2-.5.3-.8.3z"/></svg>
+                </span>
+                <span class="avatar xs" id="wThemAvatar"></span>
+              </div>
+              <div class="widget-sub" id="wSub">一起听 0 次</div>
+            </div>
+          </div>
+
+          <button class="hp2-anniv" id="hp2Anniv" aria-label="纪念日">
+            <span class="hp2-anniv-label">纪念日</span>
+            <b id="hp2Days">0</b>
+            <span class="hp2-anniv-foot" id="hp2Date">点这里设置</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="home-dots" id="homeDots">
+      <span class="dot active" data-hpage="0"></span>
+      <span class="dot" data-hpage="1"></span>
     </div>
   </section>
 
@@ -781,6 +833,6 @@
   <style id="user-font"></style>
 </div>
 
-<script type="module" src="js/app.js?v=20261030l"></script>
+<script type="module" src="js/app.js?v=20261030m"></script>
 </body>
 </html>

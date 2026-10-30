@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261030l';
-import { initSettings } from './settings.js?v=20261030l';
-import { initCards } from './cards.js?v=20261030l';
-import { initChat } from './chat.js?v=20261030l';
-import { initCall, hideCall } from './call.js?v=20261030l';
-import { initStatus } from './status.js?v=20261030l';
-import { initMoments } from './moments.js?v=20261030l';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261030l';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030l';
-import { closeSheet } from './ui.js?v=20261030l';
-import { $, $$, setAvatar, toast, pickFile, compressImage } from './util.js?v=20261030l';
-import { get, subscribe, commit } from './state.js?v=20261030l';
-import { openMeSheet } from './chat.js?v=20261030l';
+import { initAppearance } from './appearance.js?v=20261030m';
+import { initSettings } from './settings.js?v=20261030m';
+import { initCards } from './cards.js?v=20261030m';
+import { initChat } from './chat.js?v=20261030m';
+import { initCall, hideCall } from './call.js?v=20261030m';
+import { initStatus } from './status.js?v=20261030m';
+import { initMoments } from './moments.js?v=20261030m';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261030m';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030m';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030m';
+import { $, $$, setAvatar, toast, pickFile, compressImage } from './util.js?v=20261030m';
+import { get, subscribe, commit } from './state.js?v=20261030m';
+import { openMeSheet } from './chat.js?v=20261030m';
 
 function renderHome() {
   const s = get();
@@ -39,11 +39,22 @@ function renderHome() {
     }
   }
 
+  const hp2 = $('#hp2Cover');
+  if (hp2) {
+    if (s.ui.homeCover) {
+      hp2.style.backgroundImage = `url("${s.ui.homeCover}")`;
+      hp2.classList.add('has-img');
+    } else {
+      hp2.style.backgroundImage = '';
+      hp2.classList.remove('has-img');
+    }
+  }
+
   setAvatar($('#homeAvatarView'), s.me.name, s.me.avatar);
   const name = $('#homeName');
   if (name) name.textContent = s.me.name || '我';
   const status = $('#homeStatus');
-  if (status) status.textContent = s.me.status || '添加状态';
+  if (status) status.textContent = s.me.status || '添加个性签名';
 
   const pin = $('#homePin');
   if (pin) {
@@ -55,8 +66,155 @@ function renderHome() {
       pin.classList.remove('has-img');
     }
   }
+  const pinCap = $('#homePinCaption');
+  if (pinCap) pinCap.textContent = s.me.status || '添加签名';
 
+  renderWidgets(s);
+  updateHomeDots();
   updateClock();
+}
+
+function renderWidgets(s) {
+  const a = s.anniversary || {};
+  setAvatar($('#hp2Me'), s.me.name, s.me.avatar);
+  setAvatar($('#hp2Them'), s.persona.name, s.persona.avatar);
+  const days = $('#hp2Days');
+  const foot = $('#hp2Date');
+  if (!days || !foot) return;
+  if (!a.date) {
+    days.textContent = '—';
+    foot.textContent = '点这里设置';
+    return;
+  }
+  const start = new Date(`${a.date}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const n = Math.max(0, Math.floor((today.getTime() - start.getTime()) / 86400000));
+  days.textContent = String(n);
+  foot.textContent = `${a.date.replace(/-/g, '.')} 起 · ${a.text || '我们在一起'}`;
+}
+
+let homePage = 0;
+
+function setHomePage(next, animate = true) {
+  homePage = Math.max(0, Math.min(1, next));
+  const pager = $('#homePager');
+  if (!pager) return;
+  const w = pager.offsetWidth / 2 || window.innerWidth;
+  pager.style.transition = animate ? '' : 'none';
+  pager.style.transform = `translate3d(${-homePage * w}px, 0, 0)`;
+  if (!animate) {
+    requestAnimationFrame(() => { pager.style.transition = ''; });
+  }
+  updateHomeDots();
+}
+
+function updateHomeDots() {
+  $$('#homeDots .dot').forEach(d => {
+    d.classList.toggle('active', Number(d.dataset.hpage) === homePage);
+  });
+}
+
+function bindPager() {
+  const pager = $('#homePager');
+  if (!pager) return;
+  setHomePage(0, false);
+  let sx = 0;
+  let sy = 0;
+  let base = 0;
+  let dragging = false;
+  let suppressClick = false;
+
+  pager.addEventListener('touchstart', event => {
+    if (event.touches.length !== 1) return;
+    sx = event.touches[0].clientX;
+    sy = event.touches[0].clientY;
+    base = -homePage * (pager.offsetWidth / 2 || window.innerWidth);
+    dragging = false;
+    pager.style.transition = 'none';
+  }, { passive: true });
+
+  pager.addEventListener('touchmove', event => {
+    if (event.touches.length !== 1) return;
+    const t = event.touches[0];
+    const dx = t.clientX - sx;
+    const dy = t.clientY - sy;
+    if (!dragging) {
+      if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.1) return;
+      dragging = true;
+    }
+    const w = pager.offsetWidth / 2 || window.innerWidth;
+    let move = dx;
+    if ((homePage === 0 && dx > 0) || (homePage === 1 && dx < 0)) move = dx * .32;
+    const x = Math.min(0, Math.max(-w, base + move));
+    pager.style.transform = `translate3d(${x}px, 0, 0)`;
+  }, { passive: true });
+
+  pager.addEventListener('touchend', event => {
+    const t = event.changedTouches[0];
+    pager.style.transition = '';
+    if (!t || !dragging) {
+      dragging = false;
+      setHomePage(homePage, true);
+      return;
+    }
+    const dx = t.clientX - sx;
+    const dy = t.clientY - sy;
+    dragging = false;
+    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+      suppressClick = true;
+      setTimeout(() => { suppressClick = false; }, 350);
+    }
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 55) {
+      setHomePage(homePage + (dx < 0 ? 1 : -1), true);
+    } else {
+      setHomePage(homePage, true);
+    }
+  }, { passive: true });
+
+  pager.addEventListener('click', event => {
+    if (!suppressClick) return;
+    suppressClick = false;
+    event.stopPropagation();
+    event.preventDefault();
+  }, true);
+
+  $$('#homeDots .dot').forEach(dot => {
+    dot.addEventListener('click', () => setHomePage(Number(dot.dataset.hpage)));
+  });
+}
+
+function commitAnniv(date, text) {
+  commit(s => {
+    s.anniversary.date = date;
+    s.anniversary.text = text || '我们在一起';
+  });
+  renderHome();
+}
+
+function openAnnivSheet() {
+  const a = get().anniversary || {};
+  openSheet(`
+    ${sheetTitle('纪念日')}
+    <div class="field"><input class="input" type="date" id="annivDateInput" value="${a.date || ''}"></div>
+    <div class="field"><input class="input" id="annivTextInput" maxlength="20" placeholder="我们在一起" value="${(a.text || '').replace(/"/g, '&quot;')}"></div>
+    <div class="sheet-actions">
+      <button class="btn-ghost" id="annivCancel">取消</button>
+      <button class="btn-ink" id="annivSave">保存</button>
+    </div>
+  `);
+  $('#annivCancel').onclick = closeSheet;
+  $('#annivSave').onclick = () => {
+    const date = $('#annivDateInput').value;
+    const text = $('#annivTextInput').value.trim();
+    if (!date) {
+      toast('请选择开始日期');
+      return;
+    }
+    commitAnniv(date, text);
+    closeSheet();
+    toast('已保存');
+  };
 }
 
 const WEEK = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
@@ -82,6 +240,15 @@ async function pickHomeImage() {
 }
 
 function bindHome() {
+  bindPager();
+  $('#hp2Anniv')?.addEventListener('click', openAnnivSheet);
+  $('#hp2Cover')?.addEventListener('click', async () => {
+    const url = await pickHomeImage();
+    if (!url) return;
+    commit(s => { s.ui.homeCover = url; });
+    renderHome();
+    toast('已更换封面');
+  });
   $('#homeCover')?.addEventListener('click', async () => {
     const url = await pickHomeImage();
     if (!url) return;
@@ -101,7 +268,9 @@ function bindHome() {
   });
   $('#homeAvatar')?.addEventListener('click', () => openMeSheet());
   $('#homeName')?.addEventListener('click', () => openMeSheet());
-  $('#homeStatusBtn')?.addEventListener('click', () => openMeSheet());
+  $('#homeBioEdit')?.addEventListener('click', () => openMeSheet());
+  $('#homeStatus')?.addEventListener('click', () => openMeSheet());
+  $('#homePinCaption')?.addEventListener('click', () => openMeSheet());
   $$('.app[data-app]').forEach(btn => {
     btn.addEventListener('click', () => {
       if (navigator.vibrate) navigator.vibrate(4);
@@ -162,7 +331,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261030l', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261030m', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
