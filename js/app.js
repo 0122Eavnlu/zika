@@ -252,13 +252,9 @@ function boot() {
   bindBackButtons();
   handleHistory();
   registerServiceWorker();
-  tickClock();
   renderHome();
   subscribe(renderHome);
-  setInterval(tickClock, 15000);
   splash();
-
-  window.addEventListener('load', tickClock);
 }
 
 if (document.readyState === 'loading') {
