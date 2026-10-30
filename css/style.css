@@ -1243,6 +1243,32 @@ select.input option { background: var(--surface); color: var(--ink); }
 .data-actions { display: flex; gap: 10px; padding-bottom: 12px; }
 .data-actions .ghost-btn { flex: 1; padding: 0 8px; }
 
+.storage-total {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--surface-2, #f2f0eb);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.storage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--line, rgba(0,0,0,.06));
+}
+.storage-info { display: flex; flex-direction: column; gap: 2px; }
+.storage-label { font-size: 14px; }
+.storage-size { font-size: 11.5px; color: var(--ink-3, #9c9c9c); }
+.storage-row .ghost-btn.tiny { padding: 5px 12px; font-size: 12px; }
+.storage-hint {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--ink-3, #9c9c9c);
+  line-height: 1.6;
+}
+
 /* ============ 弹层 ============ */
 .layer {
   position: absolute;

@@ -388,7 +388,7 @@ async function pickBg() {
   const file = await pickFile('image/*');
   if (!file) return;
   try {
-    const data = await compressImage(file, 1600, .84);
+    const data = await compressImage(file, 1280, .8);
     commit(s => { s.moments.bg = data; });
     render();
     toast('已更换背景');

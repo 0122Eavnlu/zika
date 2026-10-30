@@ -272,6 +272,67 @@ function bindData() {
   };
 }
 
+/* ---------- 存储空间 ---------- */
+
+function sizeOf(val) {
+  try { return new Blob([JSON.stringify(val ?? '')]).size; } catch { return 0; }
+}
+function fmtSize(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1048576).toFixed(2) + ' MB';
+}
+
+function storageSections() {
+  const s = get();
+  return [
+    { key: 'messages', label: '聊天记录', size: sizeOf(s.messages), clear: () => commit(st => { st.messages = []; }) },
+    { key: 'stickers', label: '表情包', size: sizeOf(s.stickers), clear: () => commit(st => { st.stickers = []; }) },
+    { key: 'cards', label: '字卡库', size: sizeOf(s.cards.items), clear: () => commit(st => { st.cards.items = []; }) },
+    { key: 'moments', label: '朋友圈', size: sizeOf(s.moments.posts), clear: () => commit(st => { st.moments.posts = []; }) },
+    { key: 'music', label: '音乐', size: sizeOf(s.music.tracks), clear: () => commit(st => { st.music.tracks = []; }) },
+    { key: 'bgs', label: '背景 / 头像', size: sizeOf({ home: s.ui.homeBg, chat: s.ui.chatBg, moments: s.moments.bg, me: s.me.avatar, persona: s.persona.avatar }), clear: () => commit(st => { st.ui.homeBg = ''; st.ui.chatBg = ''; st.moments.bg = ''; st.me.avatar = ''; st.persona.avatar = ''; }) },
+  ];
+}
+
+function openStorageSheet() {
+  const render = () => {
+    const sections = storageSections();
+    const total = sections.reduce((a, b) => a + b.size, 0);
+    const rows = sections.map(sec => `
+      <div class="storage-row" data-key="${sec.key}">
+        <div class="storage-info">
+          <span class="storage-label">${escapeHtml(sec.label)}</span>
+          <span class="storage-size">${fmtSize(sec.size)}</span>
+        </div>
+        <button class="ghost-btn tiny danger-text" data-clear="${sec.key}">清空</button>
+      </div>`).join('');
+    const body = document.querySelector('#storageBody');
+    if (body) {
+      body.innerHTML = `
+        <div class="storage-total">占用 ${fmtSize(total)}</div>
+        ${rows}
+        <p class="storage-hint">表情包和背景图通常占空间最大，可优先清理。</p>`;
+      body.querySelectorAll('[data-clear]').forEach(btn => {
+        btn.onclick = async () => {
+          const sec = sections.find(x => x.key === btn.dataset.clear);
+          if (!sec) return;
+          const ok = await confirmSheet({ title: `清空${sec.label}`, text: `将删除所有${sec.label}，无法恢复`, confirm: '清空', danger: true });
+          if (!ok) return;
+          sec.clear();
+          toast(`已清空${sec.label}`);
+          render();
+        };
+      });
+    }
+  };
+  openSheet(`
+    ${sheetTitle('存储空间')}
+    <div id="storageBody"></div>
+  `);
+  render();
+}
+
 /* ---------- 初始化 ---------- */
 
 export function initSettings() {
@@ -303,6 +364,7 @@ export function initSettings() {
   });
 
   $('#soundAdd').onclick = addSound;
+  $('#storageBtn').onclick = openStorageSheet;
   $('#memberAdd').onclick = () => {
     commit(s => {
       const count = s.group.members.length + 1;

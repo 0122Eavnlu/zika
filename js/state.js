@@ -137,12 +137,16 @@ export function subscribe(fn) {
   return () => listeners.delete(fn);
 }
 
+let quotaWarned = false;
 function save() {
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
     return true;
   } catch (e) {
-    toast('本地空间不足');
+    if (!quotaWarned) {
+      quotaWarned = true;
+      toast('本地空间不足，请到「设定 → 存储空间」清理');
+    }
     return false;
   }
 }

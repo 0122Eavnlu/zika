@@ -139,7 +139,7 @@ export function initAppearance() {
     const file = await pickFile('image/*');
     if (!file) return;
     try {
-      const data = await compressImage(file, 1600, .84);
+      const data = await compressImage(file, 1280, .8);
       commit(s => { s.ui.chatBg = data; });
       toast('已设置背景');
     } catch {
@@ -156,7 +156,7 @@ export function initAppearance() {
     const file = await pickFile('image/*');
     if (!file) return;
     try {
-      const data = await compressImage(file, 1600, .84);
+      const data = await compressImage(file, 1280, .8);
       commit(s => { s.ui.homeBg = data; });
       toast('已设置主屏壁纸');
     } catch {
