@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030e';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030e';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030e';
-import * as router from './router.js?v=20261030e';
+import { get, commit, subscribe } from './state.js?v=20261030f';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030f';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030f';
+import * as router from './router.js?v=20261030f';
 
 const session = [];
 const lyricsMap = new Map();
@@ -751,15 +751,12 @@ async function importLyrics() {
 /* ---------- 交互 ---------- */
 
 let page = 0;
-let widgetOnly = false;
 
 export function openWidgets() {
-  widgetOnly = true;
   router.open('music');
 }
 
 export function openMusic() {
-  widgetOnly = false;
   router.open('music');
 }
 let lyricKey = '';
@@ -794,9 +791,9 @@ function updateMusicDots() {
 }
 
 function goPage(next) {
-  page = Math.max(0, Math.min(2, next));
+  page = Math.max(0, Math.min(1, next));
   const pager = $('#musicPager');
-  if (pager) pager.style.transform = `translate3d(${-page * 33.3333}%, 0, 0)`;
+  if (pager) pager.style.transform = `translate3d(${-page * 50}%, 0, 0)`;
   $('#screen-music')?.classList.toggle('is-listen', page === 1);
   updateMusicDots();
   if (page === 1) {
@@ -950,23 +947,6 @@ function openPlaylist() {
 /* ---------- 手势 ---------- */
 
 function bindSwipe() {
-  const home = $('#home');
-  let sx = 0;
-  let sy = 0;
-  home.addEventListener('touchstart', event => {
-    if (event.touches.length !== 1) return;
-    sx = event.touches[0].clientX;
-    sy = event.touches[0].clientY;
-  }, { passive: true });
-  home.addEventListener('touchend', event => {
-    const t = event.changedTouches[0];
-    if (!t) return;
-    const dx = t.clientX - sx;
-    const dy = t.clientY - sy;
-    if (dx > 70 && Math.abs(dy) < Math.abs(dx) * .6) openMusic();
-    if (dx < -70 && Math.abs(dy) < Math.abs(dx) * .6) openWidgets();
-  }, { passive: true });
-
   const screen = $('#screen-music');
   let mx = 0;
   let my = 0;
@@ -981,12 +961,8 @@ function bindSwipe() {
     const dx = t.clientX - mx;
     const dy = t.clientY - my;
     if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * .6) return;
-    if (widgetOnly) {
-      if (dx > 0) router.close();
-      return;
-    }
     if (dx > 0) {
-      if (page < 2) goPage(page + 1);
+      if (page < 1) goPage(page + 1);
     } else if (page > 0) {
       goPage(page - 1);
     } else {
@@ -1079,11 +1055,7 @@ export function initMusic() {
   router.register('music', { onOpen: () => {
     render();
     const dots = $('#musicDots');
-    if (dots) dots.style.display = widgetOnly ? 'none' : '';
-    if (widgetOnly) {
-      goPage(2);
-      return;
-    }
+    if (dots) dots.style.display = '';
     if (music().together && allTracks().length) {
       startChatLoop();
       goPage(1);

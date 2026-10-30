@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261030e';
-import { initSettings } from './settings.js?v=20261030e';
-import { initCards } from './cards.js?v=20261030e';
-import { initChat } from './chat.js?v=20261030e';
-import { initCall, hideCall } from './call.js?v=20261030e';
-import { initStatus } from './status.js?v=20261030e';
-import { initMoments } from './moments.js?v=20261030e';
-import { initMusic, hideQrModal, openMusic, openWidgets } from './music.js?v=20261030e';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030e';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030e';
-import { $, $$, setAvatar, toast, pickFile, compressImage } from './util.js?v=20261030e';
-import { get, subscribe, commit } from './state.js?v=20261030e';
-import { openMeSheet } from './chat.js?v=20261030e';
+import { initAppearance } from './appearance.js?v=20261030f';
+import { initSettings } from './settings.js?v=20261030f';
+import { initCards } from './cards.js?v=20261030f';
+import { initChat } from './chat.js?v=20261030f';
+import { initCall, hideCall } from './call.js?v=20261030f';
+import { initStatus } from './status.js?v=20261030f';
+import { initMoments } from './moments.js?v=20261030f';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261030f';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261030f';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030f';
+import { $, $$, setAvatar, toast, pickFile, compressImage } from './util.js?v=20261030f';
+import { get, subscribe, commit } from './state.js?v=20261030f';
+import { openMeSheet } from './chat.js?v=20261030f';
 
 function renderHome() {
   const s = get();
@@ -39,6 +39,17 @@ function renderHome() {
     }
   }
 
+  const hp2 = $('#hp2Cover');
+  if (hp2) {
+    if (s.ui.homeCover) {
+      hp2.style.backgroundImage = `url("${s.ui.homeCover}")`;
+      hp2.classList.add('has-img');
+    } else {
+      hp2.style.backgroundImage = '';
+      hp2.classList.remove('has-img');
+    }
+  }
+
   setAvatar($('#homeAvatarView'), s.me.name, s.me.avatar);
   const name = $('#homeName');
   if (name) name.textContent = s.me.name || '我';
@@ -56,28 +67,41 @@ function renderHome() {
     }
   }
 
-  const a = s.anniversary || {};
-  const card = $('#annivCard');
-  if (!card) return;
-  const show = Boolean(a.enabled);
-  card.hidden = !show;
-  if (!show) return;
+  renderWidgets(s);
+  updateClock();
+  updateHomeDots();
+}
 
-  setAvatar($('#annivMe'), s.me.name, s.me.avatar);
-  setAvatar($('#annivThem'), s.persona.name, s.persona.avatar);
-  $('#annivMeName').textContent = s.me.name || '我';
-  $('#annivThemName').textContent = s.persona.name || '';
+const WEEK = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+
+function updateClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  if ($('#clock')) $('#clock').textContent = `${hh}:${mm}`;
+  if ($('#date')) $('#date').textContent = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
+  if ($('#homeWeek')) $('#homeWeek').textContent = WEEK[now.getDay()];
+  $$('#homeWeekRow span').forEach((el, i) => el.classList.toggle('today', i === now.getDay()));
+}
+
+function renderWidgets(s) {
+  const a = s.anniversary || {};
+  setAvatar($('#hp2Me'), s.me.name, s.me.avatar);
+  setAvatar($('#hp2Them'), s.persona.name, s.persona.avatar);
+  const days = $('#hp2Days');
+  const foot = $('#hp2Date');
+  if (!days || !foot) return;
   if (!a.date) {
-    $('#annivDays').textContent = '—';
-    $('#annivDate').textContent = '点这里设置纪念日';
+    days.textContent = '—';
+    foot.textContent = '点这里设置';
     return;
   }
   const start = new Date(`${a.date}T00:00:00`);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const days = Math.max(0, Math.floor((today.getTime() - start.getTime()) / 86400000));
-  $('#annivDays').textContent = String(days);
-  $('#annivDate').textContent = `${a.date.replace(/-/g, '.')} 起 · ${a.text || '我们在一起'}`;
+  const n = Math.max(0, Math.floor((today.getTime() - start.getTime()) / 86400000));
+  days.textContent = String(n);
+  foot.textContent = `${a.date.replace(/-/g, '.')} 起 · ${a.text || '我们在一起'}`;
 }
 
 function openAnnivSheet() {
@@ -123,8 +147,107 @@ async function pickHomeImage() {
   }
 }
 
+let homePage = 0;
+
+function setHomePage(next, animate = true) {
+  homePage = Math.max(0, Math.min(1, next));
+  const pager = $('#homePager');
+  if (!pager) return;
+  const w = pager.offsetWidth / 2 || window.innerWidth;
+  pager.style.transition = animate ? '' : 'none';
+  pager.style.transform = `translate3d(${-homePage * w}px, 0, 0)`;
+  if (!animate) {
+    requestAnimationFrame(() => { pager.style.transition = ''; });
+  }
+  updateHomeDots();
+}
+
+function updateHomeDots() {
+  $$('#homeDots .dot').forEach(d => {
+    d.classList.toggle('active', Number(d.dataset.hpage) === homePage);
+  });
+}
+
+function bindPager() {
+  const pager = $('#homePager');
+  if (!pager) return;
+  setHomePage(0, false);
+  let sx = 0;
+  let sy = 0;
+  let base = 0;
+  let dragging = false;
+  let suppressClick = false;
+
+  pager.addEventListener('touchstart', event => {
+    if (event.touches.length !== 1) return;
+    sx = event.touches[0].clientX;
+    sy = event.touches[0].clientY;
+    base = -homePage * (pager.offsetWidth / 2 || window.innerWidth);
+    dragging = false;
+    pager.style.transition = 'none';
+  }, { passive: true });
+
+  pager.addEventListener('touchmove', event => {
+    if (event.touches.length !== 1) return;
+    const t = event.touches[0];
+    const dx = t.clientX - sx;
+    const dy = t.clientY - sy;
+    if (!dragging) {
+      if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.1) return;
+      dragging = true;
+    }
+    const w = pager.offsetWidth / 2 || window.innerWidth;
+    let move = dx;
+    if ((homePage === 0 && dx > 0) || (homePage === 1 && dx < 0)) move = dx * .32;
+    const x = Math.min(0, Math.max(-w, base + move));
+    pager.style.transform = `translate3d(${x}px, 0, 0)`;
+  }, { passive: true });
+
+  pager.addEventListener('touchend', event => {
+    const t = event.changedTouches[0];
+    pager.style.transition = '';
+    if (!t || !dragging) {
+      dragging = false;
+      setHomePage(homePage, true);
+      return;
+    }
+    const dx = t.clientX - sx;
+    const dy = t.clientY - sy;
+    const wasDrag = dragging;
+    dragging = false;
+    if (wasDrag && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+      suppressClick = true;
+      setTimeout(() => { suppressClick = false; }, 350);
+    }
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 55) {
+      setHomePage(homePage + (dx < 0 ? 1 : -1), true);
+    } else {
+      setHomePage(homePage, true);
+    }
+  }, { passive: true });
+
+  pager.addEventListener('click', event => {
+    if (!suppressClick) return;
+    suppressClick = false;
+    event.stopPropagation();
+    event.preventDefault();
+  }, true);
+
+  $$('#homeDots .dot').forEach(dot => {
+    dot.addEventListener('click', () => setHomePage(Number(dot.dataset.hpage)));
+  });
+}
+
 function bindHome() {
-  $('#annivCard')?.addEventListener('click', openAnnivSheet);
+  bindPager();
+  $('#hp2Anniv')?.addEventListener('click', openAnnivSheet);
+  $('#hp2Cover')?.addEventListener('click', async () => {
+    const url = await pickHomeImage();
+    if (!url) return;
+    commit(s => { s.ui.homeCover = url; });
+    renderHome();
+    toast('已更换封面');
+  });
   $('#homeCover')?.addEventListener('click', async () => {
     const url = await pickHomeImage();
     if (!url) return;
@@ -204,7 +327,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261030e', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261030f', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -254,6 +377,7 @@ function boot() {
   handleHistory();
   registerServiceWorker();
   renderHome();
+  setInterval(updateClock, 30000);
   subscribe(renderHome);
   splash();
 }
