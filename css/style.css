@@ -8,19 +8,19 @@
   --serif: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", "SimSun", "Times New Roman", serif;
   --kai: "Kaiti SC", "KaiTi", "STKaiti", serif;
 
-  --paper: #efece5;
-  --paper-2: #f7f4ee;
-  --surface: #fcfbf7;
+  --paper: #f4f6f9;
+  --paper-2: #fbfcfe;
+  --surface: #ffffff;
   --surface-2: #ffffff;
-  --ink: #171512;
-  --ink-2: #4b4741;
-  --ink-3: #8c867c;
-  --line: rgba(23, 21, 18, .09);
-  --line-2: rgba(23, 21, 18, .16);
+  --ink: #14171c;
+  --ink-2: #464c55;
+  --ink-3: #868d97;
+  --line: rgba(20, 23, 28, .08);
+  --line-2: rgba(20, 23, 28, .14);
   --accent: #b6482f;
   --accent-2: #d3f04f;
   --accent-soft: rgba(182, 72, 47, .1);
-  --bubble-them: #fffefb;
+  --bubble-them: #ffffff;
   --bubble-me: #191714;
   --bubble-me-text: #f6f2ea;
   --bubble-me-line: rgba(255, 255, 255, .12);
@@ -69,7 +69,7 @@ body {
 }
 
 @media (min-width: 700px) {
-  body { background: #d9d4ca; }
+  body { background: #dfe3e9; }
   [data-theme="dark"] body { background: #000; }
 }
 
