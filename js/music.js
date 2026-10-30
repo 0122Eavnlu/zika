@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030o';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030o';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030o';
-import * as router from './router.js?v=20261030o';
+import { get, commit, subscribe } from './state.js?v=20261030p';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030p';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030p';
+import * as router from './router.js?v=20261030p';
 
 const session = [];
 const lyricsMap = new Map();
@@ -410,6 +410,37 @@ function neteaseTarget(raw) {
   return { id, type };
 }
 
+const METING_HOSTS = [
+  { base: 'https://api.injahow.cn/meting/?server=netease' },
+  { base: 'https://api.i-meto.com/meting/api?server=netease' },
+];
+
+async function fetchMetingList(target) {
+  for (const host of METING_HOSTS) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const bust = attempt ? `&_=${Date.now()}` : '';
+        const res = await fetch(`${host.base}&type=${target.type}&id=${target.id}${bust}`);
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (!Array.isArray(data) || !data.length) continue;
+        const items = data
+          .filter(item => item && (item.name || item.title) && item.url)
+          .slice(0, 300)
+          .map(item => ({
+            name: String(item.name || item.title).trim(),
+            artist: String(item.artist || item.author || '').trim(),
+            url: httpsUrl(item.url),
+            cover: hiRes(httpsUrl(item.pic)),
+            lrcUrl: httpsUrl(item.lrc || ''),
+          }));
+        if (items.length) return items;
+      } catch {}
+    }
+  }
+  return [];
+}
+
 async function importPlaylist(raw) {
   const target = neteaseTarget(raw);
   if (!target) {
@@ -417,30 +448,14 @@ async function importPlaylist(raw) {
     return;
   }
   toast('正在导入…');
-  try {
-    const res = await fetch(`${API}&type=${target.type}&id=${target.id}`);
-    if (!res.ok) throw new Error('http');
-    const data = await res.json();
-    if (!Array.isArray(data) || !data.length) throw new Error('empty');
-    const items = data
-      .filter(item => item && item.name && item.url)
-      .slice(0, 300)
-      .map(item => ({
-        name: String(item.name).trim(),
-        artist: String(item.artist || '').trim(),
-        url: httpsUrl(item.url),
-        cover: hiRes(httpsUrl(item.pic)),
-        lrcUrl: httpsUrl(item.lrc),
-      }));
-    if (!items.length) throw new Error('empty');
-    pushTracks(items);
-    closeSheet();
-    toast(`已导入 ${items.length} 首`);
-  } catch (err) {
-    toast(err && err.message === 'empty'
-      ? '这个歌单没有可播放的歌（可能全部版权受限）'
-      : '导入失败：接口没响应，稍后再试');
+  const items = await fetchMetingList(target);
+  if (!items.length) {
+    toast('这个歌单暂时取不到可播放的歌，换个歌单链接再试');
+    return;
   }
+  pushTracks(items);
+  closeSheet();
+  toast(`已导入 ${items.length} 首`);
 }
 
 function apiBase() {
