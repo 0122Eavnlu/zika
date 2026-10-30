@@ -3007,8 +3007,8 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .ml-disc { display: grid; place-items: center; margin: 6px 0; }
 .ml-disc .music-cover {
-  width: min(50vw, 196px);
-  height: min(50vw, 196px);
+  width: min(64vw, 252px);
+  height: min(64vw, 252px);
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, .18);
   box-shadow: 0 0 0 10px rgba(255, 255, 255, .04), 0 18px 48px rgba(0, 0, 0, .55);

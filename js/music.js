@@ -158,8 +158,12 @@ function syncPlayButton() {
 
 const COVER_GRADIENT = 'linear-gradient(150deg, #a99a7c, #7d6f55 55%, #5d5343)';
 
+function hiRes(url) {
+  return url.replace(/([?&]param=)\d+y\d+/i, (m, key) => `${key}800y800`);
+}
+
 function applyCover(el, track) {
-  const url = httpsUrl(track && track.cover);
+  const url = hiRes(httpsUrl(track && track.cover));
   const quiet = () => {
     el.classList.remove('has-art');
     el.style.backgroundImage = COVER_GRADIENT;
@@ -402,7 +406,7 @@ async function importPlaylist(raw) {
         name: String(item.name).trim(),
         artist: String(item.artist || '').trim(),
         url: item.url,
-        cover: httpsUrl(item.pic),
+        cover: hiRes(httpsUrl(item.pic)),
         lrcUrl: httpsUrl(item.lrc),
       }));
     if (!items.length) throw new Error('empty');
@@ -668,7 +672,7 @@ async function importPrivatePlaylist(playlistId) {
         name: t.name,
         artist: (t.ar || []).map(a => a.name).join(' / '),
         url: urls[t.id],
-        cover: httpsUrl(t.al?.picUrl),
+        cover: hiRes(httpsUrl(t.al?.picUrl)),
       }));
     if (!items.length) throw new Error('empty');
     pushTracks(items);
