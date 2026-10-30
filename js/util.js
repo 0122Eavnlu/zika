@@ -47,7 +47,7 @@ export function setAvatar(el, name = '', url = '') {
   }
 }
 
-export function compressImage(file, maxSize = 1400, quality = .84) {
+export function compressImage(file, maxSize = 1400, quality = .84, type = 'image/jpeg') {
   return new Promise((resolve, reject) => {
     if (!file || !file.type.startsWith('image/')) return reject(new Error('not-image'));
     const reader = new FileReader();
@@ -66,7 +66,8 @@ export function compressImage(file, maxSize = 1400, quality = .84) {
         const ctx = canvas.getContext('2d');
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        const mime = type === 'image/png' ? 'image/png' : 'image/jpeg';
+        resolve(canvas.toDataURL(mime, mime === 'image/jpeg' ? quality : undefined));
       };
       img.src = reader.result;
     };
@@ -96,10 +97,11 @@ export function fileToDataUrl(file) {
   });
 }
 
-export async function prepareSticker(file, maxSize = 900) {
+export async function prepareSticker(file, maxSize = 640) {
   if (!file || !file.type.startsWith('image/')) throw new Error('not-image');
-  if (file.type === 'image/gif') return fileToDataUrl(file);
-  return compressImage(file, maxSize, .9);
+  // GIF 无法在浏览器里重新压缩动图，取首帧降采样为 PNG，保留透明、大幅节省空间
+  if (file.type === 'image/gif') return compressImage(file, maxSize, undefined, 'image/png');
+  return compressImage(file, maxSize, .8, 'image/jpeg');
 }
 
 export function pickFile(accept = '*/*', multiple = false) {
