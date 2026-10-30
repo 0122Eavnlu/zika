@@ -221,7 +221,7 @@ function openAdd() {
         <span id="musicAccountState">填写 MUSIC_U 或扫码，读取并导入你的歌单</span>
       </button>
       <div class="src-field">
-        <input class="input" id="musicPlaylistInput" placeholder="粘贴歌单链接或歌单 ID">
+        <input class="input" id="musicPlaylistInput" placeholder="粘贴歌单 / 单曲 / 专辑链接或 ID">
         <button class="ghost-btn" id="musicImportPlaylist">导入</button>
       </div>
       <div class="src-cards">
@@ -332,15 +332,26 @@ function pushTracks(items) {
   if (!before) loadTrack(0, false);
 }
 
+function neteaseTarget(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return null;
+  const id = importId(text);
+  if (!id) return null;
+  let type = 'playlist';
+  if (/\/song\b|song\?id=|#\/song/i.test(text)) type = 'song';
+  else if (/\/album\b|album\?id=/.test(text)) type = 'album';
+  return { id, type };
+}
+
 async function importPlaylist(raw) {
-  const id = importId(raw);
-  if (!id) {
-    toast('请粘贴歌单链接或数字 ID');
+  const target = neteaseTarget(raw);
+  if (!target) {
+    toast('请粘贴歌单 / 单曲 / 专辑链接，或数字 ID');
     return;
   }
   toast('正在导入…');
   try {
-    const res = await fetch(`${API}&type=playlist&id=${id}`);
+    const res = await fetch(`${API}&type=${target.type}&id=${target.id}`);
     if (!res.ok) throw new Error('http');
     const data = await res.json();
     if (!Array.isArray(data) || !data.length) throw new Error('empty');
@@ -358,7 +369,7 @@ async function importPlaylist(raw) {
     closeSheet();
     toast(`已导入 ${items.length} 首`);
   } catch {
-    toast('导入失败，换一个歌单试试');
+    toast('导入失败，换个链接试试（版权受限的歌曲可能拿不到地址）');
   }
 }
 
