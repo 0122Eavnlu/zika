@@ -672,6 +672,22 @@
   <div class="layer" id="sheetLayer" hidden>
     <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
   </div>
+
+  <!-- 网易云扫码登录 -->
+  <div class="qr-modal" id="qrModal" hidden>
+    <div class="qr-card">
+      <h2 class="qr-title">网易云扫码登录</h2>
+      <div class="qr-img" id="qrImg"></div>
+      <p class="qr-status" id="qrStatus">等待扫码登录…</p>
+      <div class="qr-actions">
+        <button class="ghost-btn" id="qrRefresh">重新获取</button>
+        <button class="btn-ink" id="qrCancel">取消</button>
+      </div>
+      <p class="qr-hint">使用网易云音乐 APP 扫码<br>登录后即可导入我的歌单</p>
+      <button class="qr-alt" id="qrUseCookie">改用 MUSIC_U 登录</button>
+    </div>
+  </div>
+
   <div class="toast" id="toast" hidden></div>
   <style id="bubble-style"></style>
   <style id="user-font"></style>

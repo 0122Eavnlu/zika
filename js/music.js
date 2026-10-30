@@ -386,37 +386,122 @@ function syncAccount() {
   holder.textContent = connected ? `${st.nickname || '我的网易云'} · 我的歌单` : '连接网易云账号';
   $('#musicAccountState').textContent = connected
     ? '已连接，点这里查看并导入我的歌单'
-    : (st.apiBase ? '填写 MUSIC_U 或扫码，读取并导入你的歌单' : '需要先填写网易云 API 地址');
+    : (st.apiBase ? '点这里扫码登录，导入我的歌单' : '需要先填写网易云 API 地址');
 }
 
-function openConnect() {
-  const st = music();
-  if (st.cookie && st.uid) {
-    openSheet(`
-      ${sheetTitle(st.nickname || '我的网易云')}
-      <p class="music-src-text">已连接，登录信息只保存在本机。</p>
-      <button class="ghost-btn wide" id="musicMyPlaylists">查看我的歌单</button>
-      <button class="ghost-btn wide danger" id="musicLogout">退出登录</button>
-    `);
-    $('#musicMyPlaylists').onclick = openMyPlaylists;
-    $('#musicLogout').onclick = () => {
-      commit(s => { s.music.cookie = ''; s.music.uid = ''; s.music.nickname = ''; });
-      closeSheet();
-      syncAccount();
-      toast('已退出');
-    };
-    return;
-  }
+/* ---------- 网易云扫码登录 ---------- */
 
+let qrTimer = null;
+
+function isNetworkError(err) {
+  const msg = String((err && err.message) || '');
+  return (err && err.name === 'TypeError') || /fetch|network|load failed/i.test(msg);
+}
+
+export function hideQrModal() {
+  clearInterval(qrTimer);
+  qrTimer = null;
+  const modal = $('#qrModal');
+  if (modal) modal.hidden = true;
+}
+
+async function startQr() {
+  clearInterval(qrTimer);
+  qrTimer = null;
+  const box = $('#qrImg');
+  const status = $('#qrStatus');
+  if (!box || !status) return;
+  box.innerHTML = '';
+  status.textContent = '正在获取二维码…';
+  try {
+    const keyData = await apiGet(`/login/qr/key?timestamp=${Date.now()}`);
+    const key = keyData?.data?.unikey;
+    if (!key) throw new Error('qr');
+    const create = await apiGet(`/login/qr/create?key=${key}&qrimg=true&timestamp=${Date.now()}`);
+    const qrimg = create?.data?.qrimg;
+    if (!qrimg) throw new Error('qr');
+    const img = new Image();
+    img.alt = '登录二维码';
+    img.src = qrimg;
+    box.appendChild(img);
+    status.textContent = '等待扫码登录…';
+    pollQr(key);
+  } catch (err) {
+    status.textContent = isNetworkError(err) ? '连不上 API 服务，请检查地址' : '二维码获取失败，请重试';
+  }
+}
+
+function pollQr(key) {
+  qrTimer = setInterval(async () => {
+    const status = $('#qrStatus');
+    if (!status || !status.isConnected || $('#qrModal')?.hidden) {
+      clearInterval(qrTimer);
+      qrTimer = null;
+      return;
+    }
+    try {
+      const check = await apiGet(`/login/qr/check?key=${key}&timestamp=${Date.now()}`);
+      const code = check?.code;
+      if (code === 803) {
+        clearInterval(qrTimer);
+        qrTimer = null;
+        const cookieText = (String(check.cookie || '').match(/MUSIC_U=([^;]+)/) || [])[1] || '';
+        if (!cookieText) {
+          status.textContent = '登录失败，请重试';
+          return;
+        }
+        status.textContent = '登录成功';
+        commit(s => { s.music.cookie = cookieText; });
+        const me = await apiGet(`/login/status?${cookieParam(cookieText)}&timestamp=${Date.now()}`);
+        const profile = me?.data?.profile || me?.profile || null;
+        commit(s => {
+          s.music.uid = String(profile?.userId || '');
+          s.music.nickname = profile?.nickname || '';
+        });
+        hideQrModal();
+        toast('已连接网易云');
+        openAdd();
+        return;
+      }
+      if (code === 802) status.textContent = '已扫码，请在手机上确认';
+      else if (code === 800) {
+        clearInterval(qrTimer);
+        qrTimer = null;
+        status.textContent = '二维码已过期，点「重新获取」';
+      }
+    } catch (err) {
+      if (isNetworkError(err)) {
+        clearInterval(qrTimer);
+        qrTimer = null;
+        status.textContent = '连不上 API 服务，请检查地址';
+      }
+    }
+  }, 2500);
+}
+
+function showQrModal() {
+  const modal = $('#qrModal');
+  if (!modal) return;
+  modal.hidden = false;
+  modal.onclick = e => { if (e.target === modal) hideQrModal(); };
+  $('#qrRefresh').onclick = () => startQr();
+  $('#qrCancel').onclick = hideQrModal;
+  $('#qrUseCookie').onclick = () => {
+    hideQrModal();
+    openCookieSheet();
+  };
+  startQr();
+}
+
+function openCookieSheet() {
+  const st = music();
   openSheet(`
     ${sheetTitle('连接网易云')}
-    <p class="music-src-text">填写你部署的网易云 API 地址（NeteaseCloudMusicApi），登录信息只保存在本机。</p>
+    <p class="music-src-text">填写你部署的网易云 API 地址，再粘贴 MUSIC_U。登录信息只保存在本机。</p>
     <input class="input" id="musicApiBase" placeholder="https://你的服务地址" value="${escapeHtml(st.apiBase || '')}">
     <input class="input" id="musicCookie" placeholder="MUSIC_U 的值" value="">
     <button class="ghost-btn wide" id="musicVerify">验证并连接</button>
-    <div class="src-head qr-wrap" id="musicQrBox" hidden></div>
-    <button class="ghost-btn wide" id="musicQr">生成登录二维码</button>
-    <p class="src-note">MUSIC_U 可在 music.163.com 登录后，从浏览器 Cookie 里复制；二维码需 API 服务支持扫码接口。</p>
+    <p class="src-note">MUSIC_U 可在 music.163.com 登录后，从浏览器 Cookie 里复制。</p>
   `);
 
   $('#musicVerify').onclick = async () => {
@@ -439,53 +524,56 @@ function openConnect() {
       openAdd();
       toast('已连接');
     } catch (err) {
-      toast(err.message === 'noapi' ? '请先填写 API 地址' : '验证失败，检查地址或 MUSIC_U');
-    }
-  };
-
-  $('#musicQr').onclick = async () => {
-    const base = $('#musicApiBase').value.trim().replace(/\/+$/, '');
-    if (!/^https?:\/\//i.test(base)) { toast('请填写 API 地址'); return; }
-    commit(s => { s.music.apiBase = base; });
-    try {
-      const keyData = await apiGet(`/login/qr/key?timestamp=${Date.now()}`);
-      const key = keyData?.data?.unikey;
-      if (!key) throw new Error('qr');
-      const create = await apiGet(`/login/qr/create?key=${key}&qrimg=true&timestamp=${Date.now()}`);
-      const qrimg = create?.data?.qrimg;
-      if (!qrimg) throw new Error('qr');
-      const box = $('#musicQrBox');
-      box.hidden = false;
-      box.innerHTML = `<img src="${qrimg}" alt="登录二维码">`;
-      const timer = setInterval(async () => {
-        if (!$('#musicQrBox')) { clearInterval(timer); return; }
-        try {
-          const check = await apiGet(`/login/qr/check?key=${key}&timestamp=${Date.now()}`);
-          if (check?.code === 803 && check.cookie) {
-            clearInterval(timer);
-            const cookie = check.cookie.replace(/^MUSIC_U=/, '').split(';')[0];
-            const cookieText = check.cookie.match(/MUSIC_U=([^;]+)/)?.[1] || cookie;
-            commit(s => { s.music.cookie = cookieText; });
-            const me = await apiGet(`/login/status?${cookieParam(cookieText)}&timestamp=${Date.now()}`);
-            const profile = me?.data?.profile || me?.profile || null;
-            commit(s => {
-              s.music.uid = String(profile?.userId || '');
-              s.music.nickname = profile?.nickname || '';
-            });
-            clearInterval(timer);
-            openAdd();
-            toast('已连接');
-          } else if (check?.code === 800) {
-            clearInterval(timer);
-            toast('二维码已过期');
-          }
-        } catch {}
-      }, 2500);
-    } catch {
-      toast('生成二维码失败，请检查 API 地址');
+      toast(isNetworkError(err) ? '连不上 API 服务，请检查地址' : '验证失败，检查地址或 MUSIC_U');
     }
   };
 }
+
+function askApiBase() {
+  openSheet(`
+    ${sheetTitle('先填 API 地址')}
+    <p class="music-src-text">扫码登录需要你部署的 NeteaseCloudMusicApi 服务地址，例如 https://xxx.vercel.app</p>
+    <div class="src-field">
+      <input class="input" id="musicApiBaseInput" placeholder="https://你的服务地址" value="${escapeHtml(music().apiBase || '')}">
+    </div>
+    <button class="ghost-btn wide" id="musicApiBaseSave">保存并扫码登录</button>
+    <button class="ghost-btn wide" id="musicApiCookie">改用 MUSIC_U 登录</button>
+  `);
+  $('#musicApiBaseSave').onclick = () => {
+    const base = $('#musicApiBaseInput').value.trim().replace(/\/+$/, '');
+    if (!/^https?:\/\//i.test(base)) { toast('请填写以 http(s) 开头的地址'); return; }
+    commit(s => { s.music.apiBase = base; });
+    closeSheet();
+    showQrModal();
+  };
+  $('#musicApiCookie').onclick = () => { closeSheet(); openCookieSheet(); };
+}
+
+function openConnect() {
+  const st = music();
+  if (st.cookie && st.uid) {
+    openSheet(`
+      ${sheetTitle(st.nickname || '我的网易云')}
+      <p class="music-src-text">已连接，登录信息只保存在本机。</p>
+      <button class="ghost-btn wide" id="musicMyPlaylists">查看我的歌单</button>
+      <button class="ghost-btn wide danger" id="musicLogout">退出登录</button>
+    `);
+    $('#musicMyPlaylists').onclick = openMyPlaylists;
+    $('#musicLogout').onclick = () => {
+      commit(s => { s.music.cookie = ''; s.music.uid = ''; s.music.nickname = ''; });
+      closeSheet();
+      syncAccount();
+      toast('已退出');
+    };
+    return;
+  }
+  if (!apiBase()) {
+    askApiBase();
+    return;
+  }
+  showQrModal();
+}
+
 
 async function openMyPlaylists() {
   toast('正在读取歌单…');
