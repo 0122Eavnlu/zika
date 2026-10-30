@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet } from './ui.js';
-import * as router from './router.js';
-import { playSound } from './audio.js';
-import { startCall } from './call.js';
-import { openCardSheet } from './cards.js';
-import { openMoments } from './moments.js';
-import { pickLyric, isListening } from './music.js';
+import { get, commit, subscribe } from './state.js?v=20261030c';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261030c';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet } from './ui.js?v=20261030c';
+import * as router from './router.js?v=20261030c';
+import { playSound } from './audio.js?v=20261030c';
+import { startCall } from './call.js?v=20261030c';
+import { openCardSheet } from './cards.js?v=20261030c';
+import { openMoments } from './moments.js?v=20261030c';
+import { pickLyric, isListening } from './music.js?v=20261030c';
 
 let busy = false;
 let replying = false;
