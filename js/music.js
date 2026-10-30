@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030m';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030m';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030m';
-import * as router from './router.js?v=20261030m';
+import { get, commit, subscribe } from './state.js?v=20261030n';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030n';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030n';
+import * as router from './router.js?v=20261030n';
 
 const session = [];
 const lyricsMap = new Map();
@@ -79,7 +79,7 @@ function loadTrack(i, autoplay) {
   index = ((i % list.length) + list.length) % list.length;
   const track = list[index];
   const a = ensureAudio();
-  a.src = track.url;
+  a.src = httpsUrl(track.url);
   updateMediaSession(track);
   render();
   if (autoplay) a.play().catch(() => {});
@@ -357,7 +357,7 @@ function pushTracks(items) {
         id: uid(),
         name: item.name || '未命名',
         artist: item.artist || '',
-        url: item.url,
+        url: httpsUrl(item.url),
         cover: httpsUrl(item.cover),
         lyrics: '',
         lrcUrl: item.lrcUrl || '',
@@ -396,7 +396,7 @@ async function importPlaylist(raw) {
       .map(item => ({
         name: String(item.name).trim(),
         artist: String(item.artist || '').trim(),
-        url: item.url,
+        url: httpsUrl(item.url),
         cover: hiRes(httpsUrl(item.pic)),
         lrcUrl: httpsUrl(item.lrc),
       }));
@@ -662,7 +662,7 @@ async function importPrivatePlaylist(playlistId) {
       .map(t => ({
         name: t.name,
         artist: (t.ar || []).map(a => a.name).join(' / '),
-        url: urls[t.id],
+        url: httpsUrl(urls[t.id]),
         cover: hiRes(httpsUrl(t.al?.picUrl)),
       }));
     if (!items.length) throw new Error('empty');
