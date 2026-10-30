@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261030n';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261030n';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet } from './ui.js?v=20261030n';
-import * as router from './router.js?v=20261030n';
-import { playSound } from './audio.js?v=20261030n';
-import { startCall } from './call.js?v=20261030n';
-import { openCardSheet } from './cards.js?v=20261030n';
-import { openMoments } from './moments.js?v=20261030n';
-import { pickLyric, isListening } from './music.js?v=20261030n';
+import { get, commit, subscribe } from './state.js?v=20261030o';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261030o';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet } from './ui.js?v=20261030o';
+import * as router from './router.js?v=20261030o';
+import { playSound } from './audio.js?v=20261030o';
+import { startCall } from './call.js?v=20261030o';
+import { openCardSheet } from './cards.js?v=20261030o';
+import { openMoments } from './moments.js?v=20261030o';
+import { pickLyric, isListening } from './music.js?v=20261030o';
 
 let busy = false;
 let replying = false;

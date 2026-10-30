@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030n';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030n';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030n';
-import * as router from './router.js?v=20261030n';
+import { get, commit, subscribe } from './state.js?v=20261030o';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030o';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030o';
+import * as router from './router.js?v=20261030o';
 
 const session = [];
 const lyricsMap = new Map();
@@ -50,8 +50,39 @@ function ensureAudio() {
   audio.addEventListener('ended', onEnded);
   audio.addEventListener('play', syncPlayButton);
   audio.addEventListener('pause', syncPlayButton);
-  audio.addEventListener('error', () => toast('这首歌无法播放'));
+  audio.addEventListener('error', onAudioError);
   return audio;
+}
+
+const recoveredIds = new Set();
+
+async function onAudioError() {
+  const track = currentTrack();
+  if (!track) return;
+  if (recoveredIds.has(track.id)) {
+    toast('这首歌暂时放不了');
+    return;
+  }
+  recoverAudio(track);
+}
+
+async function recoverAudio(track) {
+  if (!track || !track.url) {
+    toast('这首歌暂时放不了');
+    return;
+  }
+  recoveredIds.add(track.id);
+  try {
+    const res = await fetch(track.url);
+    if (!res.ok) throw new Error(String(res.status));
+    const blob = await res.blob();
+    const a = ensureAudio();
+    a.src = URL.createObjectURL(blob);
+    await a.play();
+    toast('已切换备用播放');
+  } catch {
+    toast('这首歌暂时放不了，换一首试试');
+  }
 }
 
 function updateMediaSession(track) {
@@ -393,6 +424,7 @@ async function importPlaylist(raw) {
     if (!Array.isArray(data) || !data.length) throw new Error('empty');
     const items = data
       .filter(item => item && item.name && item.url)
+      .slice(0, 300)
       .map(item => ({
         name: String(item.name).trim(),
         artist: String(item.artist || '').trim(),
@@ -404,8 +436,10 @@ async function importPlaylist(raw) {
     pushTracks(items);
     closeSheet();
     toast(`已导入 ${items.length} 首`);
-  } catch {
-    toast('导入失败，换个链接试试（版权受限的歌曲可能拿不到地址）');
+  } catch (err) {
+    toast(err && err.message === 'empty'
+      ? '这个歌单没有可播放的歌（可能全部版权受限）'
+      : '导入失败：接口没响应，稍后再试');
   }
 }
 
