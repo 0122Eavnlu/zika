@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030z';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030z';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030z';
-import * as router from './router.js?v=20261030z';
+import { get, commit, subscribe } from './state.js?v=20261031a';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261031a';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261031a';
+import * as router from './router.js?v=20261031a';
 
 const session = [];
 const lyricsMap = new Map();
@@ -72,19 +72,27 @@ async function recoverAudio(track) {
     return;
   }
   recoveredIds.add(track.id);
-  try {
-    const url = await resolveAudioUrl(track);
-    if (!url) throw new Error('nourl');
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(String(res.status));
-    const blob = await res.blob();
-    const a = ensureAudio();
-    a.src = URL.createObjectURL(blob);
-    await a.play();
-    toast('已切换备用播放');
-  } catch {
-    toast('这首歌暂时放不了，换一首试试');
+  const src = resolveUrl(track);
+  if (!src) {
+    toast('这首歌暂时放不了');
+    return;
   }
+  for (const host of PLAY_HOSTS) {
+    const id = metingId(src);
+    const url = id ? `${host}&type=url&id=${id}&_=${Date.now()}` : src;
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) continue;
+      const blob = await res.blob();
+      if (!blob.size || blob.type && !/audio|octet-stream/.test(blob.type)) continue;
+      const a = ensureAudio();
+      a.src = URL.createObjectURL(blob);
+      await a.play();
+      toast('已切换备用播放');
+      return;
+    } catch {}
+  }
+  toast('这首歌暂时放不了，换一首试试');
 }
 
 function updateMediaSession(track) {
@@ -113,8 +121,7 @@ async function loadTrack(i, autoplay) {
   const track = list[index];
   const a = ensureAudio();
   recoveredIds.delete(track.id);
-  const url = await resolveAudioUrl(track);
-  a.src = url;
+  a.src = resolveUrl(track);
   updateMediaSession(track);
   render();
   if (autoplay) a.play().catch(() => {});
@@ -426,30 +433,6 @@ function resolveUrl(track) {
   const idMatch = String(track.lrcUrl || '').match(/[?&]id=(\d+)/);
   if (idMatch) return `${METING_HOST}&type=url&id=${idMatch[1]}&_=${Date.now()}`;
   return url;
-}
-
-// 解析出真实的 MP3 直链，避开浏览器对 302 的缓存
-async function resolveAudioUrl(track) {
-  const src = resolveUrl(track);
-  if (!src) return '';
-  if (!/meting|injiahow|i-meto/.test(src) || !/type=url/.test(src)) return src;
-  const id = metingId(src);
-  if (!id) return src;
-  for (const host of PLAY_HOSTS) {
-    const url = `${host}&type=url&id=${id}&_=${Date.now()}`;
-    const controller = new AbortController();
-    try {
-      const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
-      if (res.ok && res.url && res.url !== url) {
-        const finalUrl = res.url;
-        controller.abort(); // 只取直链，不下载整个音频
-        return finalUrl;
-      }
-    } catch (err) {
-      if (err.name !== 'AbortError') continue;
-    }
-  }
-  return src;
 }
 
 function pushTracks(items) {
