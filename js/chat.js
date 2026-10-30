@@ -128,6 +128,12 @@ function buildMessage(msg) {
     inner = (msg.quote ? `<span class="quote">${escapeHtml(msg.quote)}</span>` : '') + escapeHtml(msg.text);
   }
 
+  // 气泡皮肤兼容：文字 / 歌词气泡额外挂 .message-sent / .message-received，
+  // 并把内容包进 .content-wrapper，外部皮肤 CSS 可正常生效（含左右镜像写法）。
+  const skinnable = type === 'text' || type === 'lyric';
+  if (skinnable) bubbleCls += isMe ? ' message-sent' : ' message-received';
+  if (type !== 'sticker' && type !== 'emoji' && type !== 'call') inner = `<span class="content-wrapper">${inner}</span>`;
+
   const avatarHtml = showAvatar ? `<span class="avatar" data-avatar="${msg.id}"></span>` : '';
   const meAvatarHtml = isMe ? `<span class="avatar me-avatar" data-avatar="${msg.id}" aria-label="我的资料"></span>` : '';
   return `<div class="msg ${isMe ? 'me' : 'them'} ${showAvatar || isMe ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${avatarHtml}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}<div class="${bubbleCls}">${inner}</div>${meta.length ? `<div class="meta">${meta.join('')}</div>` : ''}</div>${meAvatarHtml}</div>`;

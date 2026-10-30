@@ -33,7 +33,9 @@ export function applyVisuals() {
       loadedFontUrl = font;
       try {
         const face = new FontFace('ZikaUserFont', `url("${font}")`);
-        face.load().then(f => document.fonts.add(f)).catch(() => {});
+        face.load()
+          .then(f => document.fonts.add(f))
+          .catch(() => toast('字体加载失败：该地址未开放跨域，换一个字体地址'));
       } catch {}
     }
   } else {

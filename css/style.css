@@ -649,6 +649,7 @@ svg { display: block; }
   box-shadow: var(--shadow-sm);
 }
 .bubble:active { transform: scale(.98); }
+.bubble > .content-wrapper { display: block; position: relative; }
 
 .quote {
   display: block;
