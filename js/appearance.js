@@ -1,5 +1,5 @@
-import { get, commit, subscribe } from './state.js?v=20261030g';
-import { $, pickFile, compressImage, toast } from './util.js?v=20261030g';
+import { get, commit, subscribe } from './state.js?v=20261030h';
+import { $, pickFile, compressImage, toast } from './util.js?v=20261030h';
 
 const root = document.documentElement;
 let loadedFontUrl = '';

@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261030g';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030g';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030g';
-import * as router from './router.js?v=20261030g';
+import { get, commit, subscribe } from './state.js?v=20261030h';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261030h';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261030h';
+import * as router from './router.js?v=20261030h';
 
 const session = [];
 const lyricsMap = new Map();
@@ -823,11 +823,7 @@ function goPage(next) {
 }
 
 function backMusic() {
-  if (page > 0) goPage(page - 1);
-  else {
-    endSession();
-    router.close();
-  }
+  router.close();
 }
 
 function pushMusicMsg(who, text) {
