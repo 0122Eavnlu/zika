@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261031b';
-import { initSettings } from './settings.js?v=20261031b';
-import { initCards } from './cards.js?v=20261031b';
-import { initChat } from './chat.js?v=20261031b';
-import { initCall, hideCall } from './call.js?v=20261031b';
-import { initStatus } from './status.js?v=20261031b';
-import { initMoments } from './moments.js?v=20261031b';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031b';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031b';
-import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261031b';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml } from './util.js?v=20261031b';
-import { get, subscribe, commit } from './state.js?v=20261031b';
-import { openMeSheet } from './chat.js?v=20261031b';
+import { initAppearance } from './appearance.js?v=20261031c';
+import { initSettings } from './settings.js?v=20261031c';
+import { initCards } from './cards.js?v=20261031c';
+import { initChat } from './chat.js?v=20261031c';
+import { initCall, hideCall } from './call.js?v=20261031c';
+import { initStatus } from './status.js?v=20261031c';
+import { initMoments } from './moments.js?v=20261031c';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031c';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031c';
+import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261031c';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml } from './util.js?v=20261031c';
+import { get, subscribe, commit } from './state.js?v=20261031c';
+import { openMeSheet } from './chat.js?v=20261031c';
 
 function renderHome() {
   const s = get();
@@ -69,9 +69,45 @@ function renderHome() {
   const pinCap = $('#homePinCaption');
   if (pinCap) pinCap.textContent = s.ui.homePinCaption || '添加签名';
 
+  renderHomeMsgs(s);
+
   renderWidgets(s);
   updateHomeDots();
   updateClock();
+}
+
+function renderHomeMsgs(s) {
+  const left = $('#hp2MsgL');
+  const right = $('#hp2MsgR');
+  if (left) {
+    const text = (s.ui.homeMsgLeft || '').trim();
+    left.textContent = text || '点我输入';
+    left.classList.toggle('empty', !text);
+  }
+  if (right) {
+    const text = (s.ui.homeMsgRight || '').trim();
+    right.textContent = text || '点我输入';
+    right.classList.toggle('empty', !text);
+  }
+  setAvatar($('#hp2MsgAvL'), s.persona.name, s.persona.avatar);
+  setAvatar($('#hp2MsgAvR'), s.me.name, s.me.avatar);
+}
+
+async function editHomeMsg(side) {
+  const isLeft = side === 'left';
+  const current = isLeft ? get().ui.homeMsgLeft : get().ui.homeMsgRight;
+  const value = await promptSheet({
+    title: isLeft ? '左边这句话' : '右边这句话',
+    value: current || '',
+    placeholder: '写一句话，留空则显示「点我输入」',
+    maxlength: 40,
+  });
+  if (value == null) return;
+  commit(s => {
+    if (isLeft) s.ui.homeMsgLeft = value.trim();
+    else s.ui.homeMsgRight = value.trim();
+  });
+  renderHome();
 }
 
 function renderWidgets(s) {
@@ -271,6 +307,8 @@ function openFavSheet() {
 function bindHome() {
   bindPager();
   $('#hp2Anniv')?.addEventListener('click', openAnnivSheet);
+  $('#hp2MsgL')?.addEventListener('click', () => editHomeMsg('left'));
+  $('#hp2MsgR')?.addEventListener('click', () => editHomeMsg('right'));
   $('#hp2Cover')?.addEventListener('click', async () => {
     const url = await pickHomeImage();
     if (!url) return;
@@ -366,7 +404,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261031b', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261031c', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
