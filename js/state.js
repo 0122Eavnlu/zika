@@ -1,4 +1,4 @@
-import { uid, toast } from './util.js?v=20261031y';
+import { uid, toast } from './util.js?v=20261031z';
 
 const KEY = 'zika.state.v1';
 const VERSION = 4;
@@ -93,6 +93,19 @@ function defaults(withSeed = true) {
       momentReplyDelayMax: 300,
       momentPostGapMin: 20,
       momentPostGapMax: 180,
+      recallChance: 15,
+    },
+    tts: {
+      provider: 'minimax',
+      apiKey: '',
+      voiceId: '',
+      model: 'speech-02-hd',
+      apiBase: 'https://api.minimax.chat',
+      groupId: '',
+      speed: 1,
+      interval: 350,
+      autoVoice: false,
+      voiceRate: '偶尔',
     },
     group: { enabled: false, members },
     cards: seed.cards,

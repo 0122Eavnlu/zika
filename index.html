@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f4f6f9">
 <title>字卡</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=20261031y">
+<link rel="stylesheet" href="css/style.css?v=20261031z">
 </head>
 <body>
 
@@ -157,6 +157,7 @@
             </div>
           </div>
 
+          <div class="hp2-bottom">
           <button class="hp2-anniv" id="hp2Anniv" aria-label="纪念日">
             <span class="hp2-anniv-label">纪念日</span>
             <b id="hp2Days">0</b>
@@ -185,6 +186,7 @@
               </span>
               <span class="app-name">设定</span>
             </button>
+          </div>
           </div>
         </div>
       </div>
@@ -612,6 +614,64 @@
             <span class="range-val" data-range-val="behavior.quoteChance"></span>
           </div>
         </div>
+        <div class="row">
+          <span class="row-label">对方撤回</span>
+          <div class="slider-row">
+            <input type="range" min="0" max="80" step="1" class="range" data-range="behavior.recallChance">
+            <span class="range-val" data-range-val="behavior.recallChance"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">语音（MiniMax）</h2>
+        <div class="row">
+          <span class="row-label">API Key</span>
+          <input class="input" type="password" data-input="tts.apiKey" placeholder="只保存在本地">
+        </div>
+        <div class="row">
+          <span class="row-label">音色 ID</span>
+          <input class="input" data-input="tts.voiceId" placeholder="如 clone_voice_0122">
+        </div>
+        <div class="row">
+          <span class="row-label">Group ID</span>
+          <input class="input" data-input="tts.groupId" placeholder="可选">
+        </div>
+        <div class="row">
+          <span class="row-label">模型</span>
+          <input class="input" data-input="tts.model" placeholder="speech-02-hd">
+        </div>
+        <div class="row">
+          <span class="row-label">语速</span>
+          <div class="range-pair">
+            <input class="num" type="number" min="0.5" max="2" step="0.1" data-input="tts.speed">
+            <span class="unit">倍</span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="row-label">API 地址</span>
+          <input class="input" data-input="tts.apiBase" placeholder="https://api.minimax.chat">
+        </div>
+        <div class="tts-actions">
+          <button class="ghost-btn" id="ttsClone">克隆音色</button>
+          <button class="ghost-btn" id="ttsTest">试听</button>
+        </div>
+        <p class="tts-hint">API Key 只保存在本机浏览器；克隆音色会先把录音上传到 MiniMax。</p>
+        <div class="row">
+          <span class="row-label">AI 主动发语音</span>
+          <button class="switch" data-switch="tts.autoVoice" aria-label="主动发语音"></button>
+        </div>
+        <div class="row">
+          <span class="row-label">发语音频率</span>
+          <select class="input" data-select="tts.voiceRate">
+            <option value="偶尔">偶尔</option>
+            <option value="经常">经常</option>
+            <option value="总是">总是</option>
+          </select>
+        </div>
+        <div class="tts-actions">
+          <button class="ghost-btn wide" id="ttsClear">清除配置</button>
+        </div>
       </section>
 
       <section class="group">
@@ -866,6 +926,6 @@
   <style id="user-font"></style>
 </div>
 
-<script type="module" src="js/app.js?v=20261031y"></script>
+<script type="module" src="js/app.js?v=20261031z"></script>
 </body>
 </html>

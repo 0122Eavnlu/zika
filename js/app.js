@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261031y';
-import { initSettings } from './settings.js?v=20261031y';
-import { initCards } from './cards.js?v=20261031y';
-import { initChat } from './chat.js?v=20261031y';
-import { initCall, hideCall } from './call.js?v=20261031y';
-import { initStatus } from './status.js?v=20261031y';
-import { initMoments } from './moments.js?v=20261031y';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031y';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031y';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031y';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031y';
-import { get, subscribe, commit } from './state.js?v=20261031y';
-import { openMeSheet } from './chat.js?v=20261031y';
+import { initAppearance } from './appearance.js?v=20261031z';
+import { initSettings } from './settings.js?v=20261031z';
+import { initCards } from './cards.js?v=20261031z';
+import { initChat } from './chat.js?v=20261031z';
+import { initCall, hideCall } from './call.js?v=20261031z';
+import { initStatus } from './status.js?v=20261031z';
+import { initMoments } from './moments.js?v=20261031z';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031z';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031z';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031z';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031z';
+import { get, subscribe, commit } from './state.js?v=20261031z';
+import { openMeSheet } from './chat.js?v=20261031z';
 
 function renderHome() {
   const s = get();
@@ -377,7 +377,7 @@ async function pickHomeImage() {
   const file = await pickFile('image/*', false);
   if (!file) return '';
   try {
-    return await compressImage(file, 1280, .82);
+    return await compressImage(file, 760, .72);
   } catch {
     return '';
   }
@@ -499,7 +499,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261031y', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261031z', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {

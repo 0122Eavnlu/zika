@@ -1,5 +1,5 @@
-import { get, commit, subscribe } from './state.js?v=20261031y';
-import { $, pickFile, compressImage, toast } from './util.js?v=20261031y';
+import { get, commit, subscribe } from './state.js?v=20261031z';
+import { $, pickFile, compressImage, toast } from './util.js?v=20261031z';
 
 const root = document.documentElement;
 let loadedFontUrl = '';
@@ -20,8 +20,9 @@ export function applyVisuals() {
   root.style.setProperty('--fs', String(ui.fontSize));
   root.style.setProperty('--avatar-size', `${Number(ui.avatarSize) || 28}px`);
   const frost = Math.min(100, Math.max(0, Number(ui.frost ?? 65)));
-  root.style.setProperty('--frost-alpha', `${Math.max(0, 100 - frost * 1.15).toFixed(0)}%`);
-  root.style.setProperty('--frost-blur', `${(frost * .12).toFixed(1)}px`);
+  root.style.setProperty('--frost-alpha', `${(52 + frost * .32).toFixed(0)}%`);
+  root.style.setProperty('--frost-blur', `${(frost * .32).toFixed(1)}px`);
+  root.style.setProperty('--frost-sat', `${(1.35 + frost * .009).toFixed(2)}`);
 
   const ink = Math.min(100, Math.max(35, Number(ui.inkDepth ?? 100)));
   root.style.setProperty('--ink-strength', `${ink}%`);

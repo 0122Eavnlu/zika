@@ -1,11 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261031y';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031y';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031y';
-import * as router from './router.js?v=20261031y';
-import { playSound } from './audio.js?v=20261031y';
-import { startCall } from './call.js?v=20261031y';
-import { openMoments } from './moments.js?v=20261031y';
-import { pickLyric, isListening } from './music.js?v=20261031y';
+import { get, commit, subscribe } from './state.js?v=20261031z';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031z';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031z';
+import * as router from './router.js?v=20261031z';
+import { playSound } from './audio.js?v=20261031z';
+import { startCall } from './call.js?v=20261031z';
+import { openMoments } from './moments.js?v=20261031z';
+import { pickLyric, isListening } from './music.js?v=20261031z';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031z';
 
 let busy = false;
 let replying = false;
@@ -107,6 +108,10 @@ function buildMessage(msg) {
     return `<div class="msg nudge ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}"><span>${escapeHtml(msg.text)}</span></div>`;
   }
 
+  if (type === 'recall') {
+    return `<div class="msg recall ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}"><span>${escapeHtml(msg.text || '对方撤回了一条消息')}</span></div>`;
+  }
+
   const sender = senderOf(msg);
   const showAvatar = !isMe && p.showAvatar;
   const showName = !isMe && p.showName && get().group.enabled;
@@ -129,6 +134,14 @@ function buildMessage(msg) {
   } else if (type === 'lyric') {
     bubbleCls = 'bubble lyric';
     inner = escapeHtml(msg.lyric || msg.text || '');
+  } else if (type === 'quiz') {
+    bubbleCls = 'bubble quiz';
+    const q = msg.quiz || {};
+    const opts = (q.options || []).map((o, i) => {
+      const on = (q.chosen || []).includes(i) ? ' on' : '';
+      return `<div class="quiz-opt${on}"><span class="quiz-tick">✓</span><span class="quiz-label">${escapeHtml(o.text)}</span></div>`;
+    }).join('');
+    inner = `<div class="quiz-q">${escapeHtml(msg.text || '')}</div><div class="quiz-opts">${opts}</div>${q.answer ? `<div class="quiz-ans">${escapeHtml(q.answer)}</div>` : ''}`;
   } else {
     inner = (msg.quote ? `<span class="quote">${escapeHtml(msg.quote)}</span>` : '') + escapeHtml(msg.text);
   }
@@ -137,7 +150,7 @@ function buildMessage(msg) {
   // 并把内容包进 .content-wrapper，外部皮肤 CSS 可正常生效（含左右镜像写法）。
   const skinnable = type === 'text' || type === 'lyric';
   if (skinnable) bubbleCls += isMe ? ' message-sent' : ' message-received';
-  if (type !== 'sticker' && type !== 'emoji' && type !== 'call') inner = `<span class="content-wrapper">${inner}</span>`;
+  if (type !== 'sticker' && type !== 'emoji' && type !== 'call' && type !== 'quiz') inner = `<span class="content-wrapper">${inner}</span>`;
 
   const avatarHtml = showAvatar ? `<span class="avatar" data-avatar="${msg.id}"></span>` : '';
   const meAvatarHtml = isMe ? `<span class="avatar me-avatar" data-avatar="${msg.id}" aria-label="我的资料"></span>` : '';
@@ -208,12 +221,31 @@ function addIncoming(msgParts) {
     });
   });
   if (!seen && msgParts.text) notifyIncoming(msgParts.text, msgParts.senderName);
+  return id;
 }
 
 function markSelfRead() {
   const s = get();
   if (!s.messages.some(m => m.role === 'me' && !m.read)) return;
   commit(st => { st.messages.forEach(m => { if (m.role === 'me') m.read = true; }); });
+}
+
+/* 对方撤回：把刚发的消息换成一条居中提示 */
+function recallMessage(id) {
+  commit(st => {
+    const idx = st.messages.findIndex(m => m.id === id);
+    if (idx < 0) return;
+    st.messages[idx] = {
+      id: st.messages[idx].id,
+      role: 'them',
+      type: 'recall',
+      text: '对方撤回了一条消息',
+      ts: Date.now(),
+      seen: true,
+      senderId: '',
+    };
+  });
+  render(true);
 }
 
 function markSeen() {
@@ -549,25 +581,41 @@ export async function triggerReply({ proactive = false, allowCall = true } = {})
       ? parts[0]
       : parts.map((t, i) => (i < parts.length - 1 ? t.replace(/[。！？!?…，,；;、]+$/, '') : t)).join(sep);
     const sender = randomSender();
-    addIncoming({ text, quote, senderId: sender?.id || '', senderName: sender?.name || '' });
+    const firstId = addIncoming({ text, quote, senderId: sender?.id || '', senderName: sender?.name || '' });
     playSound();
+    afterAiMessage(firstId, text);
   } else {
+    let firstId = '';
+    let firstText = '';
     for (let i = 0; i < chosen.length; i++) {
       const sender = randomSender();
-      addIncoming({
+      const id = addIncoming({
         text: chosen[i].text,
         quote: i === 0 ? quote : '',
         senderId: sender?.id || '',
         senderName: sender?.name || '',
       });
+      if (!firstId) { firstId = id; firstText = chosen[i].text; }
       if (i === 0) playSound();
       if (i < chosen.length - 1) await sleep(randInt(420, 860));
     }
+    afterAiMessage(firstId, firstText);
   }
 
   replying = false;
   setSpeakState(false);
   await afterReply();
+}
+
+/* 发出后：按概率撤回 / 按频率用 MiniMax 语音读出来 */
+function afterAiMessage(id, text) {
+  const chance = Number(get().behavior.recallChance ?? 15);
+  if (id && chance > 0 && Math.random() * 100 < chance) {
+    setTimeout(() => recallMessage(id), randInt(1400, 2800));
+  }
+  if (text && hasTTS() && Math.random() <= voiceRateChance()) {
+    setTimeout(() => { speak(text, { silent: true }); }, randInt(300, 900));
+  }
 }
 
 async function afterReply() {
@@ -669,6 +717,7 @@ const ICON_HAND = `<svg viewBox="0 0 24 24"><path d="M8 13.4V7.6a1.5 1.5 0 0 1 3
 const ICON_LIST = `<svg viewBox="0 0 24 24"><path d="M4 7h11M4 12h11M4 17h7"/><path d="M18.4 15.5l1.6 1.6 3-3.4"/></svg>`;
 const ICON_IMAGE = `<svg viewBox="0 0 24 24"><rect x="3.2" y="5" width="17.6" height="14" rx="3"/><path d="M4.4 16.6l4.3-4.2a1.2 1.2 0 0 1 1.7 0l3.4 3.3M12.4 14.4l1.8-1.7a1.2 1.2 0 0 1 1.7 0l2.3 2.2"/><circle cx="8" cy="9.4" r="1.3"/></svg>`;
 const ICON_RECORD = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.6V12l3.2 1.9"/></svg>`;
+const ICON_QUIZ = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><circle cx="12" cy="16.9" r=".9" fill="currentColor" stroke="none"/></svg>`;
 
 function sendSticker(url) {
   const id = uid();
@@ -732,6 +781,7 @@ function openAttachPanel() {
       <button class="attach-row" data-attach="burst">${ICON_LIST}<span>连发</span></button>
       <button class="attach-row" data-attach="image">${ICON_IMAGE}<span>图片</span></button>
       <button class="attach-row" data-attach="record">${ICON_RECORD}<span>记录</span></button>
+      <button class="attach-row" data-attach="quiz">${ICON_QUIZ}<span>问问TA</span></button>
     </div>
   `);
   $$('#sheet [data-attach]').forEach(btn => {
@@ -758,9 +808,141 @@ function openAttachPanel() {
       }
       if (kind === 'image') { pickChatImage(); return; }
       if (kind === 'record') { openRecord(); return; }
+      if (kind === 'quiz') { openQuizPanel(); return; }
       closeSheet();
     };
   });
+}
+
+/* ---------- 问问TA（问卷） ---------- */
+
+function openQuizPanel() {
+  openSheet(`
+    <div class="quiz-panel">
+      <div class="quiz-title">
+        <h3>问问TA</h3>
+        <button class="quiz-close" data-quiz-close aria-label="关闭">×</button>
+      </div>
+      <div class="quiz-field">
+        <input class="quiz-input" id="quizQuestion" placeholder="你的问题？" maxlength="80">
+        <button class="quiz-clear" data-quiz-clear aria-label="清空">×</button>
+      </div>
+      <textarea class="quiz-area" id="quizBatch" rows="2" placeholder="批量设置问卷：每行一个问题（可写 问题~选项1~选项2）"></textarea>
+      <div class="quiz-modes">
+        <button class="quiz-mode on" data-mode="text">文字回复</button>
+        <button class="quiz-mode" data-mode="single">单选题</button>
+        <button class="quiz-mode" data-mode="multi">多选题</button>
+      </div>
+      <textarea class="quiz-area" id="quizOptions" rows="3" placeholder="选项：每行一个；可写 选项~TA回应" hidden></textarea>
+      <div class="quiz-wait">
+        <span>思考时间（秒）</span>
+        <div class="quiz-step">
+          <button data-step="-1" aria-label="减少">−</button>
+          <b id="quizWait">6</b>
+          <button data-step="1" aria-label="增加">+</button>
+        </div>
+      </div>
+      <div class="quiz-actions">
+        <button class="ghost-btn wide" data-quiz-close>取消</button>
+        <button class="ghost-btn wide primary" id="quizSend">发送</button>
+      </div>
+    </div>
+  `);
+
+  let mode = 'text';
+  const optionsBox = $('#quizOptions');
+  $$('#sheet [data-quiz-close]').forEach(btn => { btn.onclick = closeSheet; });
+  $$('#sheet [data-quiz-clear]').forEach(btn => { btn.onclick = () => { $('#quizQuestion').value = ''; $('#quizQuestion').focus(); }; });
+  $$('#sheet .quiz-mode').forEach(btn => {
+    btn.onclick = () => {
+      mode = btn.dataset.mode;
+      $$('#sheet .quiz-mode').forEach(b => b.classList.toggle('on', b === btn));
+      optionsBox.hidden = mode === 'text';
+      if (mode !== 'text') optionsBox.focus();
+    };
+  });
+  $$('#sheet [data-step]').forEach(btn => {
+    btn.onclick = () => {
+      const el = $('#quizWait');
+      const next = Math.min(60, Math.max(1, Number(el.textContent) + Number(btn.dataset.step)));
+      el.textContent = String(next);
+    };
+  });
+  $('#quizSend').onclick = () => {
+    const question = $('#quizQuestion').value.trim();
+    const batch = $('#quizBatch').value.trim();
+    const wait = Math.min(60, Math.max(1, Number($('#quizWait').textContent) || 6));
+    const fallbackOptions = parseQuizOptions(optionsBox.value);
+    const items = batch
+      ? batch.split('\n').map(l => l.trim()).filter(Boolean).map(line => {
+        const [q, ...rest] = line.split('~').map(x => x.trim()).filter(Boolean);
+        return { question: q, options: rest.length ? parseQuizOptions(rest.join('\n')) : fallbackOptions };
+      })
+      : [{ question, options: fallbackOptions }];
+    if (!items.length || !items[0].question) { toast('先写一个问题'); return; }
+    const valid = items.filter(it => it.question && (mode === 'text' || it.options.length >= 2));
+    if (!valid.length) { toast(mode === 'text' ? '先写一个问题' : '至少写两个选项'); return; }
+    closeSheet();
+    valid.forEach((it, i) => {
+      setTimeout(() => sendQuizCard(it.question, mode === 'text' ? [] : it.options, mode, wait), i * (wait + 2) * 1000);
+    });
+  };
+}
+
+function parseQuizOptions(text) {
+  return String(text || '').split('\n').map(line => line.trim()).filter(Boolean).map(line => {
+    const [text2, reply] = line.split('~').map(x => x.trim());
+    return { text: text2, reply: reply || '' };
+  }).filter(o => o.text);
+}
+
+function sendQuizCard(question, options, mode, wait) {
+  const id = uid();
+  fresh.add(id);
+  commit(st => {
+    st.messages.push({
+      id,
+      role: 'me',
+      type: 'quiz',
+      text: question,
+      ts: Date.now(),
+      read: false,
+      seen: true,
+      senderId: '',
+      quiz: { mode, options, chosen: [], answer: '' },
+    });
+  });
+  playSound();
+  render(true);
+  if (mode !== 'text' && options.length) {
+    setTimeout(() => resolveQuiz(id, randomizeQuizAnswer(mode, options)), Math.max(1, wait) * 1000);
+  } else {
+    setTimeout(() => triggerReply({ allowCall: false }), Math.max(1, wait) * 1000);
+  }
+}
+
+function randomizeQuizAnswer(mode, options) {
+  const count = mode === 'multi'
+    ? Math.max(1, Math.min(options.length, randInt(1, 2)))
+    : 1;
+  const pool = options.map((_, i) => i).sort(() => Math.random() - .5).slice(0, count);
+  return pool.sort((a, b) => a - b);
+}
+
+function resolveQuiz(id, chosen) {
+  const msg = get().messages.find(m => m.id === id);
+  if (!msg || !msg.quiz || msg.quiz.answer) return;
+  const picked = chosen.map(i => msg.quiz.options[i]).filter(Boolean);
+  const answer = picked.map(o => o.reply).filter(Boolean).join(' ') || `我选「${picked.map(o => o.text).join('、')}」`;
+  commit(st => {
+    const m = st.messages.find(x => x.id === id);
+    if (!m || !m.quiz) return;
+    m.quiz.chosen = chosen;
+    m.quiz.answer = answer;
+    m.seen = true;
+  });
+  render(true);
+  if (hasTTS() && Math.random() <= voiceRateChance()) speak(answer, { silent: true });
 }
 
 async function openTransfer() {

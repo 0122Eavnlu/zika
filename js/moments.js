@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261031y';
-import { $, escapeHtml, timeText, setAvatar, toast, uid, randInt, pick, pickFile, compressImage } from './util.js?v=20261031y';
-import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261031y';
-import * as router from './router.js?v=20261031y';
+import { get, commit, subscribe } from './state.js?v=20261031z';
+import { $, escapeHtml, timeText, setAvatar, toast, uid, randInt, pick, pickFile, compressImage } from './util.js?v=20261031z';
+import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261031z';
+import * as router from './router.js?v=20261031z';
 
 let origin = 'home';
 let draft = { text: '', stickerUrl: '', imageUrl: '', fromCards: false };

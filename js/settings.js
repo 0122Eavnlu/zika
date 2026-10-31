@@ -1,10 +1,11 @@
-import { get, commit, subscribe, getPath, setPath, exportState, importState, resetState } from './state.js?v=20261031y';
-import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, compressDataUrl, setAvatar, getInputNumber } from './util.js?v=20261031y';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js?v=20261031y';
-import { playItem } from './audio.js?v=20261031y';
-import * as router from './router.js?v=20261031y';
-import { openStatusSheet } from './status.js?v=20261031y';
-import { openMeSheet } from './chat.js?v=20261031y';
+import { get, commit, subscribe, getPath, setPath, exportState, importState, resetState } from './state.js?v=20261031z';
+import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, compressDataUrl, setAvatar, getInputNumber } from './util.js?v=20261031z';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js?v=20261031z';
+import { playItem } from './audio.js?v=20261031z';
+import * as router from './router.js?v=20261031z';
+import { openStatusSheet } from './status.js?v=20261031z';
+import { openMeSheet } from './chat.js?v=20261031z';
+import { speak, cloneVoice, hasTTS } from './tts.js?v=20261031z';
 
 /* ---------- 通用控件 ---------- */
 
@@ -229,6 +230,62 @@ async function addSound() {
   toast('已添加');
 }
 
+/* ---------- 语音（MiniMax） ---------- */
+
+function bindTTS() {
+  const testBtn = $('#ttsTest');
+  if (testBtn) {
+    testBtn.onclick = async () => {
+      if (!hasTTS()) { toast('先填 API Key 和音色 ID'); return; }
+      testBtn.disabled = true;
+      testBtn.textContent = '合成中…';
+      const name = get().persona.name || '我';
+      const ok = await speak(`你好，我是${name}，今天也要好好吃饭。`, { silent: true });
+      if (!ok) toast('合成失败，检查 Key / 网络 / 跨域');
+      testBtn.disabled = false;
+      testBtn.textContent = '试听';
+    };
+  }
+
+  const cloneBtn = $('#ttsClone');
+  if (cloneBtn) {
+    cloneBtn.onclick = async () => {
+      const file = await pickFile('audio/*');
+      if (!file) return;
+      const voiceId = await promptSheet({
+        title: '克隆音色',
+        value: `clone_voice_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`,
+        placeholder: '给这个音色起个 ID',
+        confirm: '上传',
+      });
+      if (!voiceId || !voiceId.trim()) return;
+      cloneBtn.disabled = true;
+      cloneBtn.textContent = '上传中…';
+      try {
+        await cloneVoice(file, voiceId.trim());
+        commit(s => { s.tts.voiceId = voiceId.trim(); });
+        toast('音色已克隆');
+      } catch (error) {
+        toast(`克隆失败：${error.message}`);
+      }
+      cloneBtn.disabled = false;
+      cloneBtn.textContent = '克隆音色';
+    };
+  }
+
+  const clearBtn = $('#ttsClear');
+  if (clearBtn) {
+    clearBtn.onclick = async () => {
+      const ok = await confirmSheet({ title: '清除语音配置', text: 'API Key 与音色 ID 会一起删掉', confirm: '清除', danger: true });
+      if (!ok) return;
+      commit(s => {
+        s.tts = { ...(s.tts || {}), apiKey: '', voiceId: '', groupId: '' };
+      });
+      toast('已清除');
+    };
+  }
+}
+
 /* ---------- 通知 ---------- */
 
 function bindNotify() {
@@ -413,6 +470,7 @@ export function initSettings() {
   bindControls();
   bindNotify();
   bindData();
+  bindTTS();
 
   $('#personaAvatar').onclick = uploadPersonaAvatar;
   $('#personaStatus').onclick = openStatusSheet;
