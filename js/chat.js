@@ -1,11 +1,11 @@
-import { get, commit, subscribe } from './state.js?v=20261031m';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031m';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031m';
-import * as router from './router.js?v=20261031m';
-import { playSound } from './audio.js?v=20261031m';
-import { startCall } from './call.js?v=20261031m';
-import { openMoments } from './moments.js?v=20261031m';
-import { pickLyric, isListening } from './music.js?v=20261031m';
+import { get, commit, subscribe } from './state.js?v=20261031n';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031n';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031n';
+import * as router from './router.js?v=20261031n';
+import { playSound } from './audio.js?v=20261031n';
+import { startCall } from './call.js?v=20261031n';
+import { openMoments } from './moments.js?v=20261031n';
+import { pickLyric, isListening } from './music.js?v=20261031n';
 
 let busy = false;
 let replying = false;
