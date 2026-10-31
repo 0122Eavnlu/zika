@@ -3333,6 +3333,8 @@ select.input option { background: var(--surface); color: var(--ink); }
   padding: 13px 14px 10px;
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line-2), var(--shadow-sm);
+  /* 屏幕变高时把时钟与下方图标均匀铺开，不再全挤在顶部 */
+  margin-top: auto;
 }
 .hp-clock-top {
   display: flex;
@@ -3397,7 +3399,8 @@ select.input option { background: var(--surface); color: var(--ink); }
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  margin-top: 2px;
+  /* 与时钟平分剩余高度，整体上下分布更均匀 */
+  margin-top: auto;
 }
 .hp-pins {
   position: relative;
@@ -3481,6 +3484,8 @@ select.input option { background: var(--surface); color: var(--ink); }
   flex-direction: column;
   gap: 16px;
   min-height: 100%;
+  /* 封面 / 消息 / 播放器 / 底部卡片 均匀铺满整屏 */
+  justify-content: space-between;
 }
 .hp2-cover {
   position: relative;
