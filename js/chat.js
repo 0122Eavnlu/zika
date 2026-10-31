@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261031K';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031K';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031K';
-import * as router from './router.js?v=20261031K';
-import { playSound } from './audio.js?v=20261031K';
-import { startCall } from './call.js?v=20261031K';
-import { openMoments } from './moments.js?v=20261031K';
-import { pickLyric, isListening } from './music.js?v=20261031K';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031K';
+import { get, commit, subscribe } from './state.js?v=20261031L';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031L';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031L';
+import * as router from './router.js?v=20261031L';
+import { playSound } from './audio.js?v=20261031L';
+import { startCall } from './call.js?v=20261031L';
+import { openMoments } from './moments.js?v=20261031L';
+import { pickLyric, isListening } from './music.js?v=20261031L';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031L';
 
 let busy = false;
 let replying = false;
@@ -151,7 +151,7 @@ function buildMessage(msg) {
     const answered = (q.chosen || []).length > 0;
     const soft = q.mode === 'yesno';
     bubbleCls = `bubble quiz${soft ? ' quiz-soft' : ''}`;
-    const kind = soft ? `让 ${persona().name || 'TA'} 决定` : '问卷';
+    const kind = soft ? `让 ${persona().name || 'TA'} 决定` : '问卷 · 1题';
     const time = get().ui.timeOn ? `<span class="qz-time">${timeText(msg.ts)}</span>` : '';
     const opts = soft
       ? (q.options || []).map((o, i) => {
@@ -165,7 +165,6 @@ function buildMessage(msg) {
     const status = answered ? 'TA 已选' : (soft ? '等TA选' : '等待中');
     inner = `<div class="qz-card">
         <div class="qz-card-head"><span class="qz-kind">${escapeHtml(kind)}</span>${time}</div>
-        ${soft ? '' : `<div class="qz-sub">问卷 · 1题</div>`}
         <div class="qz-question">${soft ? '' : '1. '}${escapeHtml(msg.text || '')}</div>
         ${opts ? `<div class="${soft ? 'qz-btns' : 'qz-opts'}">${opts}</div>` : ''}
         <div class="qz-foot"><span class="qz-status${answered ? ' done' : ''}">${status}</span></div>
@@ -196,7 +195,7 @@ function buildMessage(msg) {
       <button data-fa="fav" aria-label="收藏">${FA_STAR}</button>
       <button data-fa="del" class="danger" aria-label="删除">${FA_TRASH}</button>
     </div>`;
-  return `<div class="msg ${isMe ? 'me' : 'them'} ${showAvatar || isMe ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${avatarHtml}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}${mini}<div class="${bubbleCls}">${inner}</div>${meta.length ? `<div class="meta">${meta.join('')}</div>` : ''}${actions}</div>${meAvatarHtml}</div>`;
+  return `<div class="msg ${isMe ? 'me' : 'them'} ${type === 'quiz' ? 'quiz-msg' : ''} ${showAvatar || isMe ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${avatarHtml}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}${mini}<div class="${bubbleCls}">${inner}</div>${meta.length ? `<div class="meta">${meta.join('')}</div>` : ''}${actions}</div>${meAvatarHtml}</div>`;
 }
 
 function render(forceBottom = false) {

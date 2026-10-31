@@ -4694,10 +4694,11 @@ select.input option { background: var(--surface); color: var(--ink); }
 .qz-his-st.done { color: var(--surface); background: var(--ink); }
 .qz-his-pick { font-size: 11px; color: var(--ink-2); }
 
-/* 问卷气泡：两种都用同一种颜色（白） */
+/* 问卷气泡：两种都用同一种颜色（白），更横更宽 */
+.msg.quiz-msg .bubble-wrap { max-width: 92%; }
 .bubble.quiz,
 .msg.me .bubble.quiz {
-  max-width: min(78vw, 300px);
+  max-width: min(92vw, 350px);
   background: var(--surface);
   color: var(--ink);
   box-shadow: inset 0 0 0 1px var(--line), var(--shadow-sm);
@@ -4708,7 +4709,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   padding: 0;
   border-radius: 15px;
 }
-.qz-card { padding: 10px 12px 8px; }
+.qz-card { padding: 9px 12px 8px; }
 .qz-card-head {
   display: flex;
   align-items: center;
@@ -4717,14 +4718,20 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .qz-kind { font-size: 12px; font-weight: 600; color: var(--ink); letter-spacing: .02em; }
 .qz-time { font-size: 10px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.qz-sub { margin-top: 2px; font-size: 10px; color: var(--ink-3); letter-spacing: .03em; }
-.qz-question { margin-top: 6px; font-size: 13px; line-height: 1.4; color: var(--ink); }
-.qz-card .qz-opts { margin-top: 6px; gap: 1px; }
+.qz-question { margin-top: 5px; font-size: 13px; line-height: 1.4; color: var(--ink); }
+/* 选项横排两列，卡片更矮 */
+.qz-card .qz-opts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 10px;
+  margin-top: 7px;
+}
 .qz-opt {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 5px 3px;
+  min-width: 0;
+  padding: 4px 2px;
   border-radius: 8px;
   font-size: 12.5px;
   color: var(--ink-2);
