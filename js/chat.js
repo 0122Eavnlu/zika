@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261031G';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031G';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031G';
-import * as router from './router.js?v=20261031G';
-import { playSound } from './audio.js?v=20261031G';
-import { startCall } from './call.js?v=20261031G';
-import { openMoments } from './moments.js?v=20261031G';
-import { pickLyric, isListening } from './music.js?v=20261031G';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031G';
+import { get, commit, subscribe } from './state.js?v=20261031H';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031H';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031H';
+import * as router from './router.js?v=20261031H';
+import { playSound } from './audio.js?v=20261031H';
+import { startCall } from './call.js?v=20261031H';
+import { openMoments } from './moments.js?v=20261031H';
+import { pickLyric, isListening } from './music.js?v=20261031H';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031H';
 
 let busy = false;
 let replying = false;
@@ -135,12 +135,17 @@ function buildMessage(msg) {
     inner = `<div class="call-msg"><span class="call-ic">${CALL_ICON}</span><div><div class="call-title">${escapeHtml(msg.text || '视频通话')}</div><div class="call-sub">${escapeHtml(callSub(msg))}</div></div></div>`;
   } else if (type === 'lyric') {
     bubbleCls = 'bubble lyric';
-    inner = escapeHtml(msg.lyric || msg.text || '');
+    // 歌词摘取要带上歌名和歌词，和之前一致
+    const full = msg.text
+      || `${msg.lead || '我摘取了'}《${msg.song || ''}》${msg.lyric ? `的「${msg.lyric}」` : ''}`;
+    inner = escapeHtml(full);
   } else if (type === 'voice') {
     bubbleCls = 'bubble voice';
     const vText = msg.voiceText || msg.text || '';
     const sec = Math.max(1, Number(msg.voiceDur) || Math.round(vText.length / 4));
-    inner = `<div class="voice-msg"><span class="voice-wave"><i></i><i></i><i></i><i></i></span><span class="voice-track"></span><span class="voice-dur">${sec}"</span></div>`;
+    const quoteHtml = msg.quote ? `<span class="quote">${escapeHtml(msg.quote)}</span>` : '';
+    const caption = msg.voiceCaption && vText ? `<span class="voice-text">${escapeHtml(vText)}</span>` : '';
+    inner = `${quoteHtml}<div class="voice-msg"><span class="voice-wave"><i></i><i></i><i></i><i></i></span><span class="voice-track"></span><span class="voice-dur">${sec}"</span></div>${caption}`;
   } else if (type === 'quiz') {
     bubbleCls = 'bubble quiz';
     const q = msg.quiz || {};
@@ -451,6 +456,7 @@ function runAction(action, id) {
       m.text = text;
       delete m.voiceText;
       delete m.voiceDur;
+      delete m.voiceCaption;
     });
     scheduleRender();
   } else if (action === 'bubble') {
@@ -688,14 +694,22 @@ export async function triggerReply({ proactive = false, allowCall = true } = {})
   await afterReply();
 }
 
-/* 发出后：按概率撤回 / 按频率用 MiniMax 语音读出来 */
+/* 发出后：按概率撤回 / 按频率发成语音气泡（不自动朗读，点一下才播） */
 function afterAiMessage(id, text) {
   const chance = Number(get().behavior.recallChance ?? 15);
   if (id && chance > 0 && Math.random() * 100 < chance) {
     setTimeout(() => recallMessage(id), randInt(1400, 2800));
   }
-  if (text && hasTTS() && Math.random() <= voiceRateChance()) {
-    setTimeout(() => { speak(text, { silent: true }); }, randInt(300, 900));
+  if (id && text && hasTTS() && Math.random() <= voiceRateChance()) {
+    commit(s => {
+      const m = s.messages.find(x => x.id === id);
+      if (!m) return;
+      m.type = 'voice';
+      m.voiceText = text;
+      m.voiceDur = Math.max(1, Math.min(60, Math.round(text.length / 4)));
+      m.voiceCaption = true;
+    });
+    scheduleRender();
   }
 }
 

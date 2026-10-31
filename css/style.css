@@ -4329,6 +4329,18 @@ select.input option { background: var(--surface); color: var(--ink); }
 .voice-track { flex: 1; width: 46px; height: 3px; border-radius: 2px; background: color-mix(in srgb, currentColor 24%, transparent); }
 .voice-dur { font-size: 11px; letter-spacing: .03em; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .msg.me .bubble.voice .voice-dur { color: color-mix(in srgb, var(--bubble-me-text) 62%, transparent); }
+/* 语音气泡里附带的文字（不自动朗读，直接看得到） */
+.voice-text {
+  display: block;
+  margin-top: 7px;
+  max-width: 210px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.msg.me .bubble.voice .voice-text { color: var(--bubble-me-text); }
 .msg-mini {
   align-self: flex-start;
   max-width: 100%;
