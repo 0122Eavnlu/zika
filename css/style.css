@@ -3116,10 +3116,30 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .home-page::-webkit-scrollbar { display: none; }
 .hp1 {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-height: 100%;
+}
+
+/* 头像 / 名字 / 签名 / 位置 下方的白色透明渐变底 */
+.hp1::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -6px;
+  right: -6px;
+  top: 106px;
+  height: 200px;
+  border-radius: 26px;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--surface) 90%, transparent) 0%,
+    color-mix(in srgb, var(--surface) 78%, transparent) 32%,
+    color-mix(in srgb, var(--surface) 40%, transparent) 66%,
+    transparent 100%);
 }
 
 .hp-cover {
