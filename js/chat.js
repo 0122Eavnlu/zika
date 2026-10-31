@@ -1,11 +1,11 @@
-import { get, commit, subscribe } from './state.js?v=20261031s';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031s';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031s';
-import * as router from './router.js?v=20261031s';
-import { playSound } from './audio.js?v=20261031s';
-import { startCall } from './call.js?v=20261031s';
-import { openMoments } from './moments.js?v=20261031s';
-import { pickLyric, isListening } from './music.js?v=20261031s';
+import { get, commit, subscribe } from './state.js?v=20261031t';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031t';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031t';
+import * as router from './router.js?v=20261031t';
+import { playSound } from './audio.js?v=20261031t';
+import { startCall } from './call.js?v=20261031t';
+import { openMoments } from './moments.js?v=20261031t';
+import { pickLyric, isListening } from './music.js?v=20261031t';
 
 let busy = false;
 let replying = false;
@@ -65,7 +65,7 @@ function updateIdentity() {
   nameEl.textContent = p.name || '';
   nameEl.style.display = p.showName ? '' : 'none';
   $('#chatStatus').textContent = p.status || '';
-  $('#chatStatus').style.display = p.showName && p.status ? '' : 'none';
+  $('#chatStatus').style.display = 'none';
   $('#emptyName').textContent = p.name || '';
   $('#emptyName').style.display = p.showName ? '' : 'none';
   setAvatar($('#emptyAvatar'), p.name, p.avatar);
