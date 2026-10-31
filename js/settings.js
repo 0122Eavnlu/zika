@@ -1,11 +1,11 @@
-import { get, commit, subscribe, getPath, setPath, exportState, importState, resetState } from './state.js?v=20261031R';
-import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, compressDataUrl, setAvatar, getInputNumber } from './util.js?v=20261031R';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js?v=20261031R';
-import { playItem } from './audio.js?v=20261031R';
-import * as router from './router.js?v=20261031R';
-import { openStatusSheet } from './status.js?v=20261031R';
-import { openMeSheet } from './chat.js?v=20261031R';
-import { speak, cloneVoice, hasTTS } from './tts.js?v=20261031R';
+import { get, commit, subscribe, getPath, setPath, exportState, importState, resetState } from './state.js?v=20261031S';
+import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, compressDataUrl, setAvatar, getInputNumber } from './util.js?v=20261031S';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js?v=20261031S';
+import { playItem } from './audio.js?v=20261031S';
+import * as router from './router.js?v=20261031S';
+import { openStatusSheet } from './status.js?v=20261031S';
+import { openMeSheet } from './chat.js?v=20261031S';
+import { speak, cloneVoice, hasTTS } from './tts.js?v=20261031S';
 
 /* ---------- 通用控件 ---------- */
 
@@ -300,7 +300,7 @@ function notifyHint() {
     denied: '已被拒绝（需到手机设置 → 应用 → 字卡 → 通知里打开）',
     default: '尚未授权，点上面的「开启系统通知」',
   }[Notification.permission] || '未知';
-  el.textContent = `通知权限：${state}。新消息提醒需要 App 在后台运行，完全关闭后不会推送。`;
+  el.textContent = `通知权限：${state}。提醒需要 App 在后台运行；若延迟或偶尔不弹，请在手机设置里允许它后台活动（不限制电池）。`;
 }
 
 async function ensureNotifyPermission() {

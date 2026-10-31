@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261031R';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031R';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031R';
-import * as router from './router.js?v=20261031R';
-import { playSound } from './audio.js?v=20261031R';
-import { startCall } from './call.js?v=20261031R';
-import { openMoments } from './moments.js?v=20261031R';
-import { pickLyric, isListening } from './music.js?v=20261031R';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031R';
+import { get, commit, subscribe } from './state.js?v=20261031S';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031S';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031S';
+import * as router from './router.js?v=20261031S';
+import { playSound } from './audio.js?v=20261031S';
+import { startCall } from './call.js?v=20261031S';
+import { openMoments } from './moments.js?v=20261031S';
+import { pickLyric, isListening } from './music.js?v=20261031S';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031S';
 
 let busy = false;
 let replying = false;
@@ -332,7 +332,10 @@ async function notifyIncoming(text, senderName) {
   const title = get().group.enabled && senderName ? `${senderName} · ${p.name}` : p.name;
   const options = {
     body: text.length > 60 ? text.slice(0, 60) + '…' : text,
-    tag: 'zika-chat',
+    // 每条消息用独立 tag，避免新通知把上一条悄悄覆盖掉（那样不会弹横幅）
+    tag: `zika-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    renotify: true,
+    timestamp: Date.now(),
     // 不能静音，否则安卓只会悄悄进通知栏，不会弹出横幅
     silent: false,
     vibrate: [200, 80, 200],
