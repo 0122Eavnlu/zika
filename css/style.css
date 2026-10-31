@@ -524,15 +524,20 @@ svg { display: block; }
 .chat-bg.empty::after { display: none; }
 .chat-head { background: color-mix(in srgb, var(--paper) 68%, transparent); }
 #screen-chat .identity {
-  flex: 1;
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
   gap: 0;
   min-width: 0;
-  margin: 0 4px;
+  margin: 0;
+  z-index: 3;
 }
+#screen-chat #chatCallBtn { margin-left: auto; }
 #chatAvatar {
   width: 64px;
   height: 64px;
