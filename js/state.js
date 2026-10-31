@@ -1,4 +1,4 @@
-import { uid, toast } from './util.js?v=20261031F';
+import { uid, toast } from './util.js?v=20261031G';
 
 const KEY = 'zika.state.v1';
 const AT_KEY = 'zika.state.v1.at';
@@ -55,11 +55,14 @@ async function idbRead() {
 
 async function idbWrite(rec) {
   const db = await openDb();
-  if (!db) return;
+  if (!db) return false;
   try {
     const tx = db.transaction(DB_STORE, 'readwrite');
     tx.objectStore(DB_STORE).put(rec, DB_KEY);
-  } catch {}
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function seeds() {
@@ -261,20 +264,27 @@ function persistNow() {
     saveTimer = null;
   }
   const at = Date.now();
+  let localFailed = false;
   if (localOk) {
     try {
       localStorage.setItem(KEY, JSON.stringify(state));
       localStorage.setItem(AT_KEY, String(at));
     } catch {
       localOk = false;
-      if (!shared.quotaWarned) {
-        shared.quotaWarned = true;
-        toast('本地空间已满，已自动转存到大容量空间，数据不会丢');
-      }
+      localFailed = true;
     }
   }
-  // IndexedDB 支持结构化存储，不用把整个状态转成字符串，写入更快
-  idbWrite({ state, at });
+  // IndexedDB 支持结构化存储，不用把整个状态转成字符串，写入更快、容量也大得多
+  const wrote = idbWrite({ state, at });
+  if (localFailed) {
+    // 只有连大容量存储都写不进去时才提示，扩容后不再打扰
+    wrote.then(ok => {
+      if (!ok && !shared.quotaWarned) {
+        shared.quotaWarned = true;
+        toast('存储空间已满，请到「设定 → 存储空间」清理');
+      }
+    });
+  }
   return true;
 }
 
