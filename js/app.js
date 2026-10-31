@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261031i';
-import { initSettings } from './settings.js?v=20261031i';
-import { initCards } from './cards.js?v=20261031i';
-import { initChat } from './chat.js?v=20261031i';
-import { initCall, hideCall } from './call.js?v=20261031i';
-import { initStatus } from './status.js?v=20261031i';
-import { initMoments } from './moments.js?v=20261031i';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031i';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031i';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031i';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031i';
-import { get, subscribe, commit } from './state.js?v=20261031i';
-import { openMeSheet } from './chat.js?v=20261031i';
+import { initAppearance } from './appearance.js?v=20261031j';
+import { initSettings } from './settings.js?v=20261031j';
+import { initCards } from './cards.js?v=20261031j';
+import { initChat } from './chat.js?v=20261031j';
+import { initCall, hideCall } from './call.js?v=20261031j';
+import { initStatus } from './status.js?v=20261031j';
+import { initMoments } from './moments.js?v=20261031j';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031j';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031j';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031j';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031j';
+import { get, subscribe, commit } from './state.js?v=20261031j';
+import { openMeSheet } from './chat.js?v=20261031j';
 
 function renderHome() {
   const s = get();
@@ -73,7 +73,7 @@ function renderPins(s) {
   if (!box) return;
   const pins = s.ui.pins || [];
   if (!pins.length) {
-    box.style.height = '140px';
+    box.style.height = '148px';
     box.innerHTML = `
       <div class="polaroid" data-pin="add" style="--rot:-6deg;z-index:1">
         <button class="pin-card" aria-label="添加照片"><span class="pin-empty">＋</span></button>
@@ -81,7 +81,7 @@ function renderPins(s) {
       </div>`;
     return;
   }
-  box.style.height = pins.length > 1 ? '170px' : '140px';
+  box.style.height = pins.length > 1 ? '172px' : '148px';
   box.innerHTML = pins.map((p, i) => `
     <div class="polaroid" data-pin="${p.id}" style="--rot:${Number(p.rot) || 0}deg;z-index:${i + 1}">
       ${i === pins.length - 1 ? PIN_CLIP : ''}
@@ -498,7 +498,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261031i', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261031j', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {

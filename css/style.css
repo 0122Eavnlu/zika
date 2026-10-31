@@ -3332,10 +3332,10 @@ select.input option { background: var(--surface); color: var(--ink); }
   top: 0;
   left: 0;
   width: 116px;
-  padding: 6px 6px 0;
+  padding: 8px 8px 0;
   border-radius: 3px;
-  background: #fbfaf6;
-  box-shadow: 0 10px 26px -14px rgba(0, 0, 0, .38), inset 0 0 0 1px rgba(0, 0, 0, .05);
+  background: #fdfcf7;
+  box-shadow: 0 14px 30px -18px rgba(0, 0, 0, .45), 0 2px 6px -2px rgba(0, 0, 0, .12), inset 0 0 0 1px rgba(0, 0, 0, .04);
   transform: rotate(var(--rot, -6deg));
   transform-origin: 50% 100%;
   transition: transform .3s var(--ease);
@@ -3343,35 +3343,37 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .polaroid:nth-child(2) { left: 70px; top: 16px; }
 .polaroid .pin-card {
-  width: 104px;
-  height: 104px;
+  width: 100px;
+  height: 100px;
   margin: 0;
   padding: 0;
-  border-radius: 2px;
-  box-shadow: inset 0 0 0 1px var(--line);
+  border-radius: 1px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06);
 }
 .pin-caption {
   display: block;
   width: 100%;
-  padding: 5px 1px 7px;
+  padding: 9px 2px 13px;
   text-align: left;
-  font-size: 10px;
-  letter-spacing: .02em;
-  color: #57534c;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
+  font-size: 9px;
+  letter-spacing: .16em;
+  color: #2f2b26;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .pin-clip {
   position: absolute;
-  left: -9px;
-  top: -9px;
-  width: 24px;
-  height: 24px;
+  left: -13px;
+  top: -12px;
+  width: 30px;
+  height: 30px;
   z-index: 3;
   pointer-events: none;
-  color: #8d8a83;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .16));
+  color: #9a968e;
+  transform: rotate(-9deg);
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .22));
 }
 .pin-clip svg { width: 100%; height: 100%; }
 .hp1 .home-grid {
