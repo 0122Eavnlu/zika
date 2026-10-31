@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261031E';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031E';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031E';
-import * as router from './router.js?v=20261031E';
-import { playSound } from './audio.js?v=20261031E';
-import { startCall } from './call.js?v=20261031E';
-import { openMoments } from './moments.js?v=20261031E';
-import { pickLyric, isListening } from './music.js?v=20261031E';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031E';
+import { get, commit, subscribe } from './state.js?v=20261031F';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031F';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031F';
+import * as router from './router.js?v=20261031F';
+import { playSound } from './audio.js?v=20261031F';
+import { startCall } from './call.js?v=20261031F';
+import { openMoments } from './moments.js?v=20261031F';
+import { pickLyric, isListening } from './music.js?v=20261031F';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031F';
 
 let busy = false;
 let replying = false;
@@ -202,6 +202,42 @@ function render(forceBottom = false) {
   }
 }
 
+/* 同一帧内的多次数据变动只重绘一次，避免连续操作时反复重建整条消息列表 */
+let renderRaf = 0;
+let renderForce = false;
+
+function scheduleRender(force = false) {
+  if (force) renderForce = true;
+  if (renderRaf) return;
+  renderRaf = requestAnimationFrame(() => {
+    renderRaf = 0;
+    const f = renderForce;
+    renderForce = false;
+    render(f);
+  });
+}
+
+/* 只更新某一条消息的小气泡，不重建整个列表（贴气泡时用，明显更顺） */
+function patchBubbleText(id, text) {
+  const row = document.querySelector(`.msg[data-id="${id}"]`);
+  if (!row) return;
+  const wrap = row.querySelector('.bubble-wrap');
+  if (!wrap) return;
+  let mini = wrap.querySelector('.msg-mini');
+  if (text) {
+    if (!mini) {
+      mini = document.createElement('span');
+      mini.className = 'msg-mini';
+      const bubble = wrap.querySelector('.bubble');
+      if (bubble) wrap.insertBefore(mini, bubble);
+      else wrap.appendChild(mini);
+    }
+    mini.textContent = text;
+  } else if (mini) {
+    mini.remove();
+  }
+}
+
 function updateBadge() {
   const unseen = get().messages.filter(m => m.role === 'them' && !m.seen).length;
   const badge = $('#chatBadge');
@@ -256,7 +292,7 @@ function recallMessage(id) {
       senderId: '',
     };
   });
-  render(true);
+  scheduleRender(true);
 }
 
 function markSeen() {
@@ -374,8 +410,14 @@ function editBubble(id) {
       const m = s.messages.find(x => x.id === id);
       if (m) m.bubbleText = text;
     });
+    // commit 已经安排了一次整页重绘；这里只更新这一条的小气泡，取消掉那次重绘
+    if (renderRaf) {
+      cancelAnimationFrame(renderRaf);
+      renderRaf = 0;
+      renderForce = false;
+    }
+    patchBubbleText(id, text);
     closeSheet();
-    render();
   };
 }
 
@@ -398,7 +440,7 @@ function runAction(action, id) {
       m.voiceDur = Math.max(1, Math.min(60, Math.round(text.length / 4)));
       m.type = 'voice';
     });
-    render();
+    scheduleRender();
     toast('已转成语音');
   } else if (action === 'toText') {
     const text = msg.voiceText || msg.text || '';
@@ -410,7 +452,7 @@ function runAction(action, id) {
       delete m.voiceText;
       delete m.voiceDur;
     });
-    render();
+    scheduleRender();
   } else if (action === 'bubble') {
     editBubble(id);
   } else if (action === 'fav') {
@@ -745,7 +787,7 @@ function sendMessage() {
   input.value = '';
   autoGrow();
   playSound();
-  render(true);
+  scheduleRender(true);
   input.focus();
   triggerReply({ allowCall: false });
 }
@@ -776,7 +818,7 @@ function sendSticker(url) {
   });
   closeSheet();
   playSound();
-  render(true);
+  scheduleRender(true);
   triggerReply({ allowCall: false });
 }
 
@@ -831,7 +873,7 @@ function openAttachPanel() {
       if (kind === 'nudge') {
         closeSheet();
         pushSelf({ type: 'nudge', text: `你拍了拍「${persona().name || 'TA'}」` });
-        render(true);
+        scheduleRender(true);
         setTimeout(() => addIncoming({ text: '干嘛', senderName: persona().name }), 900);
         return;
       }
@@ -840,7 +882,7 @@ function openAttachPanel() {
         ['想你了', '在干嘛', '理理我'].forEach((text, i) => {
           setTimeout(() => {
             pushSelf({ text });
-            render(true);
+            scheduleRender(true);
           }, 260 * i);
         });
         return;
@@ -952,7 +994,7 @@ function sendQuizCard(question, options, mode, wait) {
     });
   });
   playSound();
-  render(true);
+  scheduleRender(true);
   if (mode !== 'text' && options.length) {
     setTimeout(() => resolveQuiz(id, randomizeQuizAnswer(mode, options)), Math.max(1, wait) * 1000);
   } else {
@@ -980,7 +1022,7 @@ function resolveQuiz(id, chosen) {
     m.quiz.answer = answer;
     m.seen = true;
   });
-  render(true);
+  scheduleRender(true);
   if (hasTTS() && Math.random() <= voiceRateChance()) speak(answer, { silent: true });
 }
 
@@ -989,7 +1031,7 @@ async function openTransfer() {
   if (!value || !value.trim()) return;
   closeSheet();
   pushSelf({ text: `[转账] ¥${value.trim()}` });
-  render(true);
+  scheduleRender(true);
   setTimeout(() => addIncoming({ text: '收到啦，谢谢你', senderName: persona().name }), 1200);
 }
 
@@ -1085,7 +1127,8 @@ export function initChat() {
   });
 
   subscribe(() => {
-    render();
+    updateBadge();
+    if (router.isOpen('chat')) scheduleRender();
     syncProactive();
   });
 
@@ -1098,6 +1141,11 @@ export function initChat() {
   router.register('chat', {
     onOpen: () => {
       markSeen();
+      if (renderRaf) {
+        cancelAnimationFrame(renderRaf);
+        renderRaf = 0;
+        renderForce = false;
+      }
       render(true);
       setTimeout(() => $('#msgScroll').scrollTop = $('#msgScroll').scrollHeight, 50);
     },

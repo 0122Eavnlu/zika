@@ -30,6 +30,7 @@ export function open(name) {
     next.setAttribute('aria-hidden', 'false');
   }
   hooks[name]?.onOpen?.();
+  window.dispatchEvent(new CustomEvent('zika:screen', { detail: { name: shared.current } }));
 }
 
 export function close() {
@@ -49,6 +50,7 @@ export function close() {
   }
   shared.current = null;
   document.getElementById('app').classList.remove('app-open');
+  window.dispatchEvent(new CustomEvent('zika:screen', { detail: { name: null } }));
 }
 
 export function bindBackButtons() {

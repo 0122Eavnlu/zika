@@ -1,28 +1,33 @@
-import { initAppearance } from './appearance.js?v=20261031E';
-import { initSettings } from './settings.js?v=20261031E';
-import { initCards } from './cards.js?v=20261031E';
-import { initChat } from './chat.js?v=20261031E';
-import { initCall, hideCall } from './call.js?v=20261031E';
-import { initStatus } from './status.js?v=20261031E';
-import { initMoments } from './moments.js?v=20261031E';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031E';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031E';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031E';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031E';
-import { get, subscribe, commit } from './state.js?v=20261031E';
-import { openMeSheet } from './chat.js?v=20261031E';
+import { initAppearance } from './appearance.js?v=20261031F';
+import { initSettings } from './settings.js?v=20261031F';
+import { initCards } from './cards.js?v=20261031F';
+import { initChat } from './chat.js?v=20261031F';
+import { initCall, hideCall } from './call.js?v=20261031F';
+import { initStatus } from './status.js?v=20261031F';
+import { initMoments } from './moments.js?v=20261031F';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031F';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031F';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031F';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031F';
+import { get, subscribe, commit } from './state.js?v=20261031F';
+import { openMeSheet } from './chat.js?v=20261031F';
+
+/* 首页重绘缓存：避免每次都把同一张超大的 base64 重新赋给 style，
+   反复赋值会让移动端整块重排、非常卡。 */
+let lastHomeBg = null;
+let lastCover = null;
+let lastHp2Cover = null;
 
 function renderHome() {
   const s = get();
   const home = $('#home');
   const bgEl = $('#homeBg');
   if (bgEl) {
-    if (s.ui.homeBg) {
-      bgEl.style.backgroundImage = `url("${s.ui.homeBg}")`;
-      bgEl.classList.remove('empty');
-    } else {
-      bgEl.style.backgroundImage = '';
-      bgEl.classList.add('empty');
+    const bg = s.ui.homeBg || '';
+    if (bg !== lastHomeBg) {
+      lastHomeBg = bg;
+      bgEl.style.backgroundImage = bg ? `url("${bg}")` : '';
+      bgEl.classList.toggle('empty', !bg);
     }
   }
   home?.classList.toggle('has-bg', Boolean(s.ui.homeBg));
@@ -30,24 +35,20 @@ function renderHome() {
   const cover = $('#homeCover');
   if (cover) {
     const img = (s.ui.homeCover || '').replace(/([?&]param=)\d+y\d+/i, (m, key) => `${key}1024y1024`);
-    if (img) {
-      cover.style.backgroundImage = `url("${img}")`;
-      cover.classList.add('has-img');
-    } else {
-      cover.style.backgroundImage = '';
-      cover.classList.remove('has-img');
+    if (img !== lastCover) {
+      lastCover = img;
+      cover.style.backgroundImage = img ? `url("${img}")` : '';
+      cover.classList.toggle('has-img', Boolean(img));
     }
   }
 
   const hp2 = $('#hp2Cover');
   if (hp2) {
     const img2 = s.ui.homeCover2 || s.ui.homeCover || '';
-    if (img2) {
-      hp2.style.backgroundImage = `url("${img2}")`;
-      hp2.classList.add('has-img');
-    } else {
-      hp2.style.backgroundImage = '';
-      hp2.classList.remove('has-img');
+    if (img2 !== lastHp2Cover) {
+      lastHp2Cover = img2;
+      hp2.style.backgroundImage = img2 ? `url("${img2}")` : '';
+      hp2.classList.toggle('has-img', Boolean(img2));
     }
   }
 
@@ -66,13 +67,39 @@ function renderHome() {
   updateClock();
 }
 
+/* 数据变动时不要立刻整页重绘首页：如果正开着别的页面（聊天 / 字卡等），
+   只记一个标记，等回到首页再画一次，避免聊天里每发一条消息都重建首页而卡顿。 */
+let homeDirty = false;
+let homeRaf = 0;
+
+function scheduleHomeRender() {
+  if (homeRaf) {
+    homeDirty = true;
+    return;
+  }
+  homeRaf = requestAnimationFrame(() => {
+    homeRaf = 0;
+    if (currentScreen()) {
+      homeDirty = true;
+      return;
+    }
+    homeDirty = false;
+    renderHome();
+  });
+}
+
 const PINS_MAX = 2;
 const PIN_CLIP = `<span class="pin-clip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16.6 8.6l-6.2 6.2a2.3 2.3 0 0 0 3.3 3.3l6.3-6.3a4.3 4.3 0 0 0-6.1-6.1l-7.3 7.3a6.3 6.3 0 0 0 8.9 8.9l5.8-5.8"/></svg></span>`;
+
+let lastPinsKey = null;
 
 function renderPins(s) {
   const box = $('#homePins');
   if (!box) return;
   const pins = s.ui.pins || [];
+  const key = pins.map(p => `${p.id}|${p.img ? p.img.length : 0}|${p.caption || ''}|${Number(p.rot) || 0}`).join('~');
+  if (key === lastPinsKey && box.childElementCount) return;
+  lastPinsKey = key;
   if (!pins.length) {
     box.style.height = '148px';
     box.innerHTML = `
@@ -499,7 +526,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261031E', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261031F', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -580,7 +607,14 @@ function boot() {
   registerServiceWorker();
   renderHome();
   setInterval(updateClock, 30000);
-  subscribe(renderHome);
+  subscribe(scheduleHomeRender);
+  window.addEventListener('zika:screen', event => {
+    if (event.detail && event.detail.name) return;
+    if (homeDirty) {
+      homeDirty = false;
+      renderHome();
+    }
+  });
   splash();
 }
 

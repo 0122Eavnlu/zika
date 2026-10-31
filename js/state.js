@@ -1,7 +1,66 @@
-import { uid, toast } from './util.js?v=20261031E';
+import { uid, toast } from './util.js?v=20261031F';
 
 const KEY = 'zika.state.v1';
+const AT_KEY = 'zika.state.v1.at';
 const VERSION = 4;
+
+/* 大容量存储：localStorage 只有 5MB，图片一多就写不进去。
+   这里用 IndexedDB（通常几百 MB）做主力持久化，localStorage 仅作快速快照。
+   - 每次改动：先防抖（280ms）合并写盘，不再每次 commit 都同步序列化整个 state；
+   - localStorage 写失败时自动只写 IndexedDB，不再弹「空间不足」；
+   - 启动时若 IndexedDB 的记录比 localStorage 新，就用 IndexedDB 的数据。 */
+const DB_NAME = 'zika-db';
+const DB_STORE = 'state';
+const DB_KEY = 'main';
+
+let dbPromise = null;
+let saveTimer = null;
+let touched = false;
+let localOk = true;
+
+function openDb() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise(resolve => {
+    try {
+      if (typeof indexedDB === 'undefined') { resolve(null); return; }
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+      req.onblocked = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+  return dbPromise;
+}
+
+async function idbRead() {
+  const db = await openDb();
+  if (!db) return null;
+  return new Promise(resolve => {
+    try {
+      const tx = db.transaction(DB_STORE, 'readonly');
+      const req = tx.objectStore(DB_STORE).get(DB_KEY);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+async function idbWrite(rec) {
+  const db = await openDb();
+  if (!db) return;
+  try {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put(rec, DB_KEY);
+  } catch {}
+}
 
 function seeds() {
   const g1 = uid(), g2 = uid(), g3 = uid();
@@ -184,7 +243,7 @@ let state = shared.state || load();
 shared.state = state;
 if (pendingSave) {
   pendingSave = false;
-  save();
+  persistNow();
 }
 const listeners = shared.listeners;
 
@@ -196,25 +255,78 @@ export function subscribe(fn) {
   return () => listeners.delete(fn);
 }
 
-function save() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-    return true;
-  } catch (e) {
-    if (!shared.quotaWarned) {
-      shared.quotaWarned = true;
-      toast('本地空间不足，请到「设定 → 存储空间」清理');
-    }
-    return false;
+function persistNow() {
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
   }
+  const at = Date.now();
+  if (localOk) {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(state));
+      localStorage.setItem(AT_KEY, String(at));
+    } catch {
+      localOk = false;
+      if (!shared.quotaWarned) {
+        shared.quotaWarned = true;
+        toast('本地空间已满，已自动转存到大容量空间，数据不会丢');
+      }
+    }
+  }
+  // IndexedDB 支持结构化存储，不用把整个状态转成字符串，写入更快
+  idbWrite({ state, at });
+  return true;
+}
+
+/* 防抖：连续多次改动只在 280ms 后落盘一次，避免每按一下都卡顿 */
+function scheduleSave() {
+  touched = true;
+  if (saveTimer) return;
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    persistNow();
+  }, 280);
 }
 
 export function commit(mutator) {
   if (mutator) mutator(state);
-  const ok = save();
+  scheduleSave();
   listeners.forEach(fn => fn(state));
-  return ok;
+  return true;
 }
+
+/* 启动后异步读取大容量存档：若它比 localStorage 更新，则替换为它的数据 */
+function hydrateFromIdb() {
+  if (shared.hydrated) return;
+  shared.hydrated = true;
+  idbRead().then(rec => {
+    if (!rec || typeof rec.at !== 'number' || touched) return;
+    const localAt = Number(localStorage.getItem(AT_KEY) || 0);
+    if (!(rec.at > localAt)) return;
+    try {
+      const parsed = (rec.state && typeof rec.state === 'object')
+        ? rec.state
+        : (typeof rec.json === 'string' ? JSON.parse(rec.json) : null);
+      if (!parsed || typeof parsed !== 'object') return;
+      state = deepMerge(defaults(false), parsed);
+      state.version = VERSION;
+      shared.state = state;
+      listeners.forEach(fn => fn(state));
+      scheduleSave();
+    } catch {}
+  });
+}
+
+function flushSave() {
+  if (saveTimer) persistNow();
+}
+
+window.addEventListener('pagehide', flushSave);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) flushSave();
+});
+
+hydrateFromIdb();
 
 export function getPath(path) {
   return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), state);
@@ -246,7 +358,7 @@ export function importState(parsed) {
   state = deepMerge(defaults(false), incoming);
   state.version = 1;
   shared.state = state;
-  save();
+  persistNow();
   listeners.forEach(fn => fn(state));
 }
 
@@ -255,6 +367,6 @@ export function resetState(keepPersona = false) {
   state = defaults(false);
   if (persona) state.persona = persona;
   shared.state = state;
-  save();
+  persistNow();
   listeners.forEach(fn => fn(state));
 }

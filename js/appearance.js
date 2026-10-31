@@ -1,8 +1,16 @@
-import { get, commit, subscribe } from './state.js?v=20261031E';
-import { $, pickFile, compressImage, toast } from './util.js?v=20261031E';
+import { get, commit, subscribe } from './state.js?v=20261031F';
+import { $, pickFile, compressImage, toast } from './util.js?v=20261031F';
 
 const root = document.documentElement;
 let loadedFontUrl = '';
+let lastVisualsKey = '';
+let lastChatBg = null;
+let lastHomeBg = null;
+
+function visualsKey() {
+  const ui = get().ui;
+  return [ui.theme, ui.fontSize, ui.avatarSize, ui.frost, ui.inkDepth, ui.font || '', ui.bubbleCss || ''].join('~');
+}
 
 function resolvedTheme() {
   const mode = get().ui.theme;
@@ -12,6 +20,7 @@ function resolvedTheme() {
 
 export function applyVisuals() {
   const ui = get().ui;
+  lastVisualsKey = visualsKey();
   root.dataset.theme = resolvedTheme();
 
   const meta = document.querySelector('meta[name="theme-color"]');
@@ -80,14 +89,20 @@ function syncSlider() {
 }
 
 function syncBg() {
-  const bg = get().ui.chatBg;
-  const preview = $('#bgPreview');
-  preview.style.backgroundImage = bg ? `url("${bg}")` : '';
-  preview.textContent = bg ? '' : '无';
-  const homeBg = get().ui.homeBg;
-  const homePreview = $('#homeBgPreview');
-  homePreview.style.backgroundImage = homeBg ? `url("${homeBg}")` : '';
-  homePreview.textContent = homeBg ? '' : '无';
+  const bg = get().ui.chatBg || '';
+  if (bg !== lastChatBg) {
+    lastChatBg = bg;
+    const preview = $('#bgPreview');
+    preview.style.backgroundImage = bg ? `url("${bg}")` : '';
+    preview.textContent = bg ? '' : '无';
+  }
+  const homeBg = get().ui.homeBg || '';
+  if (homeBg !== lastHomeBg) {
+    lastHomeBg = homeBg;
+    const homePreview = $('#homeBgPreview');
+    homePreview.style.backgroundImage = homeBg ? `url("${homeBg}")` : '';
+    homePreview.textContent = homeBg ? '' : '无';
+  }
 }
 
 function syncCss() {
@@ -204,12 +219,16 @@ export function initAppearance() {
   };
 
   subscribe(() => {
-    applyVisuals();
-    syncThemeButtons();
-    syncFont();
-    syncSlider();
+    const key = visualsKey();
+    if (key !== lastVisualsKey) {
+      lastVisualsKey = key;
+      applyVisuals();
+      syncThemeButtons();
+      syncFont();
+      syncSlider();
+      syncCss();
+    }
     syncBg();
-    syncCss();
   });
 
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
