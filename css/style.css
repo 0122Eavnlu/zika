@@ -3270,12 +3270,14 @@ select.input option { background: var(--surface); color: var(--ink); }
   color: var(--ink);
 }
 .hp-bio-row {
+  position: relative;
   align-self: center;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
   max-width: 100%;
   margin-top: -2px;
+  text-align: center;
 }
 .hp-bio {
   font-size: 10px;
@@ -3287,6 +3289,10 @@ select.input option { background: var(--surface); color: var(--ink); }
   white-space: nowrap;
 }
 .hp-edit {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
   flex: 0 0 auto;
   width: 13px;
   height: 13px;
@@ -3569,36 +3575,41 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .hp2-anniv {
   flex: 0 0 auto;
-  width: 92px;
-  height: 92px;
+  width: 112px;
+  height: 112px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
-  padding: 8px;
-  border-radius: 22px;
+  gap: 2px;
+  padding: 10px;
+  border-radius: 26px;
   background: color-mix(in srgb, var(--surface-2) var(--frost-alpha, 64%), transparent);
   backdrop-filter: blur(var(--frost-blur, 16px)) saturate(var(--frost-sat, 1.8));
   -webkit-backdrop-filter: blur(var(--frost-blur, 16px)) saturate(var(--frost-sat, 1.8));
   box-shadow: inset 0 0 0 1px var(--line-2), var(--shadow-sm);
 }
 .hp2-anniv-label {
-  font-size: 9.5px;
+  font-size: 11px;
   letter-spacing: .16em;
   color: var(--ink-3);
 }
 .hp2-anniv b {
-  font-size: 26px;
+  font-size: 36px;
   font-weight: 400;
-  line-height: 1.14;
+  line-height: 1.1;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 .hp2-anniv-foot {
-  font-size: 8px;
+  max-width: 100%;
+  font-size: 9px;
+  text-align: center;
   letter-spacing: .02em;
   color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .home-dots {
@@ -4305,6 +4316,20 @@ select.input option { background: var(--surface); color: var(--ink); }
   stroke-linejoin: round;
 }
 .msg-actions .danger { color: #c0453a; }
+
+/* 语音气泡 */
+.bubble.voice { padding: 11px 15px; min-width: 132px; }
+.voice-msg { display: flex; align-items: center; gap: 9px; }
+.voice-wave { display: flex; align-items: center; gap: 2.5px; height: 17px; color: var(--ink); }
+.msg.me .bubble.voice .voice-wave { color: var(--bubble-me-text); }
+.voice-wave i { display: block; width: 2.5px; border-radius: 2px; background: currentColor; }
+.voice-wave i:nth-child(1) { height: 8px; }
+.voice-wave i:nth-child(2) { height: 15px; }
+.voice-wave i:nth-child(3) { height: 11px; }
+.voice-wave i:nth-child(4) { height: 6px; }
+.voice-track { flex: 1; width: 46px; height: 3px; border-radius: 2px; background: color-mix(in srgb, currentColor 24%, transparent); }
+.voice-dur { font-size: 11px; letter-spacing: .03em; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.msg.me .bubble.voice .voice-dur { color: color-mix(in srgb, var(--bubble-me-text) 62%, transparent); }
 .msg-mini {
   align-self: flex-start;
   max-width: 100%;

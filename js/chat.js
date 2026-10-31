@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261031D';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031D';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031D';
-import * as router from './router.js?v=20261031D';
-import { playSound } from './audio.js?v=20261031D';
-import { startCall } from './call.js?v=20261031D';
-import { openMoments } from './moments.js?v=20261031D';
-import { pickLyric, isListening } from './music.js?v=20261031D';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031D';
+import { get, commit, subscribe } from './state.js?v=20261031E';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031E';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031E';
+import * as router from './router.js?v=20261031E';
+import { playSound } from './audio.js?v=20261031E';
+import { startCall } from './call.js?v=20261031E';
+import { openMoments } from './moments.js?v=20261031E';
+import { pickLyric, isListening } from './music.js?v=20261031E';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031E';
 
 let busy = false;
 let replying = false;
@@ -98,6 +98,8 @@ const FA_QUOTE = `<svg viewBox="0 0 24 24"><path d="M9 6.5L4.5 11l4.5 4.5M4.8 11
 const FA_BUBBLE = `<svg viewBox="0 0 24 24"><path d="M20.5 11.6a8.5 8.5 0 0 1-12.4 7.5L3.5 20.5l1.4-4.6a8.5 8.5 0 1 1 15.6-4.3z"/><circle cx="8.6" cy="11.7" r="1"/><circle cx="12" cy="11.7" r="1"/><circle cx="15.4" cy="11.7" r="1"/></svg>`;
 const FA_STAR = `<svg viewBox="0 0 24 24"><path d="M12 3.8l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/></svg>`;
 const FA_TRASH = `<svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.2 7V5.2a1.4 1.4 0 0 1 1.4-1.4h2.8a1.4 1.4 0 0 1 1.4 1.4V7M6.5 7l.9 12a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.9-12"/></svg>`;
+const FA_VOICE = `<svg viewBox="0 0 24 24"><path d="M4.6 10v4M8.6 7.4v9.2M12.6 4.8v14.4M16.6 8.4v7.2M20.4 10.6v2.8"/></svg>`;
+const FA_TEXT = `<svg viewBox="0 0 24 24"><rect x="5" y="3.6" width="14" height="16.8" rx="3"/><path d="M8.6 8.6h6.8M8.6 12h6.8M8.6 15.4h3.8"/></svg>`;
 
 function buildMessage(msg) {
   const p = persona();
@@ -134,6 +136,11 @@ function buildMessage(msg) {
   } else if (type === 'lyric') {
     bubbleCls = 'bubble lyric';
     inner = escapeHtml(msg.lyric || msg.text || '');
+  } else if (type === 'voice') {
+    bubbleCls = 'bubble voice';
+    const vText = msg.voiceText || msg.text || '';
+    const sec = Math.max(1, Number(msg.voiceDur) || Math.round(vText.length / 4));
+    inner = `<div class="voice-msg"><span class="voice-wave"><i></i><i></i><i></i><i></i></span><span class="voice-track"></span><span class="voice-dur">${sec}"</span></div>`;
   } else if (type === 'quiz') {
     bubbleCls = 'bubble quiz';
     const q = msg.quiz || {};
@@ -150,14 +157,18 @@ function buildMessage(msg) {
   // 并把内容包进 .content-wrapper，外部皮肤 CSS 可正常生效（含左右镜像写法）。
   const skinnable = type === 'text' || type === 'lyric';
   if (skinnable) bubbleCls += isMe ? ' message-sent' : ' message-received';
-  if (type !== 'sticker' && type !== 'emoji' && type !== 'call' && type !== 'quiz') inner = `<span class="content-wrapper">${inner}</span>`;
+  if (type !== 'sticker' && type !== 'emoji' && type !== 'call' && type !== 'quiz' && type !== 'voice') inner = `<span class="content-wrapper">${inner}</span>`;
 
   const avatarHtml = showAvatar ? `<span class="avatar" data-avatar="${msg.id}"></span>` : '';
   const meAvatarHtml = isMe ? `<span class="avatar me-avatar" data-avatar="${msg.id}" aria-label="我的资料"></span>` : '';
   const mini = msg.bubbleText ? `<span class="msg-mini">${escapeHtml(msg.bubbleText)}</span>` : '';
+  const convertBtn = type === 'voice'
+    ? `<button data-fa="toText" aria-label="转文字">${FA_TEXT}</button>`
+    : (!isMe && type === 'text' ? `<button data-fa="toVoice" aria-label="转语音">${FA_VOICE}</button>` : '');
   const actions = `<div class="msg-actions">
       <button data-fa="copy" aria-label="复制">${FA_COPY}</button>
       <button data-fa="quote" aria-label="引用">${FA_QUOTE}</button>
+      ${convertBtn}
       <button data-fa="bubble" aria-label="添加小气泡">${FA_BUBBLE}</button>
       <button data-fa="fav" aria-label="收藏">${FA_STAR}</button>
       <button data-fa="del" class="danger" aria-label="删除">${FA_TRASH}</button>
@@ -295,6 +306,11 @@ function deleteMessage(id) {
 function handleTap(row, id) {
   const msg = get().messages.find(m => m.id === id);
   if (!msg) return;
+  if (msg.type === 'voice') {
+    if (hasTTS()) speak(msg.voiceText || '', { silent: true });
+    else toast('先在「设定 → 语音」里配置');
+    return;
+  }
   if (openMeta.has(id)) openMeta.delete(id); else openMeta.add(id);
   row.classList.toggle('show-meta');
 }
@@ -372,6 +388,29 @@ function runAction(action, id) {
     navigator.clipboard?.writeText(text).then(() => toast('已复制')).catch(() => toast('复制失败'));
   } else if (action === 'quote') {
     setQuote(msg);
+  } else if (action === 'toVoice') {
+    const text = msg.text || '';
+    if (!text.trim()) return;
+    commit(s => {
+      const m = s.messages.find(x => x.id === id);
+      if (!m) return;
+      m.voiceText = text;
+      m.voiceDur = Math.max(1, Math.min(60, Math.round(text.length / 4)));
+      m.type = 'voice';
+    });
+    render();
+    toast('已转成语音');
+  } else if (action === 'toText') {
+    const text = msg.voiceText || msg.text || '';
+    commit(s => {
+      const m = s.messages.find(x => x.id === id);
+      if (!m) return;
+      m.type = 'text';
+      m.text = text;
+      delete m.voiceText;
+      delete m.voiceDur;
+    });
+    render();
   } else if (action === 'bubble') {
     editBubble(id);
   } else if (action === 'fav') {
