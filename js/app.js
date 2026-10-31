@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261031g';
-import { initSettings } from './settings.js?v=20261031g';
-import { initCards } from './cards.js?v=20261031g';
-import { initChat } from './chat.js?v=20261031g';
-import { initCall, hideCall } from './call.js?v=20261031g';
-import { initStatus } from './status.js?v=20261031g';
-import { initMoments } from './moments.js?v=20261031g';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031g';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031g';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031g';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031g';
-import { get, subscribe, commit } from './state.js?v=20261031g';
-import { openMeSheet } from './chat.js?v=20261031g';
+import { initAppearance } from './appearance.js?v=20261031h';
+import { initSettings } from './settings.js?v=20261031h';
+import { initCards } from './cards.js?v=20261031h';
+import { initChat } from './chat.js?v=20261031h';
+import { initCall, hideCall } from './call.js?v=20261031h';
+import { initStatus } from './status.js?v=20261031h';
+import { initMoments } from './moments.js?v=20261031h';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031h';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031h';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031h';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031h';
+import { get, subscribe, commit } from './state.js?v=20261031h';
+import { openMeSheet } from './chat.js?v=20261031h';
 
 function renderHome() {
   const s = get();
@@ -29,7 +29,7 @@ function renderHome() {
 
   const cover = $('#homeCover');
   if (cover) {
-    const img = (s.ui.homeCover || s.ui.homeBg || '').replace(/([?&]param=)\d+y\d+/i, (m, key) => `${key}1024y1024`);
+    const img = (s.ui.homeCover || '').replace(/([?&]param=)\d+y\d+/i, (m, key) => `${key}1024y1024`);
     if (img) {
       cover.style.backgroundImage = `url("${img}")`;
       cover.classList.add('has-img');
@@ -41,8 +41,8 @@ function renderHome() {
 
   const hp2 = $('#hp2Cover');
   if (hp2) {
-    if (s.ui.homeCover) {
-      hp2.style.backgroundImage = `url("${s.ui.homeCover}")`;
+    if (s.ui.homeCover2) {
+      hp2.style.backgroundImage = `url("${s.ui.homeCover2}")`;
       hp2.classList.add('has-img');
     } else {
       hp2.style.backgroundImage = '';
@@ -417,17 +417,14 @@ function bindHome() {
   $('#hp2Cover')?.addEventListener('click', async () => {
     const url = await pickHomeImage();
     if (!url) return;
-    commit(s => { s.ui.homeCover = url; });
+    commit(s => { s.ui.homeCover2 = url; });
     renderHome();
-    toast('已更换封面');
+    toast('已更换第二页头像背景');
   });
   $('#homeCover')?.addEventListener('click', async () => {
     const url = await pickHomeImage();
     if (!url) return;
-    commit(s => {
-      s.ui.homeCover = url;
-      s.ui.homeBg = url;
-    });
+    commit(s => { s.ui.homeCover = url; });
     renderHome();
     toast('已更换封面');
   });
@@ -501,7 +498,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261031g', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261031h', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {

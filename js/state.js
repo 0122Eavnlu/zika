@@ -1,7 +1,7 @@
-import { uid, toast } from './util.js?v=20261031g';
+import { uid, toast } from './util.js?v=20261031h';
 
 const KEY = 'zika.state.v1';
-const VERSION = 3;
+const VERSION = 4;
 
 function seeds() {
   const g1 = uid(), g2 = uid(), g3 = uid();
@@ -48,6 +48,7 @@ function defaults(withSeed = true) {
       chatBg: '',
       homeBg: '',
       homeCover: '',
+      homeCover2: '',
       homePin: '',
       homePinCaption: '',
       pins: [],
@@ -138,6 +139,7 @@ function migrate(state) {
   if (!state.ui.pins.length && state.ui.homePin) {
     state.ui.pins = [{ id: uid(), img: state.ui.homePin, caption: state.ui.homePinCaption || '', rot: -6 }];
   }
+  if (!state.ui.homeCover2 && state.ui.homeCover) state.ui.homeCover2 = state.ui.homeCover;
   if (Number(state.ui.inkDepth) === undefined || !Number.isFinite(Number(state.ui.inkDepth))) state.ui.inkDepth = 100;
   state.version = VERSION;
 }
