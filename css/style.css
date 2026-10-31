@@ -3112,7 +3112,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: max(20px, env(safe-area-inset-top)) 20px calc(env(safe-area-inset-bottom) + 26px);
+  padding: max(20px, env(safe-area-inset-top)) 34px calc(env(safe-area-inset-bottom) + 26px);
 }
 .home-page::-webkit-scrollbar { display: none; }
 .hp1 {
@@ -3133,13 +3133,13 @@ select.input option { background: var(--surface); color: var(--ink); }
   right: 0;
   top: 150px;
   height: 150px;
-  border-radius: 0 0 22px 22px;
+  border-radius: 22px;
   pointer-events: none;
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--surface) 86%, transparent) 0%,
-    color-mix(in srgb, var(--surface) 62%, transparent) 38%,
-    color-mix(in srgb, var(--surface) 26%, transparent) 72%,
-    transparent 100%);
+    rgba(255, 255, 255, .97) 0%,
+    rgba(255, 255, 255, .94) 46%,
+    rgba(255, 255, 255, .74) 82%,
+    rgba(255, 255, 255, 0) 100%);
 }
 
 .hp-cover {

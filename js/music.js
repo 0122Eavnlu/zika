@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261031e';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261031e';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261031e';
-import * as router from './router.js?v=20261031e';
+import { get, commit, subscribe } from './state.js?v=20261031f';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261031f';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261031f';
+import * as router from './router.js?v=20261031f';
 
 const session = [];
 const lyricsMap = new Map();
