@@ -4398,7 +4398,7 @@ select.input option { background: var(--surface); color: var(--ink); }
 [data-theme="dark"] #app::after { mix-blend-mode: normal; opacity: .1; }
 .home-pager { will-change: transform; transform: translateZ(0); }
 .home-pager.dragging { transition: none !important; }
-.tile, .anniv-card, .hp2-cover, .widget-music, .polaroid {
+.tile, .anniv-card, .hp2-cover, .widget-music {
   transform: translateZ(0);
   backface-visibility: hidden;
 }
