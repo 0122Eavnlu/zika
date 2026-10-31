@@ -1319,7 +1319,20 @@ select.input option { background: var(--surface); color: var(--ink); }
   scrollbar-width: none;
 }
 
-.sheet.sheet-white { background: #fff; }
+.sheet.sheet-white {
+  background: #fff;
+  color: #14171c;
+  --ink: #14171c;
+  --ink-2: #464c55;
+  --ink-3: #868d97;
+  --line: rgba(20, 23, 28, .08);
+  --line-2: rgba(20, 23, 28, .14);
+  --paper: #fff;
+  --paper-2: #fff;
+  --surface: #fff;
+  --surface-2: #fff;
+  --bubble-them: #fff;
+}
 .sheet.sheet-white .input.area { background: #f7f7f7; border-color: rgba(0,0,0,.08); }
 .sheet::-webkit-scrollbar { display: none; }
 @keyframes sheetUp { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }

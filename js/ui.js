@@ -1,4 +1,4 @@
-import { $, escapeHtml } from './util.js?v=20261031I';
+import { $, escapeHtml } from './util.js?v=20261031J';
 
 let keyHandler = null;
 let closeToken = 0;
@@ -8,8 +8,9 @@ export function openSheet(inner) {
   const layer = $('#sheetLayer');
   const sheet = $('#sheet');
   sheet.innerHTML = `<div class="grabber"></div>${inner}`;
-  sheet.classList.remove('sheet-white');
-  layer.classList.remove('closing');
+  sheet.classList.remove('sheet-dark');
+  // 所有面板统一：居中悬浮 + 白色底
+  sheet.classList.add('sheet-center', 'sheet-white');
   sheet.classList.remove('closing');
   layer.hidden = false;
 
