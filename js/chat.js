@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261031J';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031J';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031J';
-import * as router from './router.js?v=20261031J';
-import { playSound } from './audio.js?v=20261031J';
-import { startCall } from './call.js?v=20261031J';
-import { openMoments } from './moments.js?v=20261031J';
-import { pickLyric, isListening } from './music.js?v=20261031J';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031J';
+import { get, commit, subscribe } from './state.js?v=20261031K';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031K';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031K';
+import * as router from './router.js?v=20261031K';
+import { playSound } from './audio.js?v=20261031K';
+import { startCall } from './call.js?v=20261031K';
+import { openMoments } from './moments.js?v=20261031K';
+import { pickLyric, isListening } from './music.js?v=20261031K';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031K';
 
 let busy = false;
 let replying = false;
@@ -1103,8 +1103,8 @@ function resolveQuiz(id, chosen) {
   });
   scheduleRender(true);
   const p = persona();
-  // 对方作答：先回一条选择，再出现「填完了问卷」的提示
-  addIncoming({ text: answer, quote: `回复 @${p.name || 'TA'}：决策：${msg.text || ''}`, senderName: p.name, senderId: '' });
+  // 对方作答：一条简短选择，再出现「填完了问卷」的提示
+  addIncoming({ text: answer, senderName: p.name, senderId: '' });
   const noticeId = uid();
   fresh.add(noticeId);
   commit(st => {
