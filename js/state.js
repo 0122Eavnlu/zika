@@ -1,4 +1,4 @@
-import { uid, toast } from './util.js?v=20261031A';
+import { uid, toast } from './util.js?v=20261031B';
 
 const KEY = 'zika.state.v1';
 const VERSION = 4;
@@ -176,12 +176,17 @@ function load() {
   }
 }
 
-let state = load();
+/* 单例：同一次会话里若因版本号不一致重复加载本模块，共用同一个 store，
+   避免两份内存状态互相覆盖（曾导致朋友圈 / 拍立得数据丢失）。 */
+const shared = window.__zikaStore__ || (window.__zikaStore__ = { state: null, listeners: new Set(), quotaWarned: false });
+
+let state = shared.state || load();
+shared.state = state;
 if (pendingSave) {
   pendingSave = false;
   save();
 }
-const listeners = new Set();
+const listeners = shared.listeners;
 
 export function get() { return state; }
 export const store = { get: () => state };
@@ -191,14 +196,13 @@ export function subscribe(fn) {
   return () => listeners.delete(fn);
 }
 
-let quotaWarned = false;
 function save() {
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
     return true;
   } catch (e) {
-    if (!quotaWarned) {
-      quotaWarned = true;
+    if (!shared.quotaWarned) {
+      shared.quotaWarned = true;
       toast('本地空间不足，请到「设定 → 存储空间」清理');
     }
     return false;
@@ -207,8 +211,9 @@ function save() {
 
 export function commit(mutator) {
   if (mutator) mutator(state);
-  save();
+  const ok = save();
   listeners.forEach(fn => fn(state));
+  return ok;
 }
 
 export function getPath(path) {
@@ -240,6 +245,7 @@ export function importState(parsed) {
   if (!incoming) throw new Error('bad-file');
   state = deepMerge(defaults(false), incoming);
   state.version = 1;
+  shared.state = state;
   save();
   listeners.forEach(fn => fn(state));
 }
@@ -248,6 +254,7 @@ export function resetState(keepPersona = false) {
   const persona = keepPersona ? { ...state.persona } : null;
   state = defaults(false);
   if (persona) state.persona = persona;
+  shared.state = state;
   save();
   listeners.forEach(fn => fn(state));
 }
