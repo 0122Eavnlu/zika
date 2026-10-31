@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261031H';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031H';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031H';
-import * as router from './router.js?v=20261031H';
-import { playSound } from './audio.js?v=20261031H';
-import { startCall } from './call.js?v=20261031H';
-import { openMoments } from './moments.js?v=20261031H';
-import { pickLyric, isListening } from './music.js?v=20261031H';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031H';
+import { get, commit, subscribe } from './state.js?v=20261031I';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031I';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031I';
+import * as router from './router.js?v=20261031I';
+import { playSound } from './audio.js?v=20261031I';
+import { startCall } from './call.js?v=20261031I';
+import { openMoments } from './moments.js?v=20261031I';
+import { pickLyric, isListening } from './music.js?v=20261031I';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031I';
 
 let busy = false;
 let replying = false;
@@ -147,13 +147,31 @@ function buildMessage(msg) {
     const caption = msg.voiceCaption && vText ? `<span class="voice-text">${escapeHtml(vText)}</span>` : '';
     inner = `${quoteHtml}<div class="voice-msg"><span class="voice-wave"><i></i><i></i><i></i><i></i></span><span class="voice-track"></span><span class="voice-dur">${sec}"</span></div>${caption}`;
   } else if (type === 'quiz') {
-    bubbleCls = 'bubble quiz';
     const q = msg.quiz || {};
-    const opts = (q.options || []).map((o, i) => {
-      const on = (q.chosen || []).includes(i) ? ' on' : '';
-      return `<div class="quiz-opt${on}"><span class="quiz-tick">✓</span><span class="quiz-label">${escapeHtml(o.text)}</span></div>`;
-    }).join('');
-    inner = `<div class="quiz-q">${escapeHtml(msg.text || '')}</div><div class="quiz-opts">${opts}</div>${q.answer ? `<div class="quiz-ans">${escapeHtml(q.answer)}</div>` : ''}`;
+    const answered = (q.chosen || []).length > 0;
+    const soft = q.mode === 'yesno';
+    bubbleCls = `bubble quiz${soft ? ' quiz-soft' : ''}`;
+    const kind = soft ? `让 ${persona().name || 'TA'} 决定` : '问卷';
+    const time = get().ui.timeOn ? `<span class="qz-time">${timeText(msg.ts)}</span>` : '';
+    const opts = soft
+      ? (q.options || []).map((o, i) => {
+        const on = (q.chosen || []).includes(i) ? ' on' : '';
+        return `<div class="qz-btn${on}">${escapeHtml(o.text)}${on ? ' ✓' : ''}</div>`;
+      }).join('')
+      : (q.options || []).map((o, i) => {
+        const on = (q.chosen || []).includes(i) ? ' on' : '';
+        return `<div class="qz-opt${on}"><span class="qz-dot"></span><span class="qz-opt-text">${escapeHtml(o.text)}</span><span class="qz-tick">✓</span></div>`;
+      }).join('');
+    const status = answered ? 'TA 已选' : (soft ? '等TA选' : '等待中');
+    inner = `<div class="qz-card">
+        <div class="qz-card-head"><span class="qz-kind">${escapeHtml(kind)}</span>${time}</div>
+        ${soft ? '' : `<div class="qz-sub">问卷 · 1题</div>`}
+        <div class="qz-question">${soft ? '' : '1. '}${escapeHtml(msg.text || '')}</div>
+        ${opts ? `<div class="${soft ? 'qz-btns' : 'qz-opts'}">${opts}</div>` : ''}
+        <div class="qz-foot"><span class="qz-status${answered ? ' done' : ''}">${status}</span></div>
+      </div>`;
+  } else if (type === 'quizdone') {
+    return `<div class="msg quizdone ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}"><span>${escapeHtml(msg.text)}</span></div>`;
   } else {
     inner = (msg.quote ? `<span class="quote">${escapeHtml(msg.quote)}</span>` : '') + escapeHtml(msg.text);
   }
@@ -912,86 +930,133 @@ function openAttachPanel() {
 /* ---------- 问问TA（问卷） ---------- */
 
 function openQuizPanel() {
+  const p = persona();
   openSheet(`
-    <div class="quiz-panel">
-      <div class="quiz-title">
-        <h3>问问TA</h3>
-        <button class="quiz-close" data-quiz-close aria-label="关闭">×</button>
+    <div class="qz-panel">
+      <div class="qz-head">
+        <h3>让 ${escapeHtml(p.name || 'TA')} 决定</h3>
+        <button class="qz-x" data-quiz-close aria-label="关闭">×</button>
       </div>
-      <div class="quiz-field">
-        <input class="quiz-input" id="quizQuestion" placeholder="你的问题？" maxlength="80">
-        <button class="quiz-clear" data-quiz-clear aria-label="清空">×</button>
+      <div class="qz-label">回复时间</div>
+      <div class="qz-reply">
+        <button class="qz-reply-btn on" data-delay="now"><b>立即回复</b><span>10秒后自动选择</span></button>
+        <button class="qz-reply-btn" data-delay="later"><b>等一会儿</b><span>约1-6分钟后</span></button>
       </div>
-      <textarea class="quiz-area" id="quizBatch" rows="2" placeholder="批量设置问卷：每行一个问题（可写 问题~选项1~选项2）"></textarea>
-      <div class="quiz-modes">
-        <button class="quiz-mode on" data-mode="text">文字回复</button>
-        <button class="quiz-mode" data-mode="single">单选题</button>
-        <button class="quiz-mode" data-mode="multi">多选题</button>
+      <div class="qz-label">是非题</div>
+      <div class="qz-yesno">
+        <input class="qz-input" id="qzYesNo" placeholder="例如：你在吗？" maxlength="80">
+        <button class="qz-mini" id="qzSendYesNo">发送是非题</button>
       </div>
-      <textarea class="quiz-area" id="quizOptions" rows="3" placeholder="选项：每行一个；可写 选项~TA回应" hidden></textarea>
-      <div class="quiz-wait">
-        <span>思考时间（秒）</span>
-        <div class="quiz-step">
-          <button data-step="-1" aria-label="减少">−</button>
-          <b id="quizWait">6</b>
-          <button data-step="1" aria-label="增加">+</button>
-        </div>
-      </div>
-      <div class="quiz-actions">
+      <div class="qz-label">选择题：问题</div>
+      <input class="qz-input" id="qzQuestion" placeholder="例如：今晚吃什么？" maxlength="80">
+      <div class="qz-label">选项</div>
+      <div class="qz-opts" id="qzOptionList"></div>
+      <button class="qz-add" id="qzAddOption">+ 添加选项</button>
+      <div class="qz-label">允许同时选择</div>
+      <div class="qz-count"><button data-qz-count="-1" aria-label="减少">−</button><b id="qzCount">1</b><button data-qz-count="1" aria-label="增加">+</button></div>
+      <div class="qz-actions">
         <button class="ghost-btn wide" data-quiz-close>取消</button>
-        <button class="ghost-btn wide primary" id="quizSend">发送</button>
+        <button class="ghost-btn wide primary" id="qzSend">让TA决定</button>
       </div>
+      <button class="qz-history" id="qzHistory">决策记录 (${quizHistoryCount()})</button>
     </div>
   `);
 
-  let mode = 'text';
-  const optionsBox = $('#quizOptions');
-  $$('#sheet [data-quiz-close]').forEach(btn => { btn.onclick = closeSheet; });
-  $$('#sheet [data-quiz-clear]').forEach(btn => { btn.onclick = () => { $('#quizQuestion').value = ''; $('#quizQuestion').focus(); }; });
-  $$('#sheet .quiz-mode').forEach(btn => {
-    btn.onclick = () => {
-      mode = btn.dataset.mode;
-      $$('#sheet .quiz-mode').forEach(b => b.classList.toggle('on', b === btn));
-      optionsBox.hidden = mode === 'text';
-      if (mode !== 'text') optionsBox.focus();
-    };
-  });
-  $$('#sheet [data-step]').forEach(btn => {
-    btn.onclick = () => {
-      const el = $('#quizWait');
-      const next = Math.min(60, Math.max(1, Number(el.textContent) + Number(btn.dataset.step)));
-      el.textContent = String(next);
-    };
-  });
-  $('#quizSend').onclick = () => {
-    const question = $('#quizQuestion').value.trim();
-    const batch = $('#quizBatch').value.trim();
-    const wait = Math.min(60, Math.max(1, Number($('#quizWait').textContent) || 6));
-    const fallbackOptions = parseQuizOptions(optionsBox.value);
-    const items = batch
-      ? batch.split('\n').map(l => l.trim()).filter(Boolean).map(line => {
-        const [q, ...rest] = line.split('~').map(x => x.trim()).filter(Boolean);
-        return { question: q, options: rest.length ? parseQuizOptions(rest.join('\n')) : fallbackOptions };
-      })
-      : [{ question, options: fallbackOptions }];
-    if (!items.length || !items[0].question) { toast('先写一个问题'); return; }
-    const valid = items.filter(it => it.question && (mode === 'text' || it.options.length >= 2));
-    if (!valid.length) { toast(mode === 'text' ? '先写一个问题' : '至少写两个选项'); return; }
-    closeSheet();
-    valid.forEach((it, i) => {
-      setTimeout(() => sendQuizCard(it.question, mode === 'text' ? [] : it.options, mode, wait), i * (wait + 2) * 1000);
-    });
+  let delayMode = 'now';
+  let options = ['', ''];
+  let allowCount = 1;
+
+  const listEl = $('#qzOptionList');
+  const countEl = $('#qzCount');
+  const clampCount = () => {
+    allowCount = Math.max(1, Math.min(Math.max(1, options.length), allowCount));
+    countEl.textContent = String(allowCount);
   };
+  const renderOptions = () => {
+    listEl.innerHTML = options.map((text, i) => `
+      <div class="qz-opt-row">
+        <span class="qz-opt-no">${String(i + 1).padStart(2, '0')}</span>
+        <input class="qz-input" data-qz-opt="${i}" value="${escapeHtml(text)}" placeholder="选项${i + 1}" maxlength="40">
+        ${options.length > 2 ? `<button class="qz-opt-del" data-qz-del="${i}" aria-label="删除">×</button>` : ''}
+      </div>`).join('');
+    $$('#qzOptionList [data-qz-opt]').forEach(input => {
+      input.oninput = () => { options[Number(input.dataset.qzOpt)] = input.value; };
+    });
+    $$('#qzOptionList [data-qz-del]').forEach(btn => {
+      btn.onclick = () => {
+        options.splice(Number(btn.dataset.qzDel), 1);
+        if (options.length < 2) options.push('');
+        renderOptions();
+      };
+    });
+    clampCount();
+  };
+  renderOptions();
+
+  const delaySeconds = () => (delayMode === 'now' ? 10 : randInt(60, 360));
+
+  $$('#sheet [data-quiz-close]').forEach(btn => { btn.onclick = closeSheet; });
+  $$('#sheet .qz-reply-btn').forEach(btn => {
+    btn.onclick = () => {
+      delayMode = btn.dataset.delay;
+      $$('#sheet .qz-reply-btn').forEach(b => b.classList.toggle('on', b === btn));
+    };
+  });
+  $$('#sheet [data-qz-count]').forEach(btn => {
+    btn.onclick = () => {
+      allowCount += Number(btn.dataset.qzCount);
+      clampCount();
+    };
+  });
+  $('#qzAddOption').onclick = () => {
+    if (options.length >= 8) { toast('最多 8 个选项'); return; }
+    options.push('');
+    renderOptions();
+  };
+  $('#qzSendYesNo').onclick = () => {
+    const question = $('#qzYesNo').value.trim();
+    if (!question) { toast('先写一个问题'); return; }
+    const wait = delaySeconds();
+    closeSheet();
+    sendQuizCard(question, [{ text: '是' }, { text: '否' }], 'yesno', wait, 1);
+  };
+  $('#qzSend').onclick = () => {
+    const question = $('#qzQuestion').value.trim();
+    const opts = options.map(t => t.trim()).filter(Boolean);
+    if (!question) { toast('先写一个问题'); return; }
+    if (opts.length < 2) { toast('至少写两个选项'); return; }
+    const wait = delaySeconds();
+    const mode = allowCount > 1 ? 'multi' : 'single';
+    closeSheet();
+    sendQuizCard(question, opts.map(t => ({ text: t })), mode, wait, allowCount);
+  };
+  $('#qzHistory').onclick = openQuizHistory;
 }
 
-function parseQuizOptions(text) {
-  return String(text || '').split('\n').map(line => line.trim()).filter(Boolean).map(line => {
-    const [text2, reply] = line.split('~').map(x => x.trim());
-    return { text: text2, reply: reply || '' };
-  }).filter(o => o.text);
+function quizHistoryCount() {
+  return get().messages.filter(m => m.type === 'quiz').length;
 }
 
-function sendQuizCard(question, options, mode, wait) {
+function openQuizHistory() {
+  const items = get().messages.filter(m => m.type === 'quiz').slice(-40).reverse();
+  const rows = items.length ? items.map(m => {
+    const q = m.quiz || {};
+    const answered = (q.chosen || []).length > 0;
+    const picked = (q.chosen || []).map(i => (q.options || [])[i]?.text).filter(Boolean).join('、');
+    return `<div class="qz-his-row">
+        <div class="qz-his-q">${escapeHtml(m.text || '')}</div>
+        <div class="qz-his-meta"><span class="qz-his-st${answered ? ' done' : ''}">${answered ? 'TA 已选' : '等待中'}</span>${picked ? `<span class="qz-his-pick">${escapeHtml(picked)}</span>` : ''}</div>
+      </div>`;
+  }).join('') : '<div class="card-empty">还没有决策</div>';
+  openSheet(`
+    ${sheetTitle('决策记录')}
+    <div class="qz-his">${rows}</div>
+    <div class="sheet-actions"><button class="btn-ghost" data-quiz-close>关闭</button></div>
+  `);
+  $$('#sheet [data-quiz-close]').forEach(btn => { btn.onclick = closeSheet; });
+}
+
+function sendQuizCard(question, options, mode, wait, maxCount = 1) {
   const id = uid();
   fresh.add(id);
   commit(st => {
@@ -1004,22 +1069,21 @@ function sendQuizCard(question, options, mode, wait) {
       read: false,
       seen: true,
       senderId: '',
-      quiz: { mode, options, chosen: [], answer: '' },
+      quiz: { mode, options, chosen: [], answer: '', maxCount: Math.max(1, Number(maxCount) || 1) },
     });
   });
   playSound();
   scheduleRender(true);
   if (mode !== 'text' && options.length) {
-    setTimeout(() => resolveQuiz(id, randomizeQuizAnswer(mode, options)), Math.max(1, wait) * 1000);
+    setTimeout(() => resolveQuiz(id, randomizeQuizAnswer(mode, options, maxCount)), Math.max(1, wait) * 1000);
   } else {
     setTimeout(() => triggerReply({ allowCall: false }), Math.max(1, wait) * 1000);
   }
 }
 
-function randomizeQuizAnswer(mode, options) {
-  const count = mode === 'multi'
-    ? Math.max(1, Math.min(options.length, randInt(1, 2)))
-    : 1;
+function randomizeQuizAnswer(mode, options, maxCount = 1) {
+  const cap = Math.max(1, Math.min(options.length, Number(maxCount) || 1));
+  const count = mode === 'multi' ? randInt(1, cap) : 1;
   const pool = options.map((_, i) => i).sort(() => Math.random() - .5).slice(0, count);
   return pool.sort((a, b) => a - b);
 }
@@ -1028,6 +1092,7 @@ function resolveQuiz(id, chosen) {
   const msg = get().messages.find(m => m.id === id);
   if (!msg || !msg.quiz || msg.quiz.answer) return;
   const picked = chosen.map(i => msg.quiz.options[i]).filter(Boolean);
+  if (!picked.length) return;
   const answer = picked.map(o => o.reply).filter(Boolean).join(' ') || `我选「${picked.map(o => o.text).join('、')}」`;
   commit(st => {
     const m = st.messages.find(x => x.id === id);
@@ -1037,7 +1102,23 @@ function resolveQuiz(id, chosen) {
     m.seen = true;
   });
   scheduleRender(true);
-  if (hasTTS() && Math.random() <= voiceRateChance()) speak(answer, { silent: true });
+  const p = persona();
+  // 对方作答：先回一条选择，再出现「填完了问卷」的提示
+  addIncoming({ text: answer, quote: `回复 @${p.name || 'TA'}：决策：${msg.text || ''}`, senderName: p.name, senderId: '' });
+  const noticeId = uid();
+  fresh.add(noticeId);
+  commit(st => {
+    st.messages.push({
+      id: noticeId,
+      role: 'them',
+      type: 'quizdone',
+      text: `${p.name || 'TA'} 填完了问卷`,
+      ts: Date.now(),
+      seen: true,
+      senderId: '',
+    });
+  });
+  scheduleRender(true);
 }
 
 async function openTransfer() {
