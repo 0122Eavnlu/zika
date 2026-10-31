@@ -1470,10 +1470,18 @@ select.input option { background: var(--surface); color: var(--ink); }
   --scrim: rgba(255, 255, 255, .02);
 }
 #screen-chat .chat-head {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
   height: calc(92px + env(safe-area-inset-top));
   align-items: flex-end;
   padding-bottom: 13px;
   border-bottom: 0;
+}
+#screen-chat .msg-scroll {
+  padding-top: calc(102px + env(safe-area-inset-top));
 }
 #screen-chat .chat-head > .icon-btn {
   background: var(--surface);
@@ -1487,11 +1495,15 @@ select.input option { background: var(--surface); color: var(--ink); }
   backdrop-filter: blur(var(--frost-blur, 16px)) saturate(1.35);
   -webkit-backdrop-filter: blur(var(--frost-blur, 16px)) saturate(1.35);
 }
-#screen-chat.has-bg .chat-head,
 #screen-chat.has-bg .composer {
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+#screen-chat.has-bg .chat-head {
+  background: color-mix(in srgb, var(--paper) 78%, transparent);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
 }
 #screen-chat.has-bg .input-wrap {
   background: color-mix(in srgb, var(--surface) var(--frost-alpha, 66%), transparent);
