@@ -1,11 +1,11 @@
-import { get, commit, subscribe, getPath, setPath, exportState, importState, resetState } from './state.js?v=20261031O';
-import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, compressDataUrl, setAvatar, getInputNumber } from './util.js?v=20261031O';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js?v=20261031O';
-import { playItem } from './audio.js?v=20261031O';
-import * as router from './router.js?v=20261031O';
-import { openStatusSheet } from './status.js?v=20261031O';
-import { openMeSheet } from './chat.js?v=20261031O';
-import { speak, cloneVoice, hasTTS } from './tts.js?v=20261031O';
+import { get, commit, subscribe, getPath, setPath, exportState, importState, resetState } from './state.js?v=20261031P';
+import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, compressDataUrl, setAvatar, getInputNumber } from './util.js?v=20261031P';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js?v=20261031P';
+import { playItem } from './audio.js?v=20261031P';
+import * as router from './router.js?v=20261031P';
+import { openStatusSheet } from './status.js?v=20261031P';
+import { openMeSheet } from './chat.js?v=20261031P';
+import { speak, cloneVoice, hasTTS } from './tts.js?v=20261031P';
 
 /* ---------- 通用控件 ---------- */
 
@@ -313,6 +313,30 @@ function bindNotify() {
   };
 }
 
+/* ---------- 桌面安装 ---------- */
+
+function bindInstall() {
+  const btn = $('#installApp');
+  if (!btn) return;
+  btn.onclick = async () => {
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      toast('已经在桌面全屏运行');
+      return;
+    }
+    const prompt = window.__zikaInstallPrompt__;
+    if (prompt) {
+      try {
+        prompt.prompt();
+        const result = await prompt.userChoice;
+        if (result && result.outcome === 'accepted') toast('已添加到桌面');
+      } catch {}
+      window.__zikaInstallPrompt__ = null;
+      return;
+    }
+    toast('打开浏览器菜单，点「添加到主屏幕 / 安装应用」');
+  };
+}
+
 /* ---------- 数据 ---------- */
 
 function bindData() {
@@ -469,6 +493,7 @@ function openStorageSheet() {
 export function initSettings() {
   bindControls();
   bindNotify();
+  bindInstall();
   bindData();
   bindTTS();
 

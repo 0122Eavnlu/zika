@@ -1,4 +1,4 @@
-import { uid, toast } from './util.js?v=20261031O';
+import { uid, toast } from './util.js?v=20261031P';
 
 const KEY = 'zika.state.v1';
 const AT_KEY = 'zika.state.v1.at';
@@ -134,7 +134,7 @@ function defaults(withSeed = true) {
       quote: true,
       quoteChance: 30,
       chain: false,
-      notify: false,
+      notify: true,
       sound: true,
       soundRandom: true,
       soundDefault: 's1',

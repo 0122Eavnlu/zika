@@ -36,14 +36,16 @@ self.addEventListener('fetch', event => {
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   const target = new URL('./', self.registration.scope).href;
+  const chatTarget = new URL('./?chat=1', self.registration.scope).href;
   event.waitUntil((async () => {
     const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const client of list) {
       if ('focus' in client) {
         await client.focus();
+        try { client.postMessage({ type: 'zika-open-chat' }); } catch {}
         return;
       }
     }
-    if (self.clients.openWindow) await self.clients.openWindow(target);
+    if (self.clients.openWindow) await self.clients.openWindow(chatTarget || target);
   })());
 });

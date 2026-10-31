@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261031O';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031O';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031O';
-import * as router from './router.js?v=20261031O';
-import { playSound } from './audio.js?v=20261031O';
-import { startCall } from './call.js?v=20261031O';
-import { openMoments } from './moments.js?v=20261031O';
-import { pickLyric, isListening } from './music.js?v=20261031O';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031O';
+import { get, commit, subscribe } from './state.js?v=20261031P';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031P';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031P';
+import * as router from './router.js?v=20261031P';
+import { playSound } from './audio.js?v=20261031P';
+import { startCall } from './call.js?v=20261031P';
+import { openMoments } from './moments.js?v=20261031P';
+import { pickLyric, isListening } from './music.js?v=20261031P';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031P';
 
 let busy = false;
 let replying = false;
@@ -334,7 +334,7 @@ async function notifyIncoming(text, senderName) {
     body: text.length > 60 ? text.slice(0, 60) + '…' : text,
     tag: 'zika-chat',
     silent: true,
-    icon: p.avatar || undefined,
+    icon: 'icons/icon-192.png',
   };
   try {
     if (navigator.serviceWorker) {

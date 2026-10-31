@@ -5,8 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, interactive-widget=resizes-content">
 <meta name="theme-color" content="#f4f6f9">
 <title>字卡</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="字卡">
+<meta name="application-name" content="字卡">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=20261031O">
+<link rel="stylesheet" href="css/style.css?v=20261031P">
 </head>
 <body>
 
@@ -722,6 +729,14 @@
       </section>
 
       <section class="group">
+        <h2 class="group-title">桌面</h2>
+        <div class="data-actions">
+          <button class="ghost-btn" id="installApp">安装到桌面</button>
+        </div>
+        <p class="tts-hint">安装后全屏运行，新消息会以系统通知弹出。</p>
+      </section>
+
+      <section class="group">
         <h2 class="group-title">数据</h2>
         <div class="data-actions">
           <button class="ghost-btn" id="storageBtn">存储空间</button>
@@ -926,6 +941,6 @@
   <style id="user-font"></style>
 </div>
 
-<script type="module" src="js/app.js?v=20261031O"></script>
+<script type="module" src="js/app.js?v=20261031P"></script>
 </body>
 </html>

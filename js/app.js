@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261031O';
-import { initSettings } from './settings.js?v=20261031O';
-import { initCards } from './cards.js?v=20261031O';
-import { initChat } from './chat.js?v=20261031O';
-import { initCall, hideCall } from './call.js?v=20261031O';
-import { initStatus } from './status.js?v=20261031O';
-import { initMoments } from './moments.js?v=20261031O';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031O';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031O';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031O';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031O';
-import { get, subscribe, commit } from './state.js?v=20261031O';
-import { openMeSheet } from './chat.js?v=20261031O';
+import { initAppearance } from './appearance.js?v=20261031P';
+import { initSettings } from './settings.js?v=20261031P';
+import { initCards } from './cards.js?v=20261031P';
+import { initChat } from './chat.js?v=20261031P';
+import { initCall, hideCall } from './call.js?v=20261031P';
+import { initStatus } from './status.js?v=20261031P';
+import { initMoments } from './moments.js?v=20261031P';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031P';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031P';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031P';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031P';
+import { get, subscribe, commit } from './state.js?v=20261031P';
+import { openMeSheet } from './chat.js?v=20261031P';
 
 /* 首页重绘缓存：避免每次都把同一张超大的 base64 重新赋给 style，
    反复赋值会让移动端整块重排、非常卡。 */
@@ -522,11 +522,42 @@ function handleHistory() {
   });
 }
 
+function initPwa() {
+  // 记录安装事件，供设置里的「安装到桌面」使用
+  window.addEventListener('beforeinstallprompt', event => {
+    event.preventDefault();
+    window.__zikaInstallPrompt__ = event;
+  });
+  window.addEventListener('appinstalled', () => {
+    window.__zikaInstallPrompt__ = null;
+    toast('已添加到桌面');
+  });
+
+  // 浏览器要求通知权限必须在用户操作里申请，首次点屏幕时询问一次
+  if ('Notification' in window && Notification.permission === 'default') {
+    const ask = () => {
+      document.removeEventListener('pointerdown', ask, true);
+      Notification.requestPermission().then(result => {
+        if (result === 'granted') {
+          commit(s => { s.behavior.notify = true; });
+          toast('已开启消息通知');
+        }
+      }).catch(() => {});
+    };
+    document.addEventListener('pointerdown', ask, true);
+  }
+
+  // 点系统通知后回到聊天
+  navigator.serviceWorker?.addEventListener('message', event => {
+    if (event.data && event.data.type === 'zika-open-chat') open('chat');
+  });
+}
+
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261031O', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261031P', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -604,6 +635,7 @@ function boot() {
   bindHome();
   bindBackButtons();
   handleHistory();
+  initPwa();
   registerServiceWorker();
   renderHome();
   setInterval(updateClock, 30000);
@@ -616,6 +648,11 @@ function boot() {
     }
   });
   splash();
+  // 从桌面通知点进来时，直接进聊天
+  if (/[?&]chat=1/.test(location.search)) {
+    history.replaceState(null, '', location.pathname);
+    open('chat');
+  }
 }
 
 if (document.readyState === 'loading') {
