@@ -2248,8 +2248,8 @@ select.input option { background: var(--surface); color: var(--ink); }
 
 /* 对话页头像：放大并可点击进朋友圈 */
 #screen-chat #chatAvatar {
-  width: 42px;
-  height: 42px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   cursor: pointer;
   transition: transform .3s var(--spring);
