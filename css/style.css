@@ -3324,9 +3324,9 @@ select.input option { background: var(--surface); color: var(--ink); }
 .hp-pins {
   position: relative;
   flex: 0 0 auto;
-  width: 186px;
+  width: 170px;
   height: 140px;
-  margin-left: 16px;
+  margin-left: 6px;
 }
 .polaroid {
   position: absolute;
@@ -3342,7 +3342,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   transition: transform .3s var(--ease);
   cursor: pointer;
 }
-.polaroid:nth-child(2) { left: 70px; top: 16px; }
+.polaroid:nth-child(2) { left: 54px; top: 16px; }
 .polaroid .pin-card {
   width: 100px;
   height: 100px;
@@ -3382,7 +3382,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   min-width: 0;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px 6px;
+  gap: 18px 10px;
   margin: 0;
   padding: 0;
   align-content: start;
@@ -3398,7 +3398,6 @@ select.input option { background: var(--surface); color: var(--ink); }
   animation: appIn .8s var(--ease) both;
 }
 .hp1 .hp-clock { animation-delay: .06s; }
-
 .hp2 {
   display: flex;
   flex-direction: column;
