@@ -33,13 +33,20 @@ export function open(name) {
 }
 
 export function close() {
-  if (!shared.current) return;
-  const el = document.getElementById(`screen-${shared.current}`);
+  const activeEls = Array.from(document.querySelectorAll('.screen.active'));
+  const name = shared.current || (activeEls[0]?.id || '').replace(/^screen-/, '');
+  if (!name && !activeEls.length) return;
+  if (name) hooks[name]?.onClose?.();
+  // 兜底：无论记录是否对得上，把当前所有可见屏幕都关掉，返回键不会失效
+  activeEls.forEach(el => {
+    el.classList.remove('active');
+    el.setAttribute('aria-hidden', 'true');
+  });
+  const el = name ? document.getElementById(`screen-${name}`) : null;
   if (el) {
     el.classList.remove('active');
     el.setAttribute('aria-hidden', 'true');
   }
-  hooks[shared.current]?.onClose?.();
   shared.current = null;
   document.getElementById('app').classList.remove('app-open');
 }
