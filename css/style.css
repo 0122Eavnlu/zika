@@ -3326,7 +3326,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   flex: 0 0 auto;
   width: 186px;
   height: 140px;
-  margin-left: 9px;
+  margin-left: 16px;
 }
 .polaroid {
   position: absolute;
