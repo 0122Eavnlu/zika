@@ -3318,21 +3318,21 @@ select.input option { background: var(--surface); color: var(--ink); }
 .hp-lower {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 10px;
   margin-top: 2px;
 }
 .hp-pins {
   position: relative;
   flex: 0 0 auto;
-  width: 152px;
-  height: 126px;
+  width: 186px;
+  height: 140px;
 }
 .polaroid {
   position: absolute;
   top: 0;
   left: 0;
-  width: 92px;
-  padding: 5px 5px 0;
+  width: 116px;
+  padding: 6px 6px 0;
   border-radius: 3px;
   background: #fbfaf6;
   box-shadow: 0 10px 26px -14px rgba(0, 0, 0, .38), inset 0 0 0 1px rgba(0, 0, 0, .05);
@@ -3341,10 +3341,10 @@ select.input option { background: var(--surface); color: var(--ink); }
   transition: transform .3s var(--ease);
   cursor: pointer;
 }
-.polaroid:nth-child(2) { left: 58px; top: 14px; }
+.polaroid:nth-child(2) { left: 70px; top: 16px; }
 .polaroid .pin-card {
-  width: 82px;
-  height: 82px;
+  width: 104px;
+  height: 104px;
   margin: 0;
   padding: 0;
   border-radius: 2px;
@@ -3353,9 +3353,9 @@ select.input option { background: var(--surface); color: var(--ink); }
 .pin-caption {
   display: block;
   width: 100%;
-  padding: 4px 1px 6px;
+  padding: 5px 1px 7px;
   text-align: left;
-  font-size: 9.5px;
+  font-size: 10px;
   letter-spacing: .02em;
   color: #57534c;
   overflow: hidden;
@@ -3364,10 +3364,10 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .pin-clip {
   position: absolute;
-  left: -8px;
-  top: -8px;
-  width: 21px;
-  height: 21px;
+  left: -9px;
+  top: -9px;
+  width: 24px;
+  height: 24px;
   z-index: 3;
   pointer-events: none;
   color: #8d8a83;
