@@ -3137,8 +3137,10 @@ select.input option { background: var(--surface); color: var(--ink); }
   pointer-events: none;
   background: linear-gradient(180deg,
     rgba(255, 255, 255, .99) 0%,
-    rgba(255, 255, 255, .98) 55%,
-    rgba(255, 255, 255, .86) 86%,
+    rgba(255, 255, 255, .97) 30%,
+    rgba(255, 255, 255, .90) 55%,
+    rgba(255, 255, 255, .72) 74%,
+    rgba(255, 255, 255, .40) 89%,
     rgba(255, 255, 255, 0) 100%);
 }
 
