@@ -1,11 +1,11 @@
-import { get, commit, subscribe, getPath, setPath, exportState, importState, resetState } from './state.js?v=20261031Q';
-import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, compressDataUrl, setAvatar, getInputNumber } from './util.js?v=20261031Q';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js?v=20261031Q';
-import { playItem } from './audio.js?v=20261031Q';
-import * as router from './router.js?v=20261031Q';
-import { openStatusSheet } from './status.js?v=20261031Q';
-import { openMeSheet } from './chat.js?v=20261031Q';
-import { speak, cloneVoice, hasTTS } from './tts.js?v=20261031Q';
+import { get, commit, subscribe, getPath, setPath, exportState, importState, resetState } from './state.js?v=20261031R';
+import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, compressDataUrl, setAvatar, getInputNumber } from './util.js?v=20261031R';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js?v=20261031R';
+import { playItem } from './audio.js?v=20261031R';
+import * as router from './router.js?v=20261031R';
+import { openStatusSheet } from './status.js?v=20261031R';
+import { openMeSheet } from './chat.js?v=20261031R';
+import { speak, cloneVoice, hasTTS } from './tts.js?v=20261031R';
 
 /* ---------- 通用控件 ---------- */
 
@@ -288,28 +288,82 @@ function bindTTS() {
 
 /* ---------- 通知 ---------- */
 
+function notifyHint() {
+  const el = $('#notifyHint');
+  if (!el) return;
+  if (!('Notification' in window)) {
+    el.textContent = '当前浏览器不支持系统通知，请用 Chrome / Edge 打开。';
+    return;
+  }
+  const state = {
+    granted: '已授权',
+    denied: '已被拒绝（需到手机设置 → 应用 → 字卡 → 通知里打开）',
+    default: '尚未授权，点上面的「开启系统通知」',
+  }[Notification.permission] || '未知';
+  el.textContent = `通知权限：${state}。新消息提醒需要 App 在后台运行，完全关闭后不会推送。`;
+}
+
+async function ensureNotifyPermission() {
+  if (!('Notification' in window)) { toast('当前环境不支持通知'); return false; }
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') { toast('通知权限已被拒绝，请到系统设置里打开'); return false; }
+  let result = 'denied';
+  try {
+    result = await Notification.requestPermission();
+  } catch {}
+  if (result === 'granted') {
+    commit(s => { s.behavior.notify = true; });
+    toast('已开启系统通知');
+  } else {
+    toast('未获得通知权限');
+  }
+  notifyHint();
+  return result === 'granted';
+}
+
+async function sendTestNotification() {
+  if (!(await ensureNotifyPermission())) return;
+  const title = get().persona.name || '字卡';
+  const options = {
+    body: '这是一条测试通知，能看到就说明系统通知正常',
+    tag: 'zika-test',
+    silent: false,
+    vibrate: [200, 80, 200],
+    icon: 'icons/icon-192.png',
+    badge: 'icons/icon-192.png',
+  };
+  try {
+    if (navigator.serviceWorker) {
+      const reg = (await navigator.serviceWorker.getRegistration()) || (await navigator.serviceWorker.ready);
+      if (reg && reg.active) {
+        await reg.showNotification(title, options);
+        toast('已发送测试通知');
+        return;
+      }
+    }
+  } catch {}
+  try {
+    new Notification(title, options);
+    toast('已发送测试通知');
+  } catch {
+    toast('发送失败，请检查系统通知权限');
+  }
+}
+
 function bindNotify() {
+  notifyHint();
+  const enableBtn = $('#notifyEnable');
+  if (enableBtn) enableBtn.onclick = () => ensureNotifyPermission();
+  const testBtn = $('#notifyTest');
+  if (testBtn) testBtn.onclick = () => sendTestNotification();
+
   $('#notifySwitch').onclick = async () => {
     if (get().behavior.notify) {
       commit(s => { s.behavior.notify = false; });
       return;
     }
-    if (!('Notification' in window)) { toast('当前环境不支持通知'); return; }
-    if (Notification.permission === 'granted') {
-      commit(s => { s.behavior.notify = true; });
-      return;
-    }
-    if (Notification.permission === 'denied') {
-      toast('通知权限已被拒绝');
-      return;
-    }
-    const result = await Notification.requestPermission();
-    if (result === 'granted') {
-      commit(s => { s.behavior.notify = true; });
-      toast('已开启通知');
-    } else {
-      toast('未获得通知权限');
-    }
+    if (!(await ensureNotifyPermission())) return;
+    commit(s => { s.behavior.notify = true; });
   };
 }
 

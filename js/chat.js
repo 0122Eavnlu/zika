@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261031Q';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031Q';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031Q';
-import * as router from './router.js?v=20261031Q';
-import { playSound } from './audio.js?v=20261031Q';
-import { startCall } from './call.js?v=20261031Q';
-import { openMoments } from './moments.js?v=20261031Q';
-import { pickLyric, isListening } from './music.js?v=20261031Q';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031Q';
+import { get, commit, subscribe } from './state.js?v=20261031R';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031R';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031R';
+import * as router from './router.js?v=20261031R';
+import { playSound } from './audio.js?v=20261031R';
+import { startCall } from './call.js?v=20261031R';
+import { openMoments } from './moments.js?v=20261031R';
+import { pickLyric, isListening } from './music.js?v=20261031R';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031R';
 
 let busy = false;
 let replying = false;
@@ -333,8 +333,11 @@ async function notifyIncoming(text, senderName) {
   const options = {
     body: text.length > 60 ? text.slice(0, 60) + '…' : text,
     tag: 'zika-chat',
-    silent: true,
+    // 不能静音，否则安卓只会悄悄进通知栏，不会弹出横幅
+    silent: false,
+    vibrate: [200, 80, 200],
     icon: 'icons/icon-192.png',
+    badge: 'icons/icon-192.png',
   };
   try {
     if (navigator.serviceWorker) {
