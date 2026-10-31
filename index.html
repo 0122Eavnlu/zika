@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f4f6f9">
 <title>字卡</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=20261031f">
+<link rel="stylesheet" href="css/style.css?v=20261031g">
 </head>
 <body>
 
@@ -61,12 +61,7 @@
           </div>
 
           <div class="hp-lower">
-            <div class="polaroid">
-              <button class="pin-card" id="homePin" aria-label="更换图片">
-                <span class="pin-empty">＋</span>
-              </button>
-              <button class="pin-caption" id="homePinCaption">添加签名</button>
-            </div>
+            <div class="hp-pins" id="homePins"></div>
 
             <div class="home-grid">
             <button class="app" data-app="chat" aria-label="对话">
@@ -396,6 +391,13 @@
           <div class="slider-row">
             <input type="range" id="frostLevel" min="0" max="100" step="5" class="range">
             <span class="range-val" id="frostLevelVal">65</span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="row-label">字深浅</span>
+          <div class="slider-row">
+            <input type="range" id="inkDepth" min="35" max="100" step="5" class="range">
+            <span class="range-val" id="inkDepthVal">100</span>
           </div>
         </div>
       </section>
@@ -864,6 +866,6 @@
   <style id="user-font"></style>
 </div>
 
-<script type="module" src="js/app.js?v=20261031f"></script>
+<script type="module" src="js/app.js?v=20261031g"></script>
 </body>
 </html>

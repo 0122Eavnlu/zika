@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261031f';
-import { initSettings } from './settings.js?v=20261031f';
-import { initCards } from './cards.js?v=20261031f';
-import { initChat } from './chat.js?v=20261031f';
-import { initCall, hideCall } from './call.js?v=20261031f';
-import { initStatus } from './status.js?v=20261031f';
-import { initMoments } from './moments.js?v=20261031f';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031f';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031f';
-import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261031f';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml } from './util.js?v=20261031f';
-import { get, subscribe, commit } from './state.js?v=20261031f';
-import { openMeSheet } from './chat.js?v=20261031f';
+import { initAppearance } from './appearance.js?v=20261031g';
+import { initSettings } from './settings.js?v=20261031g';
+import { initCards } from './cards.js?v=20261031g';
+import { initChat } from './chat.js?v=20261031g';
+import { initCall, hideCall } from './call.js?v=20261031g';
+import { initStatus } from './status.js?v=20261031g';
+import { initMoments } from './moments.js?v=20261031g';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031g';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031g';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031g';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031g';
+import { get, subscribe, commit } from './state.js?v=20261031g';
+import { openMeSheet } from './chat.js?v=20261031g';
 
 function renderHome() {
   const s = get();
@@ -56,24 +56,129 @@ function renderHome() {
   const status = $('#homeStatus');
   if (status) status.textContent = s.me.status || '添加个性签名';
 
-  const pin = $('#homePin');
-  if (pin) {
-    if (s.ui.homePin) {
-      pin.style.backgroundImage = `url("${s.ui.homePin}")`;
-      pin.classList.add('has-img');
-    } else {
-      pin.style.backgroundImage = '';
-      pin.classList.remove('has-img');
-    }
-  }
-  const pinCap = $('#homePinCaption');
-  if (pinCap) pinCap.textContent = s.ui.homePinCaption || '添加签名';
+  renderPins(s);
 
   renderHomeMsgs(s);
 
   renderWidgets(s);
   updateHomeDots();
   updateClock();
+}
+
+const PINS_MAX = 2;
+const PIN_CLIP = `<span class="pin-clip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16.6 8.6l-6.2 6.2a2.3 2.3 0 0 0 3.3 3.3l6.3-6.3a4.3 4.3 0 0 0-6.1-6.1l-7.3 7.3a6.3 6.3 0 0 0 8.9 8.9l5.8-5.8"/></svg></span>`;
+
+function renderPins(s) {
+  const box = $('#homePins');
+  if (!box) return;
+  const pins = s.ui.pins || [];
+  if (!pins.length) {
+    box.style.height = '126px';
+    box.innerHTML = `
+      <div class="polaroid" data-pin="add" style="--rot:-6deg;z-index:1">
+        <button class="pin-card" aria-label="添加照片"><span class="pin-empty">＋</span></button>
+        <span class="pin-caption">添加签名</span>
+      </div>`;
+    return;
+  }
+  box.style.height = pins.length > 1 ? '142px' : '126px';
+  box.innerHTML = pins.map((p, i) => `
+    <div class="polaroid" data-pin="${p.id}" style="--rot:${Number(p.rot) || 0}deg;z-index:${i + 1}">
+      ${i === pins.length - 1 ? PIN_CLIP : ''}
+      <button class="pin-card ${p.img ? 'has-img' : ''}" style="${p.img ? `background-image:url(&quot;${p.img.replace(/"/g, '%22')}&quot;)` : ''}"><span class="pin-empty">＋</span></button>
+      <span class="pin-caption">${escapeHtml(p.caption || '添加签名')}</span>
+    </div>`).join('');
+}
+
+function pinActions(id) {
+  const actions = [
+    { label: '更换图片', onClick: () => changePinImage(id) },
+    { label: '修改签名', onClick: () => editPinCaption(id) },
+    { label: '换个角度', onClick: () => rotatePin(id) },
+  ];
+  if ((get().ui.pins || []).length < PINS_MAX) {
+    actions.push({ label: '再加一张拍立得', onClick: () => addPin() });
+  }
+  actions.push({ label: '删除这张', danger: true, onClick: () => removePin(id) });
+  actionSheet('拍立得', actions);
+}
+
+async function addPin() {
+  if ((get().ui.pins || []).length >= PINS_MAX) {
+    toast('最多两张');
+    return;
+  }
+  const url = await pickHomeImage();
+  if (!url) return;
+  const n = (get().ui.pins || []).length;
+  commit(s => {
+    s.ui.pins = [...(s.ui.pins || []), { id: uid(), img: url, caption: '', rot: n ? 5 : -6 }];
+  });
+  renderHome();
+}
+
+async function changePinImage(id) {
+  const url = await pickHomeImage();
+  if (!url) return;
+  commit(s => {
+    const p = (s.ui.pins || []).find(x => x.id === id);
+    if (p) p.img = url;
+  });
+  renderHome();
+  toast('已更换');
+}
+
+async function editPinCaption(id) {
+  const p = (get().ui.pins || []).find(x => x.id === id);
+  const value = await promptSheet({
+    title: '拍立得签名',
+    value: p?.caption || '',
+    placeholder: '写一句给这张照片的话',
+    maxlength: 30,
+  });
+  if (value == null) return;
+  commit(s => {
+    const t = (s.ui.pins || []).find(x => x.id === id);
+    if (t) t.caption = value.trim();
+  });
+  renderHome();
+}
+
+function rotatePin(id) {
+  commit(s => {
+    const p = (s.ui.pins || []).find(x => x.id === id);
+    if (!p) return;
+    let r = (Number(p.rot) || 0) + 4;
+    if (r > 8) r = -8;
+    p.rot = r;
+  });
+  renderHome();
+}
+
+function removePin(id) {
+  commit(s => { s.ui.pins = (s.ui.pins || []).filter(p => p.id !== id); });
+  renderHome();
+}
+
+function tapPin(id) {
+  if (id === 'add') {
+    addPin();
+    return;
+  }
+  const pins = get().ui.pins || [];
+  const idx = pins.findIndex(p => p.id === id);
+  if (idx < 0) return;
+  if (idx < pins.length - 1) {
+    commit(s => {
+      const list = s.ui.pins.slice();
+      const [item] = list.splice(idx, 1);
+      list.push(item);
+      s.ui.pins = list;
+    });
+    renderHome();
+    return;
+  }
+  pinActions(id);
 }
 
 function renderHomeMsgs(s) {
@@ -326,23 +431,15 @@ function bindHome() {
     renderHome();
     toast('已更换封面');
   });
-  $('#homePin')?.addEventListener('click', async () => {
-    const url = await pickHomeImage();
-    if (!url) return;
-    commit(s => { s.ui.homePin = url; });
-    renderHome();
-    toast('已更换图片');
+  $('#homePins')?.addEventListener('click', event => {
+    const el = event.target.closest('.polaroid');
+    if (!el) return;
+    tapPin(el.dataset.pin);
   });
   $('#homeAvatar')?.addEventListener('click', () => openMeSheet());
   $('#homeName')?.addEventListener('click', () => openMeSheet());
   $('#homeBioEdit')?.addEventListener('click', () => openMeSheet());
   $('#homeStatus')?.addEventListener('click', () => openMeSheet());
-  $('#homePinCaption')?.addEventListener('click', async () => {
-    const value = await promptSheet({ title: '拍立得签名', value: get().ui.homePinCaption || '', placeholder: '写一句给这张照片的话' });
-    if (value == null) return;
-    commit(s => { s.ui.homePinCaption = value.trim(); });
-    renderHome();
-  });
   $('#homeFav')?.addEventListener('click', openFavSheet);
   $$('.app[data-app]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -404,7 +501,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261031f', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261031g', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {

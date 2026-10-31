@@ -3136,10 +3136,28 @@ select.input option { background: var(--surface); color: var(--ink); }
   border-radius: 22px;
   pointer-events: none;
   background: linear-gradient(180deg,
-    rgba(255, 255, 255, .97) 0%,
-    rgba(255, 255, 255, .94) 46%,
-    rgba(255, 255, 255, .74) 82%,
+    rgba(255, 255, 255, .99) 0%,
+    rgba(255, 255, 255, .98) 55%,
+    rgba(255, 255, 255, .86) 86%,
     rgba(255, 255, 255, 0) 100%);
+}
+
+.hp1 .hp-name,
+.hp1 .hp-clock-left b,
+.hp1 .hp-hearts i,
+.hp1 .hp-loc-pin {
+  color: color-mix(in srgb, var(--ink) var(--ink-strength, 100%), transparent);
+}
+.hp1 .hp-bio,
+.hp1 .hp-loc,
+.hp1 .hp-clock-left span,
+.hp1 .hp-clock-right,
+.hp1 .app-name {
+  color: color-mix(in srgb, var(--ink-3) var(--ink-strength, 100%), transparent);
+}
+
+.hp1 .hp-week span:not(.today) {
+  color: color-mix(in srgb, var(--ink-3) var(--ink-strength, 100%), transparent);
 }
 
 .hp-cover {
@@ -3303,35 +3321,59 @@ select.input option { background: var(--surface); color: var(--ink); }
   gap: 14px;
   margin-top: 2px;
 }
-.polaroid {
+.hp-pins {
+  position: relative;
   flex: 0 0 auto;
-  width: 136px;
-  padding: 8px 8px 0;
-  border-radius: 4px;
+  width: 152px;
+  height: 126px;
+}
+.polaroid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 92px;
+  padding: 5px 5px 0;
+  border-radius: 3px;
   background: #fbfaf6;
   box-shadow: 0 10px 26px -14px rgba(0, 0, 0, .38), inset 0 0 0 1px rgba(0, 0, 0, .05);
-  transform: rotate(-3deg);
+  transform: rotate(var(--rot, -6deg));
   transform-origin: 50% 100%;
+  transition: transform .3s var(--ease);
+  cursor: pointer;
 }
+.polaroid:nth-child(2) { left: 58px; top: 14px; }
 .polaroid .pin-card {
-  width: 120px;
-  height: 120px;
+  width: 82px;
+  height: 82px;
   margin: 0;
+  padding: 0;
   border-radius: 2px;
   box-shadow: inset 0 0 0 1px var(--line);
 }
 .pin-caption {
   display: block;
   width: 100%;
-  padding: 6px 2px 8px;
+  padding: 4px 1px 6px;
   text-align: left;
-  font-size: 11px;
+  font-size: 9.5px;
   letter-spacing: .02em;
   color: #57534c;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.pin-clip {
+  position: absolute;
+  left: -8px;
+  top: -8px;
+  width: 21px;
+  height: 21px;
+  z-index: 3;
+  pointer-events: none;
+  color: #8d8a83;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .16));
+}
+.pin-clip svg { width: 100%; height: 100%; }
 .hp1 .home-grid {
   flex: 1;
   min-width: 0;

@@ -1,7 +1,7 @@
-import { uid, toast } from './util.js?v=20261031f';
+import { uid, toast } from './util.js?v=20261031g';
 
 const KEY = 'zika.state.v1';
-const VERSION = 2;
+const VERSION = 3;
 
 function seeds() {
   const g1 = uid(), g2 = uid(), g3 = uid();
@@ -50,9 +50,11 @@ function defaults(withSeed = true) {
       homeCover: '',
       homePin: '',
       homePinCaption: '',
+      pins: [],
       homeMsgLeft: '',
       homeMsgRight: '',
       musicBg: '',
+      inkDepth: 100,
       timeOn: true,
       readOn: true,
       readStyle: 'text',
@@ -132,6 +134,11 @@ function migrate(state) {
   state.behavior.readSkipRate = 0.1;
   state.behavior.quoteChance = 30;
   if (state.nudge) state.nudge.chance = 3;
+  if (!Array.isArray(state.ui.pins)) state.ui.pins = [];
+  if (!state.ui.pins.length && state.ui.homePin) {
+    state.ui.pins = [{ id: uid(), img: state.ui.homePin, caption: state.ui.homePinCaption || '', rot: -6 }];
+  }
+  if (Number(state.ui.inkDepth) === undefined || !Number.isFinite(Number(state.ui.inkDepth))) state.ui.inkDepth = 100;
   state.version = VERSION;
 }
 

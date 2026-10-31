@@ -1,5 +1,5 @@
-import { get, commit, subscribe } from './state.js?v=20261031f';
-import { $, pickFile, compressImage, toast } from './util.js?v=20261031f';
+import { get, commit, subscribe } from './state.js?v=20261031g';
+import { $, pickFile, compressImage, toast } from './util.js?v=20261031g';
 
 const root = document.documentElement;
 let loadedFontUrl = '';
@@ -22,6 +22,9 @@ export function applyVisuals() {
   const frost = Math.min(100, Math.max(0, Number(ui.frost ?? 65)));
   root.style.setProperty('--frost-alpha', `${Math.max(0, 100 - frost * 1.15).toFixed(0)}%`);
   root.style.setProperty('--frost-blur', `${(frost * .12).toFixed(1)}px`);
+
+  const ink = Math.min(100, Math.max(35, Number(ui.inkDepth ?? 100)));
+  root.style.setProperty('--ink-strength', `${ink}%`);
 
   const font = (ui.font || '').trim();
   if (!font) {
@@ -71,6 +74,8 @@ function syncSlider() {
   $('#avatarSizeVal').textContent = String(get().ui.avatarSize);
   $('#frostLevel').value = get().ui.frost;
   $('#frostLevelVal').textContent = String(get().ui.frost);
+  $('#inkDepth').value = get().ui.inkDepth ?? 100;
+  $('#inkDepthVal').textContent = String(get().ui.inkDepth ?? 100);
 }
 
 function syncBg() {
@@ -128,6 +133,12 @@ export function initAppearance() {
     const value = Number(event.target.value);
     $('#frostLevelVal').textContent = String(value);
     commit(s => { s.ui.frost = value; });
+  });
+
+  $('#inkDepth').addEventListener('input', event => {
+    const value = Number(event.target.value);
+    $('#inkDepthVal').textContent = String(value);
+    commit(s => { s.ui.inkDepth = value; });
   });
 
   let cssTimer = null;
