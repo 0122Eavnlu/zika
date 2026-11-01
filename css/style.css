@@ -3339,46 +3339,31 @@ select.input option { background: var(--surface); color: var(--ink); }
 .home-page::-webkit-scrollbar { display: none; }
 .hp1 {
   position: relative;
-  isolation: isolate;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  align-items: center;
+  gap: 10px;
   min-height: 100%;
   padding-top: 2px;
-  justify-content: space-between;
-  --cover-h: clamp(150px, 26vh, 230px);
-  --pins-h: clamp(116px, 19vh, 168px);
-  --pin-w: clamp(84px, 13vh, 122px);
-  --av-h: clamp(88px, 12vh, 104px);
+  --cover-h: clamp(112px, 15vh, 148px);
+  --av-h: clamp(96px, 13vh, 112px);
+  --card-r: 26px;
 }
-.hp-top {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.hp-top .hp-name { margin-top: 4px; }
-.hp-top .hp-bio-row { margin-top: 6px; }
-.hp-top .hp-loc { margin-top: 6px; }
-.hp1 .hp-lower { margin-bottom: 8px; }
 
-/* 头像 / 名字 / 签名 / 位置 下方的白色透明渐变底 —— 与封面同宽 */
-.hp1::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  left: 6%;
-  right: 6%;
-  top: calc(var(--cover-h) * 0.78);
-  height: calc(var(--cover-h) * 1.32);
-  border-radius: 22px;
-  pointer-events: none;
+/* 个人信息白色主卡片（头像一半叠在横幅上，一半落进卡片） */
+.hp-card {
+  position: relative;
+  width: 94%;
+  border-radius: var(--card-r);
+  padding: calc(var(--av-h) * .5 + 8px) 18px 16px;
+  text-align: center;
   background: linear-gradient(180deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, .92) 18%,
-    rgba(255, 255, 255, .98) 40%,
-    rgba(255, 255, 255, .95) 65%,
-    rgba(255, 255, 255, .70) 85%,
-    rgba(255, 255, 255, 0) 100%);
+    color-mix(in srgb, var(--paper) 72%, transparent) 0%,
+    color-mix(in srgb, var(--paper) 96%, transparent) 42%,
+    var(--paper) 100%);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--paper) 60%, transparent), var(--shadow-sm);
 }
 
 .hp1 .hp-name,
@@ -3404,7 +3389,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   width: 88%;
   align-self: center;
   height: var(--cover-h);
-  border-radius: 22px;
+  border-radius: var(--card-r);
   background: color-mix(in srgb, var(--surface-2) 70%, transparent) center / cover no-repeat;
   box-shadow: inset 0 0 0 1px var(--line-2), var(--shadow-sm);
   overflow: hidden;
@@ -3421,12 +3406,14 @@ select.input option { background: var(--surface); color: var(--ink); }
 .hp-cover.has-img .cover-empty { display: none; }
 
 .hp-avatar {
-  align-self: center;
-  position: relative;
+  position: absolute;
+  top: calc(var(--av-h) * -.5);
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 2;
   width: var(--av-h);
   height: var(--av-h);
-  margin: calc(var(--av-h) / -2) 0 0;
+  margin: 0;
   padding: 3px;
   border-radius: 50%;
   display: grid;
@@ -3441,10 +3428,10 @@ select.input option { background: var(--surface); color: var(--ink); }
   box-shadow: none;
 }
 .hp-name {
-  margin: 4px 0 0;
+  margin: 0;
   text-align: center;
-  font-size: 15px;
-  letter-spacing: .12em;
+  font-size: 19px;
+  letter-spacing: .08em;
   color: var(--ink);
 }
 .hp-bio-row {
@@ -3454,11 +3441,11 @@ select.input option { background: var(--surface); color: var(--ink); }
   align-items: center;
   justify-content: center;
   max-width: 100%;
-  margin-top: -2px;
+  margin-top: 5px;
   text-align: center;
 }
 .hp-bio {
-  font-size: 10px;
+  font-size: 9.5px;
   letter-spacing: .04em;
   color: var(--ink-3);
   text-align: center;
@@ -3487,18 +3474,18 @@ select.input option { background: var(--surface); color: var(--ink); }
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  margin-top: -4px;
-  font-size: 10.5px;
+  margin-top: 5px;
+  font-size: 10px;
   letter-spacing: .06em;
   color: var(--ink-3);
 }
 .hp-loc-pin { font-size: 11px; }
 
 .hp-clock {
-  width: 88%;
+  width: 94%;
   align-self: center;
-  border-radius: 22px;
-  padding: clamp(11px, 1.6vh, 18px) 14px clamp(9px, 1.3vh, 15px);
+  border-radius: var(--card-r);
+  padding: clamp(9px, 1.2vh, 13px) 14px clamp(7px, 1vh, 11px);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line-2), var(--shadow-sm);
 }
@@ -3513,7 +3500,8 @@ select.input option { background: var(--surface); color: var(--ink); }
   display: block;
   font-size: 20px;
   font-weight: 500;
-  letter-spacing: .04em;
+  letter-spacing: .02em;
+  white-space: nowrap;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
@@ -3542,15 +3530,17 @@ select.input option { background: var(--surface); color: var(--ink); }
   opacity: .7;
 }
 .hp-hearts i::before { content: "♥"; }
+.hp-hearts i.off { opacity: .45; }
+.hp-hearts i.off::before { content: "♡"; }
 .hp-week {
-  margin-top: clamp(8px, 1.3vh, 13px);
+  margin-top: clamp(6px, 1vh, 10px);
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
 }
 .hp-week span {
   text-align: center;
-  padding: clamp(6px, 1.1vh, 10px) 0;
+  padding: clamp(4px, .8vh, 7px) 0;
   border-radius: 10px;
   font-size: 10.5px;
   color: var(--ink-3);
@@ -3622,18 +3612,18 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .pin-clip svg { width: 100%; height: 100%; }
 .hp1 .home-grid {
-  flex: 1;
-  min-width: 0;
-  height: var(--pins-h);
+  width: 94%;
+  flex: 0 0 auto;
+  height: auto;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px 10px;
-  margin: 0;
-  padding: 0;
+  gap: 18px 0;
+  margin: 2px 0 0;
+  padding: 2px 0 0;
   align-content: center;
   justify-items: center;
 }
-.home-grid .tile { width: 54px; height: 54px; border-radius: 16px; }
+.home-grid .tile { width: 56px; height: 56px; border-radius: 16px; }
 .home-grid .tile svg { width: 27px; height: 27px; }
 .home-grid .app-name { font-size: 11px; }
 

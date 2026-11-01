@@ -13,7 +13,7 @@
 <meta name="application-name" content="字卡">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=20261101F">
+<link rel="stylesheet" href="css/style.css?v=20261101G">
 </head>
 <body>
 
@@ -38,19 +38,20 @@
     <div class="home-pager" id="homePager">
       <div class="home-page" data-hpage="0">
         <div class="hp1">
-          <div class="hp-top">
           <button class="hp-cover" id="homeCover" aria-label="更换封面">
             <span class="cover-empty">＋ 选择封面</span>
           </button>
-          <button class="hp-avatar" id="homeAvatar" aria-label="我的头像">
-            <span class="avatar xl" id="homeAvatarView"></span>
-          </button>
-          <div class="hp-name" id="homeName">我</div>
-          <div class="hp-bio-row">
-            <div class="hp-bio" id="homeStatus">添加个性签名</div>
-            <button class="hp-edit" id="homeBioEdit" aria-label="修改个性签名">×</button>
-          </div>
-          <div class="hp-loc"><span class="hp-loc-pin">⌖</span><span id="homeLoc">在你身边</span></div>
+
+          <div class="hp-card">
+            <button class="hp-avatar" id="homeAvatar" aria-label="我的头像">
+              <span class="avatar xl" id="homeAvatarView"></span>
+            </button>
+            <div class="hp-name" id="homeName">我</div>
+            <div class="hp-bio-row">
+              <div class="hp-bio" id="homeStatus">添加个性签名</div>
+              <button class="hp-edit" id="homeBioEdit" aria-label="修改个性签名">×</button>
+            </div>
+            <div class="hp-loc"><span class="hp-loc-pin">⌖</span><span id="homeLoc">在你身边</span></div>
           </div>
 
           <div class="hp-clock">
@@ -60,7 +61,7 @@
                 <span id="date"></span>
               </div>
               <div class="hp-clock-right">
-                <span class="hp-hearts"><i></i><i></i><i></i></span>
+                <span class="hp-hearts"><i></i><i></i><i class="off"></i></span>
                 <span id="homeWeek">星期五</span>
               </div>
             </div>
@@ -69,11 +70,8 @@
             </div>
           </div>
 
-          <div class="hp-lower">
-            <div class="hp-pins" id="homePins"></div>
-
-            <div class="home-grid">
-            <button class="app" data-app="chat" aria-label="对话">
+          <div class="home-grid">
+            <button class="app" data-app="chat" aria-label="微信">
               <span class="tile">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <rect x="3" y="4.5" width="12.5" height="9.5" rx="4.75"/>
@@ -81,7 +79,7 @@
                   <circle cx="6.6" cy="9.2" r="1" class="dot"/>
                 </svg>
               </span>
-              <span class="app-name">对话</span>
+              <span class="app-name">微信</span>
               <span class="badge" id="chatBadge" hidden>0</span>
             </button>
             <button class="app" data-app="moments" aria-label="朋友圈">
@@ -94,26 +92,26 @@
               </span>
               <span class="app-name">朋友圈</span>
             </button>
-            <button class="app" id="homeMusic" data-app="music" aria-label="一起听歌">
+            <button class="app" data-app="letters" aria-label="信箱">
               <span class="tile">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4.2 14.5v-2.2a7.8 7.8 0 0 1 15.6 0v2.2"/>
-                  <path d="M4.2 14.2h1.6a1.4 1.4 0 0 1 1.4 1.4v4a1.4 1.4 0 0 1-1.4 1.4H5a1.2 1.2 0 0 1-1.2-1.2v-4.2a1.4 1.4 0 0 1 .4-1.4z"/>
-                  <path d="M19.8 14.2h-1.6a1.4 1.4 0 0 0-1.4 1.4v4a1.4 1.4 0 0 0 1.4 1.4H19a1.2 1.2 0 0 0 1.2-1.2v-4.2a1.4 1.4 0 0 0-.4-1.4z"/>
+                  <path d="M3 7.5h18v9.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7.5z"/>
+                  <path d="M3 7.5l9 6.5 9-6.5"/>
                 </svg>
               </span>
-              <span class="app-name">听歌</span>
+              <span class="app-name">信箱</span>
+              <span class="badge" data-letter-badge hidden>0</span>
             </button>
-            <button class="app" id="homeFav" aria-label="收藏">
+            <button class="app" id="homeMusic" data-app="music" aria-label="网易云">
               <span class="tile">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 3.8l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>
-                  <path class="dot" d="M12 9.2l1.1 2.3 2.5.4-1.8 1.8.4 2.5-2.2-1.2-2.2 1.2.4-2.5-1.8-1.8 2.5-.4z"/>
+                  <path d="M9.4 17.6V5.2l8.4-1.7v12.1"/>
+                  <ellipse cx="7.1" cy="17.7" rx="2.3" ry="2.1"/>
+                  <ellipse cx="15.5" cy="15.6" rx="2.3" ry="2.1"/>
                 </svg>
               </span>
-              <span class="app-name">收藏</span>
+              <span class="app-name">网易云</span>
             </button>
-            </div>
           </div>
         </div>
       </div>
@@ -1040,6 +1038,6 @@
   <style id="user-font"></style>
 </div>
 
-<script type="module" src="js/app.js?v=20261101F"></script>
+<script type="module" src="js/app.js?v=20261101G"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261101F';
-import { $, $$, escapeHtml, timeText, toast, pick, randInt, randFloat, uid, downloadBlob, pickFile } from './util.js?v=20261101F';
-import * as router from './router.js?v=20261101F';
-import { confirmSheet } from './ui.js?v=20261101F';
+import { get, commit, subscribe } from './state.js?v=20261101G';
+import { $, $$, escapeHtml, timeText, toast, pick, randInt, randFloat, uid, downloadBlob, pickFile } from './util.js?v=20261101G';
+import * as router from './router.js?v=20261101G';
+import { confirmSheet } from './ui.js?v=20261101G';
 
 let letterTimer = null;
 let letterSig = '';
@@ -162,15 +162,15 @@ function clearLetters() {
 /* ---------- 未读角标 ---------- */
 
 function updateBadge() {
-  const badge = $('#letterBadge');
-  if (!badge) return;
   const unread = (get().letters?.inbox || []).filter(l => !l.read).length;
-  if (unread > 0) {
-    badge.textContent = unread > 99 ? '99+' : String(unread);
-    badge.hidden = false;
-  } else {
-    badge.hidden = true;
-  }
+  $$('[data-letter-badge], #letterBadge').forEach(badge => {
+    if (unread > 0) {
+      badge.textContent = unread > 99 ? '99+' : String(unread);
+      badge.hidden = false;
+    } else {
+      badge.hidden = true;
+    }
+  });
 }
 
 /* ---------- 主动来信定时器 ---------- */

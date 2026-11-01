@@ -1,17 +1,17 @@
-import { initAppearance } from './appearance.js?v=20261101F';
-import { initSettings } from './settings.js?v=20261101F';
-import { initCards } from './cards.js?v=20261101F';
-import { initChat } from './chat.js?v=20261101F';
-import { initCall, hideCall } from './call.js?v=20261101F';
-import { initStatus, openStatusSheet } from './status.js?v=20261101F';
-import { initMoments } from './moments.js?v=20261101F';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101F';
-import { initLetters } from './letters.js?v=20261101F';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101F';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101F';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101F';
-import { get, subscribe, commit } from './state.js?v=20261101F';
-import { openMeSheet } from './chat.js?v=20261101F';
+import { initAppearance } from './appearance.js?v=20261101G';
+import { initSettings } from './settings.js?v=20261101G';
+import { initCards } from './cards.js?v=20261101G';
+import { initChat } from './chat.js?v=20261101G';
+import { initCall, hideCall } from './call.js?v=20261101G';
+import { initStatus, openStatusSheet } from './status.js?v=20261101G';
+import { initMoments } from './moments.js?v=20261101G';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101G';
+import { initLetters } from './letters.js?v=20261101G';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101G';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101G';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101G';
+import { get, subscribe, commit } from './state.js?v=20261101G';
+import { openMeSheet } from './chat.js?v=20261101G';
 
 /* 首页重绘缓存：避免每次都把同一张超大的 base64 重新赋给 style，
    反复赋值会让移动端整块重排、非常卡。 */
@@ -409,14 +409,18 @@ function openAnnivSheet() {
   };
 }
 
-const WEEK = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+const WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function updateClock() {
   const now = new Date();
-  const hh = String(now.getHours()).padStart(2, '0');
+  const h24 = now.getHours();
+  const h12 = h24 % 12 || 12;
+  const hh = String(h12).padStart(2, '0');
   const mm = String(now.getMinutes()).padStart(2, '0');
-  if ($('#clock')) $('#clock').textContent = `${hh}:${mm}`;
-  if ($('#date')) $('#date').textContent = `DAILY WHISPER · ${now.getMonth() + 1}/${now.getDate()}`;
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  const ap = h24 < 12 ? 'AM' : 'PM';
+  if ($('#clock')) $('#clock').textContent = `${hh}:${mm}:${ss} ${ap}`;
+  if ($('#date')) $('#date').textContent = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
   if ($('#homeWeek')) $('#homeWeek').textContent = WEEK[now.getDay()];
   $$('#homeWeekRow span').forEach((el, i) => el.classList.toggle('today', i === now.getDay()));
 }
@@ -578,7 +582,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261101F', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261101G', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -660,7 +664,7 @@ function boot() {
   initPwa();
   registerServiceWorker();
   renderHome();
-  setInterval(updateClock, 30000);
+  setInterval(updateClock, 1000);
   subscribe(scheduleHomeRender);
   window.addEventListener('zika:screen', event => {
     if (event.detail && event.detail.name) return;
