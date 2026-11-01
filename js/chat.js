@@ -931,7 +931,10 @@ function sendMessage() {
   const input = $('#msgInput');
   const text = input.value.trim();
   if (!text) return;
-  pushSelf({ text, quote: pendingQuote });
+  const s = get();
+  const standalone = [...(s.kaomoji || []), ...(s.emojiMine || [])]
+    .some(it => (typeof it === 'string' ? it : it.text) === text);
+  pushSelf({ type: standalone ? 'emoji' : 'text', text, quote: pendingQuote });
   clearQuote();
   input.value = '';
   autoGrow();
@@ -970,25 +973,18 @@ function sendSticker(url) {
   triggerReply({ allowCall: false });
 }
 
-function sendEmojiText(text) {
-  const id = uid();
-  fresh.add(id);
-  commit(s => {
-    s.messages.push({
-      id,
-      role: 'me',
-      type: 'emoji',
-      text,
-      ts: Date.now(),
-      read: false,
-      seen: true,
-      senderId: '',
-    });
-  });
+/* 颜文字 / emoji 点一下插到输入框里，可以继续打字拼在一起，也可以直接发送 */
+function insertIntoInput(text) {
+  const input = $('#msgInput');
+  if (!input) return;
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  input.value = input.value.slice(0, start) + text + input.value.slice(end);
+  autoGrow();
   closeSheet();
-  playSound();
-  scheduleRender(true);
-  triggerReply({ allowCall: false });
+  input.focus();
+  const pos = start + text.length;
+  input.setSelectionRange(pos, pos);
 }
 
 function openStickerPicker(tab = 'stickers') {
@@ -1059,7 +1055,7 @@ function openStickerPicker(tab = 'stickers') {
   } else if (tab === 'kaomoji') {
     const list = myKaomoji.map(k => k.text);
     $$('#sheet [data-kao]').forEach(btn => {
-      btn.onclick = () => sendEmojiText(list[Number(btn.dataset.kao)]);
+      btn.onclick = () => insertIntoInput(list[Number(btn.dataset.kao)]);
       btn.oncontextmenu = e => {
         e.preventDefault();
         const idx = Number(btn.dataset.kao);
@@ -1079,7 +1075,7 @@ function openStickerPicker(tab = 'stickers') {
   } else {
     const list = myEmoji.map(e => e.text);
     $$('#sheet [data-em]').forEach(btn => {
-      btn.onclick = () => sendEmojiText(list[Number(btn.dataset.em)]);
+      btn.onclick = () => insertIntoInput(list[Number(btn.dataset.em)]);
       btn.oncontextmenu = e => {
         e.preventDefault();
         const idx = Number(btn.dataset.em);
