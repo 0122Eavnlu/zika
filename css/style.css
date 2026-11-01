@@ -623,6 +623,25 @@ svg { display: block; }
   font-size: calc(var(--avatar-size, 28px) * .4);
   margin-bottom: 2px;
 }
+.msg .avatar-col {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 56px;
+}
+.msg .avatar-meta {
+  font-size: 10px;
+  line-height: 1.3;
+  color: var(--ink-3);
+  letter-spacing: .03em;
+  text-align: center;
+  word-break: break-word;
+  font-variant-numeric: tabular-nums;
+}
+.msg .avatar-meta .read { color: var(--accent); }
+.msg .avatar-meta .read.unread { color: var(--ink-3); opacity: .85; }
 .msg.me .avatar { cursor: pointer; }
 .msg.no-avatar { gap: 0; }
 
@@ -3192,7 +3211,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   isolation: isolate;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   min-height: 100%;
 }
 
@@ -3203,7 +3222,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   z-index: -1;
   left: 0;
   right: 0;
-  top: 150px;
+  top: 140px;
   height: 150px;
   border-radius: 22px;
   pointer-events: none;
@@ -3236,8 +3255,9 @@ select.input option { background: var(--surface); color: var(--ink); }
 
 .hp-cover {
   position: relative;
-  width: 100%;
-  height: 150px;
+  width: 88%;
+  align-self: center;
+  height: 140px;
   border-radius: 22px;
   background: color-mix(in srgb, var(--surface-2) 70%, transparent) center / cover no-repeat;
   box-shadow: inset 0 0 0 1px var(--line-2), var(--shadow-sm);
@@ -3592,8 +3612,8 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .hp2-anniv {
   flex: 0 0 auto;
-  width: 112px;
-  height: 112px;
+  width: 140px;
+  height: 140px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3601,11 +3621,34 @@ select.input option { background: var(--surface); color: var(--ink); }
   gap: 2px;
   padding: 10px;
   border-radius: 26px;
-  background: color-mix(in srgb, var(--surface-2) var(--frost-alpha, 64%), transparent);
+  background: color-mix(in srgb, var(--surface-2) var(--frost-alpha, 64%), transparent) center / cover no-repeat;
   backdrop-filter: blur(var(--frost-blur, 16px)) saturate(var(--frost-sat, 1.8));
   -webkit-backdrop-filter: blur(var(--frost-blur, 16px)) saturate(var(--frost-sat, 1.8));
   box-shadow: inset 0 0 0 1px var(--line-2), var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
 }
+.hp2-anniv::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.15));
+  pointer-events: none;
+  z-index: 0;
+}
+.hp2-anniv > * { position: relative; z-index: 1; }
+.anniv-bg-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+}
+.anniv-bg-label {
+  font-size: 13px;
+  color: var(--ink-2);
+  letter-spacing: .04em;
+}
+.anniv-bg-row .btn-ghost.danger { color: #c0453a; }
 .hp2-anniv-label {
   font-size: 11px;
   letter-spacing: .16em;
@@ -4339,11 +4382,21 @@ select.input option { background: var(--surface); color: var(--ink); }
 .voice-msg { display: flex; align-items: center; gap: 9px; }
 .voice-wave { display: flex; align-items: center; gap: 2.5px; height: 17px; color: var(--ink); }
 .msg.me .bubble.voice .voice-wave { color: var(--bubble-me-text); }
-.voice-wave i { display: block; width: 2.5px; border-radius: 2px; background: currentColor; }
-.voice-wave i:nth-child(1) { height: 8px; }
-.voice-wave i:nth-child(2) { height: 15px; }
-.voice-wave i:nth-child(3) { height: 11px; }
-.voice-wave i:nth-child(4) { height: 6px; }
+.voice-wave i {
+  display: block;
+  width: 2.5px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--voice-hi, currentColor), color-mix(in srgb, currentColor 55%, transparent));
+  animation: voiceWave 1.1s ease-in-out infinite;
+}
+.voice-wave i:nth-child(1) { height: 8px; animation-delay: 0s; }
+.voice-wave i:nth-child(2) { height: 15px; animation-delay: .14s; }
+.voice-wave i:nth-child(3) { height: 11px; animation-delay: .28s; }
+.voice-wave i:nth-child(4) { height: 6px; animation-delay: .42s; }
+@keyframes voiceWave {
+  0%, 100% { transform: scaleY(.45); opacity: .55; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
 .voice-track { flex: 1; width: 46px; height: 3px; border-radius: 2px; background: color-mix(in srgb, currentColor 24%, transparent); }
 .voice-dur { font-size: 11px; letter-spacing: .03em; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .msg.me .bubble.voice .voice-dur { color: color-mix(in srgb, var(--bubble-me-text) 62%, transparent); }

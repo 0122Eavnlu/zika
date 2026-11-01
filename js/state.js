@@ -1,4 +1,4 @@
-import { uid, toast } from './util.js?v=20261031S';
+import { uid, toast } from './util.js?v=20261031T';
 
 const KEY = 'zika.state.v1';
 const AT_KEY = 'zika.state.v1.at';
@@ -99,7 +99,7 @@ function defaults(withSeed = true) {
     version: VERSION,
     persona: { name: '阿墨', avatar: '', status: '寻找灵魂伴侣', statusAt: 0, statusWait: 0, showName: true, showAvatar: true },
     me: { name: '我', avatar: '', status: '' },
-    anniversary: { enabled: true, date: '', text: '我们在一起' },
+    anniversary: { enabled: true, date: '', text: '我们在一起', bg: '' },
     ui: {
       theme: 'auto',
       fontSize: 16,

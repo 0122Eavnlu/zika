@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261031S';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031S';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031S';
-import * as router from './router.js?v=20261031S';
-import { playSound } from './audio.js?v=20261031S';
-import { startCall } from './call.js?v=20261031S';
-import { openMoments } from './moments.js?v=20261031S';
-import { pickLyric, isListening } from './music.js?v=20261031S';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031S';
+import { get, commit, subscribe } from './state.js?v=20261031T';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031T';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031T';
+import * as router from './router.js?v=20261031T';
+import { playSound } from './audio.js?v=20261031T';
+import { startCall } from './call.js?v=20261031T';
+import { openMoments } from './moments.js?v=20261031T';
+import { pickLyric, isListening } from './music.js?v=20261031T';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031T';
 
 let busy = false;
 let replying = false;
@@ -117,11 +117,23 @@ function buildMessage(msg) {
   const sender = senderOf(msg);
   const showAvatar = !isMe && p.showAvatar;
   const showName = !isMe && p.showName && get().group.enabled;
-  const meta = [];
-  if (get().ui.timeOn) meta.push(`<span class="t">${timeText(msg.ts)}</span>`);
-  if (isMe && msg.read && get().ui.readOn) {
-    meta.push(`<span class="read ok">${escapeHtml(readLabel(get().ui.readStyle))}</span>`);
+  const s = get();
+  const timeOn = s.ui.timeOn;
+  const readOn = s.ui.readOn;
+
+  // 已读 / 已读不回：对方在这条之后回复过 → 已读；否则 → 已读不回
+  let readText = '';
+  if (isMe && msg.read && readOn) {
+    const all = s.messages;
+    const idx = all.findIndex(m => m.id === msg.id);
+    const hasThemAfter = all.slice(idx + 1).some(m => m.role === 'them');
+    readText = hasThemAfter ? '已读' : '已读不回';
   }
+
+  const timeHtml = timeOn ? `<span class="t">${timeText(msg.ts)}</span>` : '';
+  const readHtml = readText ? `<span class="read ${readText === '已读不回' ? 'unread' : ''}">${escapeHtml(readText)}</span>` : '';
+  const themMeta = timeHtml ? `<div class="avatar-meta">${timeHtml}</div>` : '';
+  const meMeta = (timeHtml || readHtml) ? `<div class="avatar-meta">${timeHtml}${readHtml ? `<br>${readHtml}` : ''}</div>` : '';
 
   let bubbleCls = 'bubble';
   let inner = '';
@@ -183,6 +195,8 @@ function buildMessage(msg) {
 
   const avatarHtml = showAvatar ? `<span class="avatar" data-avatar="${msg.id}"></span>` : '';
   const meAvatarHtml = isMe ? `<span class="avatar me-avatar" data-avatar="${msg.id}" aria-label="我的资料"></span>` : '';
+  const avatarColThem = showAvatar ? `<div class="avatar-col">${avatarHtml}${themMeta}</div>` : '';
+  const avatarColMe = isMe ? `<div class="avatar-col">${meAvatarHtml}${meMeta}</div>` : '';
   const mini = msg.bubbleText ? `<span class="msg-mini">${escapeHtml(msg.bubbleText)}</span>` : '';
   const convertBtn = type === 'voice'
     ? `<button data-fa="toText" aria-label="转文字">${FA_TEXT}</button>`
@@ -195,7 +209,7 @@ function buildMessage(msg) {
       <button data-fa="fav" aria-label="收藏">${FA_STAR}</button>
       <button data-fa="del" class="danger" aria-label="删除">${FA_TRASH}</button>
     </div>`;
-  return `<div class="msg ${isMe ? 'me' : 'them'} ${type === 'quiz' ? 'quiz-msg' : ''} ${showAvatar || isMe ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${avatarHtml}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}${mini}<div class="${bubbleCls}">${inner}</div>${meta.length ? `<div class="meta">${meta.join('')}</div>` : ''}${actions}</div>${meAvatarHtml}</div>`;
+  return `<div class="msg ${isMe ? 'me' : 'them'} ${type === 'quiz' ? 'quiz-msg' : ''} ${showAvatar || isMe ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${avatarColThem}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}${mini}<div class="${bubbleCls}">${inner}</div>${actions}</div>${avatarColMe}</div>`;
 }
 
 function render(forceBottom = false) {
@@ -375,8 +389,11 @@ function handleTap(row, id) {
     else toast('先在「设定 → 语音」里配置');
     return;
   }
-  if (openMeta.has(id)) openMeta.delete(id); else openMeta.add(id);
-  row.classList.toggle('show-meta');
+  // 点一下展开操作栏（关掉其它已展开的），再点空白处才收回
+  openMeta.clear();
+  $$('.msg.show-meta').forEach(el => el.classList.remove('show-meta'));
+  openMeta.add(id);
+  row.classList.add('show-meta');
 }
 
 let pendingQuote = '';
@@ -582,6 +599,9 @@ function bindMessageEvents() {
       if (row) runAction(fa.dataset.fa, row.dataset.id);
       return;
     }
+    // 点对方头像 → 拍一拍（可自定义）
+    const themAvatar = event.target.closest('.msg.them .avatar');
+    if (themAvatar) { openNudgePrompt(); return; }
     const myAvatar = event.target.closest('.msg.me .avatar');
     if (myAvatar) { openMeSheet(); return; }
     if (fired) { fired = false; return; }
@@ -590,6 +610,13 @@ function bindMessageEvents() {
     const row = bubble.closest('.msg');
     if (row) handleTap(row, row.dataset.id);
   });
+
+  // 点气泡/操作栏/头像以外的地方 → 收回操作栏
+  document.addEventListener('click', event => {
+    if (!openMeta.size) return;
+    if (event.target.closest('.bubble') || event.target.closest('.msg-actions') || event.target.closest('.msg .avatar')) return;
+    closeActions();
+  }, true);
 }
 
 /* ---------- 生成回复 ---------- */
@@ -888,6 +915,17 @@ function openStickerPicker() {
       toast('图片处理失败');
     }
   };
+}
+
+function openNudgePrompt() {
+  promptSheet({ title: '拍一拍', placeholder: '自定义内容（留空 = 拍一拍）', confirm: '拍一下' }).then(text => {
+    const name = persona().name || 'TA';
+    const suffix = (text || '').trim();
+    const label = suffix ? `我拍了拍${name} ${suffix}` : `我拍了拍${name}`;
+    pushSelf({ type: 'nudge', text: label });
+    scheduleRender(true);
+    setTimeout(() => addIncoming({ text: '干嘛', senderName: persona().name }), 900);
+  });
 }
 
 function openAttachPanel() {

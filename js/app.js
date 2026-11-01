@@ -1,16 +1,16 @@
-import { initAppearance } from './appearance.js?v=20261031S';
-import { initSettings } from './settings.js?v=20261031S';
-import { initCards } from './cards.js?v=20261031S';
-import { initChat } from './chat.js?v=20261031S';
-import { initCall, hideCall } from './call.js?v=20261031S';
-import { initStatus } from './status.js?v=20261031S';
-import { initMoments } from './moments.js?v=20261031S';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031S';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031S';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031S';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031S';
-import { get, subscribe, commit } from './state.js?v=20261031S';
-import { openMeSheet } from './chat.js?v=20261031S';
+import { initAppearance } from './appearance.js?v=20261031T';
+import { initSettings } from './settings.js?v=20261031T';
+import { initCards } from './cards.js?v=20261031T';
+import { initChat } from './chat.js?v=20261031T';
+import { initCall, hideCall } from './call.js?v=20261031T';
+import { initStatus, openStatusSheet } from './status.js?v=20261031T';
+import { initMoments } from './moments.js?v=20261031T';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031T';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031T';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031T';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031T';
+import { get, subscribe, commit } from './state.js?v=20261031T';
+import { openMeSheet } from './chat.js?v=20261031T';
 
 /* 首页重绘缓存：避免每次都把同一张超大的 base64 重新赋给 style，
    反复赋值会让移动端整块重排、非常卡。 */
@@ -56,7 +56,7 @@ function renderHome() {
   const name = $('#homeName');
   if (name) name.textContent = s.me.name || '我';
   const status = $('#homeStatus');
-  if (status) status.textContent = s.me.status || '添加个性签名';
+  if (status) status.textContent = s.persona.status || '添加个性签名';
 
   renderPins(s);
 
@@ -247,9 +247,14 @@ function renderWidgets(s) {
   const a = s.anniversary || {};
   setAvatar($('#hp2Me'), s.me.name, s.me.avatar);
   setAvatar($('#hp2Them'), s.persona.name, s.persona.avatar);
+  const anniv = $('#hp2Anniv');
   const days = $('#hp2Days');
   const foot = $('#hp2Date');
   if (!days || !foot) return;
+  if (anniv) {
+    anniv.style.backgroundImage = a.bg ? `url("${a.bg}")` : '';
+    anniv.classList.toggle('has-img', Boolean(a.bg));
+  }
   if (!a.date) {
     days.textContent = '—';
     foot.textContent = '点这里设置';
@@ -355,10 +360,11 @@ function bindPager() {
   });
 }
 
-function commitAnniv(date, text) {
+function commitAnniv(date, text, bg) {
   commit(s => {
     s.anniversary.date = date;
     s.anniversary.text = text || '我们在一起';
+    if (bg !== undefined) s.anniversary.bg = bg;
   });
   renderHome();
 }
@@ -369,11 +375,25 @@ function openAnnivSheet() {
     ${sheetTitle('纪念日')}
     <div class="field"><input class="input" type="date" id="annivDateInput" value="${a.date || ''}"></div>
     <div class="field"><input class="input" id="annivTextInput" maxlength="20" placeholder="我们在一起" value="${(a.text || '').replace(/"/g, '&quot;')}"></div>
+    <div class="anniv-bg-row">
+      <span class="anniv-bg-label">背景图</span>
+      <button class="btn-ghost" id="annivBgBtn">${a.bg ? '更换背景' : '添加背景'}</button>
+      ${a.bg ? `<button class="btn-ghost danger" id="annivBgClear">清除</button>` : ''}
+    </div>
     <div class="sheet-actions">
       <button class="btn-ghost" id="annivCancel">取消</button>
       <button class="btn-ink" id="annivSave">保存</button>
     </div>
   `);
+  let pendingBg = a.bg || '';
+  $('#annivBgBtn').onclick = async () => {
+    const url = await pickHomeImage();
+    if (!url) return;
+    pendingBg = url;
+    toast('已选择背景');
+  };
+  const clearBtn = $('#annivBgClear');
+  if (clearBtn) clearBtn.onclick = () => { pendingBg = ''; toast('已清除背景'); };
   $('#annivCancel').onclick = closeSheet;
   $('#annivSave').onclick = () => {
     const date = $('#annivDateInput').value;
@@ -382,7 +402,7 @@ function openAnnivSheet() {
       toast('请选择开始日期');
       return;
     }
-    commitAnniv(date, text);
+    commitAnniv(date, text, pendingBg);
     closeSheet();
     toast('已保存');
   };
@@ -395,7 +415,7 @@ function updateClock() {
   const hh = String(now.getHours()).padStart(2, '0');
   const mm = String(now.getMinutes()).padStart(2, '0');
   if ($('#clock')) $('#clock').textContent = `${hh}:${mm}`;
-  if ($('#date')) $('#date').textContent = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
+  if ($('#date')) $('#date').textContent = `DAILY WHISPER · ${now.getMonth() + 1}/${now.getDate()}`;
   if ($('#homeWeek')) $('#homeWeek').textContent = WEEK[now.getDay()];
   $$('#homeWeekRow span').forEach((el, i) => el.classList.toggle('today', i === now.getDay()));
 }
@@ -463,8 +483,8 @@ function bindHome() {
   });
   $('#homeAvatar')?.addEventListener('click', () => openMeSheet());
   $('#homeName')?.addEventListener('click', () => openMeSheet());
-  $('#homeBioEdit')?.addEventListener('click', () => openMeSheet());
-  $('#homeStatus')?.addEventListener('click', () => openMeSheet());
+  $('#homeBioEdit')?.addEventListener('click', () => openStatusSheet());
+  $('#homeStatus')?.addEventListener('click', () => openStatusSheet());
   $('#homeFav')?.addEventListener('click', openFavSheet);
   $$('.app[data-app]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -557,7 +577,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261031S', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261031T', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
