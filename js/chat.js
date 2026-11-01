@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261101AB';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101AB';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101AB';
-import * as router from './router.js?v=20261101AB';
-import { playSound } from './audio.js?v=20261101AB';
-import { startCall } from './call.js?v=20261101AB';
-import { openMoments } from './moments.js?v=20261101AB';
-import { pickLyric, isListening } from './music.js?v=20261101AB';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101AB';
+import { get, commit, subscribe } from './state.js?v=20261101AD';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101AD';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101AD';
+import * as router from './router.js?v=20261101AD';
+import { playSound } from './audio.js?v=20261101AD';
+import { startCall } from './call.js?v=20261101AD';
+import { openMoments } from './moments.js?v=20261101AD';
+import { pickLyric, isListening } from './music.js?v=20261101AD';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101AD';
 
 let busy = false;
 let replying = false;
@@ -100,6 +100,12 @@ const FA_STAR = `<svg viewBox="0 0 24 24"><path d="M12 3.8l2.5 5.2 5.7.8-4.1 4 1
 const FA_TRASH = `<svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.2 7V5.2a1.4 1.4 0 0 1 1.4-1.4h2.8a1.4 1.4 0 0 1 1.4 1.4V7M6.5 7l.9 12a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.9-12"/></svg>`;
 const FA_VOICE = `<svg viewBox="0 0 24 24"><path d="M4.6 10v4M8.6 7.4v9.2M12.6 4.8v14.4M16.6 8.4v7.2M20.4 10.6v2.8"/></svg>`;
 const FA_TEXT = `<svg viewBox="0 0 24 24"><rect x="5" y="3.6" width="14" height="16.8" rx="3"/><path d="M8.6 8.6h6.8M8.6 12h6.8M8.6 15.4h3.8"/></svg>`;
+const FA_UNDO = `<svg viewBox="0 0 24 24"><path d="M8.6 8.2H6.2V5.8"/><path d="M6.4 8.2l3.1-3.1"/><path d="M8.9 8.2h6.4a4.7 4.7 0 0 1 0 9.4h-4.2"/></svg>`;
+
+function fullTimeText(ts) {
+  const d = new Date(ts);
+  return `${timeText(ts)}:${String(d.getSeconds()).padStart(2, '0')}`;
+}
 
 function buildMessage(msg, idx) {
   const p = persona();
@@ -134,7 +140,7 @@ function buildMessage(msg, idx) {
     readHtml = `<span class="read${hasThemAfter ? '' : ' unread'}">✓✓</span>`;
   }
 
-  const timeHtml = `<span class="t">${timeText(msg.ts)}</span>`;
+  const timeHtml = `<span class="t">${fullTimeText(msg.ts)}</span>`;
   const themMeta = `<div class="avatar-meta">${timeHtml}</div>`;
   const meMeta = `<div class="avatar-meta">${timeHtml}${readHtml ? `<br>${readHtml}` : ''}</div>`;
 
@@ -211,6 +217,7 @@ function buildMessage(msg, idx) {
       ${convertBtn}
       <button data-fa="bubble" aria-label="添加小气泡">${FA_BUBBLE}</button>
       <button data-fa="fav" aria-label="收藏">${FA_STAR}</button>
+      ${isMe ? `<button data-fa="recall" aria-label="撤回">${FA_UNDO}</button>` : ''}
       <button data-fa="del" class="danger" aria-label="删除">${FA_TRASH}</button>
     </div>`;
   return `<div class="msg ${isMe ? 'me' : 'them'} ${type === 'quiz' ? 'quiz-msg' : ''} ${grouped ? 'grouped' : ''} ${showAvatar || isMe ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${avatarColThem}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}${mini}<div class="${bubbleCls}">${inner}</div>${actions}</div>${avatarColMe}</div>`;
@@ -317,19 +324,42 @@ function markSelfRead() {
   commit(st => { st.messages.forEach(m => { if (m.role === 'me') m.read = true; }); });
 }
 
-/* 对方撤回：把刚发的消息换成一条居中提示 */
+/* 对方撤回：把刚发的消息换成一条居中提示，带上对方昵称 */
 function recallMessage(id) {
   commit(st => {
     const idx = st.messages.findIndex(m => m.id === id);
     if (idx < 0) return;
+    const old = st.messages[idx];
+    const who = old.senderId
+      ? ((st.group.members || []).find(x => x.id === old.senderId) || st.persona).name
+      : st.persona.name;
     st.messages[idx] = {
-      id: st.messages[idx].id,
+      id: old.id,
       role: 'them',
       type: 'recall',
-      text: '对方撤回了一条消息',
+      text: `「${who || '对方'}」撤回了一条消息`,
       ts: Date.now(),
       seen: true,
-      senderId: '',
+      senderId: old.senderId || '',
+    };
+  });
+  scheduleRender(true);
+}
+
+/* 我也能撤回自己的消息 */
+function recallMine(id) {
+  commit(st => {
+    const idx = st.messages.findIndex(m => m.id === id);
+    if (idx < 0) return;
+    const old = st.messages[idx];
+    st.messages[idx] = {
+      id: old.id,
+      role: 'me',
+      type: 'recall',
+      text: `「${st.me.name || '我'}」撤回了一条消息`,
+      ts: Date.now(),
+      read: true,
+      seen: true,
     };
   });
   scheduleRender(true);
@@ -520,6 +550,8 @@ function runAction(action, id) {
     editBubble(id);
   } else if (action === 'fav') {
     favoriteMessage(msg);
+  } else if (action === 'recall') {
+    recallMine(id);
   } else if (action === 'del') {
     deleteMessage(id);
   }

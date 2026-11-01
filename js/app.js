@@ -1,17 +1,17 @@
-import { initAppearance } from './appearance.js?v=20261101AB';
-import { initSettings } from './settings.js?v=20261101AB';
-import { initCards } from './cards.js?v=20261101AB';
-import { initChat } from './chat.js?v=20261101AB';
-import { initCall, hideCall } from './call.js?v=20261101AB';
-import { initStatus, openStatusSheet } from './status.js?v=20261101AB';
-import { initMoments } from './moments.js?v=20261101AB';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101AB';
-import { initLetters } from './letters.js?v=20261101AB';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101AB';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101AB';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101AB';
-import { get, subscribe, commit } from './state.js?v=20261101AB';
-import { openMeSheet } from './chat.js?v=20261101AB';
+import { initAppearance } from './appearance.js?v=20261101AD';
+import { initSettings } from './settings.js?v=20261101AD';
+import { initCards } from './cards.js?v=20261101AD';
+import { initChat } from './chat.js?v=20261101AD';
+import { initCall, hideCall } from './call.js?v=20261101AD';
+import { initStatus, openStatusSheet } from './status.js?v=20261101AD';
+import { initMoments } from './moments.js?v=20261101AD';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101AD';
+import { initLetters } from './letters.js?v=20261101AD';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101AD';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101AD';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101AD';
+import { get, subscribe, commit } from './state.js?v=20261101AD';
+import { openMeSheet } from './chat.js?v=20261101AD';
 
 /* 首页重绘缓存：避免每次都把同一张超大的 base64 重新赋给 style，
    反复赋值会让移动端整块重排、非常卡。 */
@@ -62,6 +62,8 @@ function renderHome() {
   if (loc) loc.textContent = s.ui.homeLoc || '添加定位';
 
   renderPins(s);
+
+  renderNotes(s);
 
   renderHomeMsgs(s);
 
@@ -119,6 +121,58 @@ function renderPins(s) {
       <button class="pin-card ${p.img ? 'has-img' : ''}" style="${p.img ? `background-image:url(&quot;${p.img.replace(/"/g, '%22')}&quot;)` : ''}"><span class="pin-empty">＋</span></button>
       <span class="pin-caption">${escapeHtml(p.caption || '添加签名')}</span>
     </div>`).join('');
+}
+
+function renderNotes(s) {
+  const lines = $('#homeNoteLines');
+  if (!lines) return;
+  const notes = s.ui.homeNotes || [];
+  lines.innerHTML = notes.length
+    ? notes.map(t => `<div class="note-line">${escapeHtml(t)}</div>`).join('')
+    : '<div class="note-line empty">写点什么，放在这里</div>';
+}
+
+function openNotesEditor() {
+  let draft = [...(get().ui.homeNotes || [])];
+  const collect = () => {
+    $$('#sheet [data-note-input]').forEach(inp => { draft[Number(inp.dataset.noteInput)] = inp.value; });
+  };
+  const draw = () => {
+    openSheet(`
+      ${sheetTitle('小字条')}
+      <div class="note-editor">
+        ${draft.length ? draft.map((t, i) => `
+          <div class="note-row">
+            <input class="input" data-note-input="${i}" value="${escapeHtml(t)}" placeholder="写一句话" maxlength="80">
+            <button class="note-del" data-note-del="${i}" aria-label="删除">×</button>
+          </div>`).join('') : '<div class="card-empty">还没有内容</div>'}
+      </div>
+      <div class="sheet-actions">
+        <button class="btn-ghost" id="noteAdd">添加一条</button>
+        <button class="btn-ink" id="noteSave">保存</button>
+      </div>
+    `);
+    $$('#sheet [data-note-del]').forEach(btn => {
+      btn.onclick = () => {
+        collect();
+        draft.splice(Number(btn.dataset.noteDel), 1);
+        draw();
+      };
+    });
+    $('#noteAdd').onclick = () => {
+      collect();
+      draft.push('');
+      draw();
+    };
+    $('#noteSave').onclick = () => {
+      collect();
+      const clean = draft.map(t => t.trim()).filter(Boolean);
+      commit(s => { s.ui.homeNotes = clean; });
+      renderHome();
+      closeSheet();
+    };
+  };
+  draw();
 }
 
 function pinActions(id) {
@@ -492,6 +546,7 @@ function bindHome() {
   $('#homeName')?.addEventListener('click', () => openMeSheet());
   $('#homeBioEdit')?.addEventListener('click', () => openStatusSheet());
   $('#homeStatus')?.addEventListener('click', () => openStatusSheet());
+  $('#homeNoteEdit')?.addEventListener('click', openNotesEditor);
   $('.hp-loc')?.addEventListener('click', () => {
     promptSheet({ title: '定位', value: get().ui.homeLoc || '', placeholder: '写一句你的定位' }).then(text => {
       if (text === null) return;
@@ -590,7 +645,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261101AB', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261101AD', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {

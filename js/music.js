@@ -1,13 +1,14 @@
-import { get, commit, subscribe } from './state.js?v=20261101AB';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101AB';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101AB';
-import * as router from './router.js?v=20261101AB';
+import { get, commit, subscribe } from './state.js?v=20261101AD';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101AD';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101AD';
+import * as router from './router.js?v=20261101AD';
 
 const session = [];
 const lyricsMap = new Map();
 const lyricsTried = new Set();
 let audio = null;
 let index = 0;
+let failStreak = 0;
 
 const MODES = [
   { key: 'sequence', label: '顺序' },
@@ -49,6 +50,7 @@ function ensureAudio() {
   audio.addEventListener('durationchange', syncProgress);
   audio.addEventListener('ended', onEnded);
   audio.addEventListener('play', syncPlayButton);
+  audio.addEventListener('play', () => { failStreak = 0; });
   audio.addEventListener('pause', syncPlayButton);
   audio.addEventListener('error', onAudioError);
   return audio;
@@ -60,10 +62,25 @@ async function onAudioError() {
   const track = currentTrack();
   if (!track) return;
   if (recoveredIds.has(track.id)) {
-    toast('这首歌暂时放不了');
+    skipUnplayable();
     return;
   }
   recoverAudio(track);
+}
+
+/* 这首歌放不了就直接切下一首；整轮都放不了才停 */
+function skipUnplayable() {
+  const list = allTracks();
+  if (!list.length) return;
+  failStreak += 1;
+  if (failStreak <= list.length) {
+    toast('这首歌放不了，已切到下一首');
+    step(1);
+    return;
+  }
+  failStreak = 0;
+  if (audio) audio.pause();
+  toast('这些歌暂时都放不了');
 }
 
 async function searchSongUrl(track) {
@@ -83,7 +100,7 @@ async function searchSongUrl(track) {
 
 async function recoverAudio(track) {
   if (!track || !track.url) {
-    toast('这首歌暂时放不了');
+    skipUnplayable();
     return;
   }
   recoveredIds.add(track.id);
@@ -111,7 +128,7 @@ async function recoverAudio(track) {
       return;
     } catch {}
   }
-  toast('这首歌暂时放不了，换一首试试');
+  skipUnplayable();
 }
 
 function updateMediaSession(track) {

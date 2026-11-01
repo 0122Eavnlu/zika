@@ -1,4 +1,4 @@
-import { uid, toast } from './util.js?v=20261101AB';
+import { uid, toast } from './util.js?v=20261101AD';
 
 const KEY = 'zika.state.v1';
 const AT_KEY = 'zika.state.v1.at';
@@ -114,6 +114,7 @@ function defaults(withSeed = true) {
       homePin: '',
       homePinCaption: '',
       homeLoc: '在你身边',
+      homeNotes: [],
       pins: [],
       homeMsgLeft: '',
       homeMsgRight: '',

@@ -1531,17 +1531,39 @@ select.input option { background: var(--surface); color: var(--ink); }
   align-items: flex-end;
   padding-bottom: 13px;
   border-bottom: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* 顶部只留一层很淡的渐隐 + 轻微模糊，不再铺一整条底色 */
+#screen-chat .chat-head::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: calc(152px + env(safe-area-inset-top));
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--paper) 55%, transparent) 0%,
+    color-mix(in srgb, var(--paper) 24%, transparent) 52%,
+    transparent 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 100%);
+  pointer-events: none;
 }
 #screen-chat .msg-scroll {
   padding-top: calc(102px + env(safe-area-inset-top));
 }
 #screen-chat .chat-head > .icon-btn {
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 58%, transparent);
+  backdrop-filter: blur(16px) saturate(1.8);
+  -webkit-backdrop-filter: blur(16px) saturate(1.8);
   border-radius: 50%;
   color: var(--ink);
-  box-shadow: 0 2px 10px rgba(20, 22, 28, .10), inset 0 0 0 1px var(--line-2);
+  box-shadow: 0 4px 14px rgba(20, 22, 28, .08), inset 0 0 0 1px var(--line-2);
 }
-#screen-chat .chat-head,
 #screen-chat .composer {
   background: color-mix(in srgb, var(--paper) var(--frost-alpha, 66%), transparent);
   backdrop-filter: blur(var(--frost-blur, 16px)) saturate(var(--frost-sat, 1.8));
@@ -1553,9 +1575,9 @@ select.input option { background: var(--surface); color: var(--ink); }
   -webkit-backdrop-filter: none;
 }
 #screen-chat.has-bg .chat-head {
-  background: color-mix(in srgb, var(--paper) 78%, transparent);
-  backdrop-filter: blur(20px) saturate(var(--frost-sat, 1.8));
-  -webkit-backdrop-filter: blur(20px) saturate(var(--frost-sat, 1.8));
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 #screen-chat.has-bg .input-wrap {
   background: color-mix(in srgb, var(--surface) var(--frost-alpha, 66%), transparent);
@@ -1581,12 +1603,11 @@ select.input option { background: var(--surface); color: var(--ink); }
   position: relative;
   z-index: 1;
   margin-top: -14px;
-  padding: 16px 14px 5px;
-  background: color-mix(in srgb, var(--surface) var(--frost-alpha, 66%), transparent);
-  backdrop-filter: blur(var(--frost-blur, 14px)) saturate(var(--frost-sat, 1.8));
-  -webkit-backdrop-filter: blur(var(--frost-blur, 14px)) saturate(var(--frost-sat, 1.8));
-  border-radius: 15px;
-  box-shadow: 0 2px 10px rgba(20, 22, 28, .06), inset 0 0 0 1px var(--line-2);
+  padding: 16px 6px 5px;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
 }
 .identity-handle,
 .identity-status {
@@ -1604,6 +1625,12 @@ select.input option { background: var(--surface); color: var(--ink); }
   font-weight: 700;
   letter-spacing: .08em;
   color: var(--ink);
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 56%, transparent);
+  backdrop-filter: blur(16px) saturate(1.8);
+  -webkit-backdrop-filter: blur(16px) saturate(1.8);
+  box-shadow: 0 3px 12px rgba(20, 22, 28, .06), inset 0 0 0 1px var(--line-2);
 }
 #screen-chat .identity-status {
   font-size: 11px;
@@ -3362,15 +3389,19 @@ select.input option { background: var(--surface); color: var(--ink); }
   padding: max(10px, env(safe-area-inset-top)) 34px calc(env(safe-area-inset-bottom) + 8px);
 }
 .home-page::-webkit-scrollbar { display: none; }
+/* P1 底部要给分页小圆点留出空间，避免小字条压到圆点上 */
+.home-page[data-hpage="0"] {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 26px);
+}
 .hp1 {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-height: 100%;
   padding-top: 0;
-  margin-top: 10px;
+  margin-top: 6px;
   --cover-h: calc(clamp(112px, 15vh, 148px) + 35px);
   --av-h: clamp(76px, 10vh, 88px);
   --pins-h: clamp(108px, 14vh, 132px);
@@ -3592,6 +3623,52 @@ select.input option { background: var(--surface); color: var(--ink); }
   gap: 10px;
   width: 94%;
   margin-top: 15px;
+}
+.hp-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 94%;
+  margin-top: 15px;
+  padding: 11px 16px;
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+  backdrop-filter: blur(18px) saturate(1.8);
+  -webkit-backdrop-filter: blur(18px) saturate(1.8);
+  box-shadow: inset 0 0 0 1px var(--line-2), 0 12px 30px -22px rgba(0, 0, 0, .4);
+}
+.hp-note .note-lines { flex: 1; min-width: 0; }
+.note-line {
+  font-size: 12px;
+  line-height: 1.55;
+  letter-spacing: .02em;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.note-line.empty { color: var(--ink-3); }
+.note-edit {
+  flex: 0 0 auto;
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  letter-spacing: .06em;
+  color: #e6a2bf;
+}
+.note-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.note-row .input { flex: 1; min-width: 0; }
+.note-del {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 0;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--ink-3);
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
 }
 .hp-pins {
   position: relative;
@@ -4955,8 +5032,8 @@ select.input option { background: var(--surface); color: var(--ink); }
 .qz-his-st.done { color: var(--surface); background: var(--ink); }
 .qz-his-pick { font-size: 11px; color: var(--ink-2); }
 
-/* 问卷气泡：两种都用同一种颜色（白），更横更宽 */
-.msg.quiz-msg .bubble-wrap { width: 92%; max-width: 92%; }
+/* 问卷气泡：窄一点、扁一点 */
+.msg.quiz-msg .bubble-wrap { width: 74%; max-width: 74%; }
 .bubble.quiz,
 .msg.me .bubble.quiz {
   width: 100%;
@@ -4973,7 +5050,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   padding: 0;
   border-radius: 15px;
 }
-.qz-card { padding: 9px 12px 8px; }
+.qz-card { padding: 7px 10px 6px; }
 .qz-card-head {
   display: flex;
   align-items: center;
@@ -4982,22 +5059,22 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .qz-kind { font-size: 12px; font-weight: 600; color: var(--ink); letter-spacing: .02em; }
 .qz-time { font-size: 10px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.qz-question { margin-top: 5px; font-size: 13px; line-height: 1.4; color: var(--ink); }
+.qz-question { margin-top: 4px; font-size: 12.5px; line-height: 1.35; color: var(--ink); }
 /* 选项横排两列，卡片更矮 */
 .qz-card .qz-opts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 5px 10px;
-  margin-top: 7px;
+  gap: 3px 8px;
+  margin-top: 5px;
 }
 .qz-opt {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   min-width: 0;
-  padding: 4px 2px;
+  padding: 3px 2px;
   border-radius: 8px;
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--ink-2);
 }
 .qz-opt.on {
