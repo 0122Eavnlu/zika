@@ -1,5 +1,5 @@
-/* zika sw v20261101AP */
-const CACHE_VERSION = '20261101AP';
+/* zika sw v20261101AQ */
+const CACHE_VERSION = '20261101AQ';
 const CORE = ['./', './index.html', './css/style.css', './js/app.js'];
 
 self.addEventListener('install', event => {
