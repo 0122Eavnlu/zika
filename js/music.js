@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261101W';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101W';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101W';
-import * as router from './router.js?v=20261101W';
+import { get, commit, subscribe } from './state.js?v=20261101X';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101X';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101X';
+import * as router from './router.js?v=20261101X';
 
 const session = [];
 const lyricsMap = new Map();
@@ -17,7 +17,7 @@ const MODES = [
 const MODE_KEYS = MODES.map(m => m.key);
 
 const PLAY_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 5.6v12.8l10.2-6.4z"/></svg>`;
-const PAUSE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 5.5v13M14.8 5.5v13"/></svg>`;
+const PAUSE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8.6" y="5.5" width="2.9" height="13" rx=".9"/><rect x="12.5" y="5.5" width="2.9" height="13" rx=".9"/></svg>`;
 
 function music() {
   return get().music;

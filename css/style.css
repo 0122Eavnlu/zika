@@ -4168,7 +4168,6 @@ select.input option { background: var(--surface); color: var(--ink); }
 .listen-ctl.play { width: 54px; height: 54px; color: #fff; }
 .listen-ctl.play svg { width: 28px; height: 28px; }
 .listen-ctl.play svg * { fill: currentColor; stroke: none; }
-.listen-ctl.play.is-paused-icon svg * { fill: none; stroke: currentColor; stroke-width: 2; }
 
 /* 发消息 / 播放列表：深色弹层 */
 .sheet.sheet-dark {
