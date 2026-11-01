@@ -3345,13 +3345,16 @@ select.input option { background: var(--surface); color: var(--ink); }
   gap: 0;
   min-height: 100%;
   padding-top: 2px;
-  justify-content: flex-start;
+  justify-content: space-between;
 }
-.hp-name { margin-top: 4px; }
-.hp-bio-row { margin-top: 6px; }
-.hp-loc { margin-top: 6px; }
-.hp-clock { margin-top: 16px; }
-.hp-lower { margin-top: 16px; }
+.hp-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.hp-top .hp-name { margin-top: 4px; }
+.hp-top .hp-bio-row { margin-top: 6px; }
+.hp-top .hp-loc { margin-top: 6px; }
 
 /* 头像 / 名字 / 签名 / 位置 下方的白色透明渐变底 —— 与封面同宽 */
 .hp1::before {
@@ -3553,21 +3556,20 @@ select.input option { background: var(--surface); color: var(--ink); }
 
 .hp-lower {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
 }
 .hp-pins {
   position: relative;
-  flex: 0 0 auto;
-  width: 170px;
-  height: 140px;
+  flex: 1;
+  height: 124px;
 }
 .polaroid {
   position: absolute;
   top: 0;
   left: 0;
-  width: 116px;
-  padding: 8px 8px 0;
+  width: 100px;
+  padding: 7px 7px 0;
   border-radius: 3px;
   background: #fdfcf7;
   box-shadow: 0 14px 30px -18px rgba(0, 0, 0, .45), 0 2px 6px -2px rgba(0, 0, 0, .12), inset 0 0 0 1px rgba(0, 0, 0, .04);
@@ -3576,10 +3578,10 @@ select.input option { background: var(--surface); color: var(--ink); }
   transition: transform .3s var(--ease);
   cursor: pointer;
 }
-.polaroid:nth-child(2) { left: 54px; top: 16px; }
+.polaroid:nth-child(2) { left: 44px; top: 12px; }
 .polaroid .pin-card {
-  width: 100px;
-  height: 100px;
+  width: 86px;
+  height: 86px;
   margin: 0;
   padding: 0;
   border-radius: 1px;
@@ -3614,12 +3616,13 @@ select.input option { background: var(--surface); color: var(--ink); }
 .hp1 .home-grid {
   flex: 1;
   min-width: 0;
+  height: 124px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 18px 10px;
+  gap: 12px 10px;
   margin: 0;
   padding: 0;
-  align-content: start;
+  align-content: center;
   justify-items: center;
 }
 .home-grid .tile { width: 54px; height: 54px; border-radius: 16px; }
