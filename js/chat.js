@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261101AI';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101AI';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101AI';
-import * as router from './router.js?v=20261101AI';
-import { playSound } from './audio.js?v=20261101AI';
-import { startCall } from './call.js?v=20261101AI';
-import { openMoments } from './moments.js?v=20261101AI';
-import { pickLyric, isListening } from './music.js?v=20261101AI';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101AI';
+import { get, commit, subscribe } from './state.js?v=20261101AJ';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101AJ';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101AJ';
+import * as router from './router.js?v=20261101AJ';
+import { playSound } from './audio.js?v=20261101AJ';
+import { startCall } from './call.js?v=20261101AJ';
+import { openMoments } from './moments.js?v=20261101AJ';
+import { pickLyric, isListening } from './music.js?v=20261101AJ';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101AJ';
 
 let busy = false;
 let replying = false;
@@ -148,8 +148,8 @@ function buildMessage(msg, idx) {
   let inner = '';
   if (type === 'sticker') {
     bubbleCls = 'bubble sticker';
-    const t = msg.text ? `<span class="sticker-text">${escapeHtml(msg.text)}</span>` : '';
-    inner = `${t}<img src="${escapeHtml(msg.stickerUrl || '')}" alt="">`;
+    // 表情包只显示图片本身，不拼任何文字
+    inner = `<img src="${escapeHtml(msg.stickerUrl || '')}" alt="">`;
   } else if (type === 'emoji') {
     bubbleCls = 'bubble emoji';
     inner = escapeHtml(msg.text || '');
@@ -745,10 +745,8 @@ export async function triggerReply({ proactive = false, allowCall = true } = {})
 
   const stickers = get().stickers || [];
   if (stickers.length && Math.random() * 100 < Number(b.stickerChance ?? 5)) {
-    // 一半单独发表情包，一半和一句话一起发
-    const withText = Math.random() < .5;
-    const text = withText && pool.length ? pick(pool).text.trim() : '';
-    addIncoming({ type: 'sticker', stickerUrl: pick(stickers).url, text });
+    // 表情包永远单独发，不和文字拼在一起
+    addIncoming({ type: 'sticker', stickerUrl: pick(stickers).url, text: '' });
     playSound();
     replying = false;
     setSpeakState(false);
