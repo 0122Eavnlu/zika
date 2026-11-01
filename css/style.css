@@ -3347,8 +3347,8 @@ select.input option { background: var(--surface); color: var(--ink); }
   padding-top: 2px;
   --cover-h: clamp(112px, 15vh, 148px);
   --av-h: clamp(76px, 10vh, 88px);
-  --pins-h: clamp(96px, 13vh, 118px);
-  --pin-w: clamp(70px, 9vh, 84px);
+  --pins-h: clamp(108px, 14vh, 132px);
+  --pin-w: clamp(80px, 10.5vh, 96px);
   --card-r: 26px;
 }
 
@@ -3630,8 +3630,8 @@ select.input option { background: var(--surface); color: var(--ink); }
   align-content: center;
   justify-items: center;
 }
-.home-grid .tile { width: 52px; height: 52px; border-radius: 16px; }
-.home-grid .tile svg { width: 25px; height: 25px; }
+.home-grid .tile { width: 50px; height: 50px; border-radius: 15px; }
+.home-grid .tile svg { width: 24px; height: 24px; }
 .home-grid .app-name { font-size: 11px; }
 
 .hp1 .hp-cover,
