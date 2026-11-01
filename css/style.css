@@ -3931,7 +3931,8 @@ select.input option { background: var(--surface); color: var(--ink); }
   transition: width .35s var(--ease), background .35s var(--ease);
   pointer-events: auto;
 }
-.home-dots .dot.active { width: 16px; background: var(--ink); }
+.home-dots .dot.active { width: 6px; background: var(--ink); }
+.home-dots .dot { width: 6px; height: 6px; border-radius: 3px; }
 
 /* ============ P3 天气 ============ */
 .hp3 {
