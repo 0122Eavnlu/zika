@@ -1,13 +1,13 @@
-import { get, commit, subscribe } from './state.js?v=20261101BC';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BC';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BC';
-import * as router from './router.js?v=20261101BC';
-import { playSound } from './audio.js?v=20261101BC';
-import { startCall } from './call.js?v=20261101BC';
-import { openMoments } from './moments.js?v=20261101BC';
-import { pickLyric, isListening } from './music.js?v=20261101BC';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101BC';
-import { rollPresetTags } from './presets.js?v=20261101BC';
+import { get, commit, subscribe } from './state.js?v=20261101BD';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BD';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BD';
+import * as router from './router.js?v=20261101BD';
+import { playSound } from './audio.js?v=20261101BD';
+import { startCall } from './call.js?v=20261101BD';
+import { openMoments } from './moments.js?v=20261101BD';
+import { pickLyric, isListening } from './music.js?v=20261101BD';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101BD';
+import { rollPresetTags } from './presets.js?v=20261101BD';
 
 let busy = false;
 let replying = false;
@@ -132,6 +132,10 @@ function buildMessage(msg, idx) {
     return `<div class="msg nudge ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}"><span>${escapeHtml(msg.text)}</span></div>`;
   }
 
+  if (type === 'moment') {
+    return `<div class="msg nudge moment-notice ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}" data-open-moment="${escapeHtml(msg.postId || '')}"><span>${escapeHtml(msg.text)}</span></div>`;
+  }
+
   if (type === 'recall') {
     return `<div class="msg recall ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}"><span>${escapeHtml(msg.text || '对方撤回了一条消息')}</span></div>`;
   }
@@ -144,8 +148,8 @@ function buildMessage(msg, idx) {
   const prev = idx > 0 ? s.messages[idx - 1] : null;
   const grouped = prev && prev.role === msg.role
     && (prev.senderId || '') === (msg.senderId || '')
-    && prev.type !== 'nudge' && prev.type !== 'recall'
-    && type !== 'nudge' && type !== 'recall';
+    && prev.type !== 'nudge' && prev.type !== 'recall' && prev.type !== 'moment'
+    && type !== 'nudge' && type !== 'recall' && type !== 'moment';
 
   // 已读：对方头像下方显示双对号；对方之后没回复过则用浅色
   let readHtml = '';
@@ -165,7 +169,7 @@ function buildMessage(msg, idx) {
     ? `<div class="bubble-tags">${msg.tags.map(t => `<span class="bubble-tag"><i>${escapeHtml(t.type || '')}</i>${escapeHtml(t.text || '')}</span>`).join('')}</div>`
     : '';
   const footHtml = resend
-    ? `<div class="msg-foot"><span class="meta-resend">补发</span><span class="t">${fullTimeText(msg.ts)}</span></div>`
+    ? `<div class="msg-foot"><span class="meta-resend">补发</span></div>`
     : '';
 
   let bubbleCls = 'bubble';
@@ -707,6 +711,8 @@ function bindMessageEvents() {
   list.addEventListener('pointercancel', clear);
 
   list.addEventListener('click', event => {
+    const notice = event.target.closest('[data-open-moment]');
+    if (notice) { openMomentNotice(); return; }
     const fa = event.target.closest('[data-fa]');
     if (fa) {
       const row = fa.closest('.msg');
@@ -1455,11 +1461,47 @@ function openChatMenu() {
   ]);
 }
 
+/* ---------- 朋友圈动态提醒 ---------- */
+
+let momentPopTimer = null;
+
+function openMomentNotice() {
+  hideMomentPop();
+  openMoments(router.isOpen('chat') ? 'chat' : 'home');
+}
+
+function hideMomentPop() {
+  const pop = $('#momentPop');
+  if (!pop || pop.hidden) return;
+  pop.classList.remove('show');
+  clearTimeout(momentPopTimer);
+  setTimeout(() => {
+    if (!pop.classList.contains('show')) pop.hidden = true;
+  }, 240);
+}
+
+function showMomentPop(text, avatar) {
+  const pop = $('#momentPop');
+  if (!pop) return;
+  $('#momentPopText').textContent = text;
+  setAvatar($('#momentPopAv'), persona().name, avatar || persona().avatar);
+  pop.hidden = false;
+  requestAnimationFrame(() => pop.classList.add('show'));
+  clearTimeout(momentPopTimer);
+  momentPopTimer = setTimeout(hideMomentPop, 6000);
+}
+
 /* ---------- 初始化 ---------- */
 
 export function initChat() {
   stripStoredLyricTimes();
   bindMessageEvents();
+  window.addEventListener('zika:moment-pop', event => {
+    const detail = event.detail || {};
+    if (!detail.text) return;
+    showMomentPop(detail.text, detail.avatar || '');
+  });
+  $('#momentPop').onclick = openMomentNotice;
   $('#micBtn').onclick = () => {
     if (navigator.vibrate) navigator.vibrate(6);
     triggerReply();

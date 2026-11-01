@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261101BC';
-import { $, escapeHtml, timeText, setAvatar, toast, uid, randInt, pick, pickFile, compressImage } from './util.js?v=20261101BC';
-import { openSheet, closeSheet, sheetTitle, promptSheet, confirmSheet } from './ui.js?v=20261101BC';
-import * as router from './router.js?v=20261101BC';
+import { get, commit, subscribe } from './state.js?v=20261101BD';
+import { $, escapeHtml, timeText, setAvatar, toast, uid, randInt, pick, pickFile, compressImage } from './util.js?v=20261101BD';
+import { openSheet, closeSheet, sheetTitle, promptSheet, confirmSheet } from './ui.js?v=20261101BD';
+import * as router from './router.js?v=20261101BD';
 
 let origin = 'home';
 let draft = { text: '', stickerUrl: '', imageUrl: '', fromCards: false };
@@ -105,6 +105,28 @@ function makeThemPost() {
   return post;
 }
 
+function announcePost(post) {
+  const p = persona();
+  const text = `${p.name || 'TA'}发了一条朋友圈`;
+  commit(s => {
+    s.messages.push({
+      id: uid(),
+      role: 'them',
+      type: 'moment',
+      text,
+      ts: Date.now(),
+      seen: false,
+      senderId: '',
+      postId: post.id,
+    });
+  });
+  if (!router.isOpen('moments')) {
+    window.dispatchEvent(new CustomEvent('zika:moment-pop', {
+      detail: { text, avatar: p.avatar || '' },
+    }));
+  }
+}
+
 function maybePost() {
   const b = get().behavior;
   const posts = get().moments.posts;
@@ -118,6 +140,7 @@ function maybePost() {
   if (!post) return;
   commit(s => { s.moments.posts.unshift(post); });
   render();
+  announcePost(post);
 }
 
 function reactToMyPost(postId) {
@@ -469,4 +492,5 @@ export function initMoments() {
 
   router.register('moments', { onOpen: () => { render(); maybePost(); } });
   subscribe(() => { if (router.isOpen('moments')) render(); });
+  setInterval(maybePost, 60 * 1000);
 }
