@@ -3371,7 +3371,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   min-height: 100%;
   padding-top: 0;
   margin-top: 10px;
-  --cover-h: clamp(112px, 15vh, 148px);
+  --cover-h: calc(clamp(112px, 15vh, 148px) + 15px);
   --av-h: clamp(76px, 10vh, 88px);
   --pins-h: clamp(108px, 14vh, 132px);
   --pin-w: clamp(80px, 10.5vh, 96px);
