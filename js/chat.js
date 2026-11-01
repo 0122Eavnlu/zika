@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261031T';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031T';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031T';
-import * as router from './router.js?v=20261031T';
-import { playSound } from './audio.js?v=20261031T';
-import { startCall } from './call.js?v=20261031T';
-import { openMoments } from './moments.js?v=20261031T';
-import { pickLyric, isListening } from './music.js?v=20261031T';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031T';
+import { get, commit, subscribe } from './state.js?v=20261031U';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031U';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031U';
+import * as router from './router.js?v=20261031U';
+import { playSound } from './audio.js?v=20261031U';
+import { startCall } from './call.js?v=20261031U';
+import { openMoments } from './moments.js?v=20261031U';
+import { pickLyric, isListening } from './music.js?v=20261031U';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031U';
 
 let busy = false;
 let replying = false;
@@ -101,7 +101,7 @@ const FA_TRASH = `<svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.2 7V5.2a1.4 1.4 
 const FA_VOICE = `<svg viewBox="0 0 24 24"><path d="M4.6 10v4M8.6 7.4v9.2M12.6 4.8v14.4M16.6 8.4v7.2M20.4 10.6v2.8"/></svg>`;
 const FA_TEXT = `<svg viewBox="0 0 24 24"><rect x="5" y="3.6" width="14" height="16.8" rx="3"/><path d="M8.6 8.6h6.8M8.6 12h6.8M8.6 15.4h3.8"/></svg>`;
 
-function buildMessage(msg) {
+function buildMessage(msg, idx) {
   const p = persona();
   const isMe = msg.role === 'me';
   const type = msg.type || 'text';
@@ -118,6 +118,12 @@ function buildMessage(msg) {
   const showAvatar = !isMe && p.showAvatar;
   const showName = !isMe && p.showName && get().group.enabled;
   const s = get();
+  // 是否和上一条同侧同发送者（连续消息堆叠，更紧凑）
+  const prev = idx > 0 ? s.messages[idx - 1] : null;
+  const grouped = prev && prev.role === msg.role
+    && (prev.senderId || '') === (msg.senderId || '')
+    && prev.type !== 'nudge' && prev.type !== 'recall'
+    && type !== 'nudge' && type !== 'recall';
   const timeOn = s.ui.timeOn;
   const readOn = s.ui.readOn;
 
@@ -187,11 +193,11 @@ function buildMessage(msg) {
     inner = (msg.quote ? `<span class="quote">${escapeHtml(msg.quote)}</span>` : '') + escapeHtml(msg.text);
   }
 
-  // 气泡皮肤兼容：文字 / 歌词气泡额外挂 .message-sent / .message-received，
+  // 气泡皮肤兼容：文字 / 歌词 / 语音气泡额外挂 .message-sent / .message-received，
   // 并把内容包进 .content-wrapper，外部皮肤 CSS 可正常生效（含左右镜像写法）。
-  const skinnable = type === 'text' || type === 'lyric';
+  const skinnable = type === 'text' || type === 'lyric' || type === 'voice';
   if (skinnable) bubbleCls += isMe ? ' message-sent' : ' message-received';
-  if (type !== 'sticker' && type !== 'emoji' && type !== 'call' && type !== 'quiz' && type !== 'voice') inner = `<span class="content-wrapper">${inner}</span>`;
+  if (type !== 'sticker' && type !== 'emoji' && type !== 'call' && type !== 'quiz') inner = `<span class="content-wrapper">${inner}</span>`;
 
   const avatarHtml = showAvatar ? `<span class="avatar" data-avatar="${msg.id}"></span>` : '';
   const meAvatarHtml = isMe ? `<span class="avatar me-avatar" data-avatar="${msg.id}" aria-label="我的资料"></span>` : '';
@@ -209,7 +215,7 @@ function buildMessage(msg) {
       <button data-fa="fav" aria-label="收藏">${FA_STAR}</button>
       <button data-fa="del" class="danger" aria-label="删除">${FA_TRASH}</button>
     </div>`;
-  return `<div class="msg ${isMe ? 'me' : 'them'} ${type === 'quiz' ? 'quiz-msg' : ''} ${showAvatar || isMe ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${avatarColThem}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}${mini}<div class="${bubbleCls}">${inner}</div>${actions}</div>${avatarColMe}</div>`;
+  return `<div class="msg ${isMe ? 'me' : 'them'} ${type === 'quiz' ? 'quiz-msg' : ''} ${grouped ? 'grouped' : ''} ${showAvatar || isMe ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${avatarColThem}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}${mini}<div class="${bubbleCls}">${inner}</div>${actions}</div>${avatarColMe}</div>`;
 }
 
 function render(forceBottom = false) {
@@ -219,7 +225,7 @@ function render(forceBottom = false) {
   const nearBottom = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 70;
   const messages = get().messages;
   $('#emptyChat').classList.toggle('hidden', messages.length > 0);
-  list.innerHTML = messages.map(buildMessage).join('');
+  list.innerHTML = messages.map((m, i) => buildMessage(m, i)).join('');
   fresh.clear();
   $$('.msg .avatar[data-avatar]', list).forEach(el => {
     const msg = messages.find(m => m.id === el.dataset.avatar);
@@ -435,27 +441,40 @@ function favoriteMessage(msg) {
   toast('已收藏');
 }
 
+const MINI_PRESETS = ['哼哼', '?', '喜欢你雨善', '……', '无奈', '伤脑筋啊', '笨蛋', '傻瓜'];
+
 function editBubble(id) {
   const msg = get().messages.find(m => m.id === id);
   if (!msg) return;
+  const cur = msg.bubbleText || '';
   openSheet(`
     <div class="bubble-sheet-head">
       <h2 class="bubble-sheet-title">添加小气泡</h2>
       <button class="bubble-sheet-x" id="bubbleX" aria-label="关闭">×</button>
     </div>
-    <textarea class="bubble-sheet-input" id="bubbleInput" rows="2" maxlength="60" placeholder="输入小气泡内容...">${escapeHtml(msg.bubbleText || '')}</textarea>
-    <p class="bubble-sheet-hint">自己输入的小气泡只在这条消息上显示；联系人会从字卡库「小气泡」随机抽内容</p>
+    <div class="mini-presets">
+      ${MINI_PRESETS.map(p => `<button class="mini-chip${p === cur ? ' on' : ''}" data-mini="${escapeHtml(p)}">${escapeHtml(p)}</button>`).join('')}
+    </div>
+    <textarea class="bubble-sheet-input" id="bubbleInput" rows="2" maxlength="60" placeholder="或输入自定义内容...">${escapeHtml(cur)}</textarea>
+    <p class="bubble-sheet-hint">点预设直接用，也可在下面自定义；对方也能给你的气泡贴小气泡</p>
     <button class="bubble-sheet-ok" id="bubbleOk">确定</button>
   `);
   $('#bubbleX').onclick = closeSheet;
-  setTimeout(() => $('#bubbleInput').focus(), 120);
+  const input = $('#bubbleInput');
+  $$('#sheet .mini-chip').forEach(btn => {
+    btn.onclick = () => {
+      $$('#sheet .mini-chip').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      input.value = btn.dataset.mini;
+    };
+  });
+  setTimeout(() => input.focus(), 120);
   $('#bubbleOk').onclick = () => {
-    const text = $('#bubbleInput').value.trim();
+    const text = input.value.trim();
     commit(s => {
       const m = s.messages.find(x => x.id === id);
       if (m) m.bubbleText = text;
     });
-    // commit 已经安排了一次整页重绘；这里只更新这一条的小气泡，取消掉那次重绘
     if (renderRaf) {
       cancelAnimationFrame(renderRaf);
       renderRaf = 0;
@@ -786,6 +805,23 @@ async function afterReply() {
       }
     } catch {}
   }
+
+  // 对方给我最近的一条气泡贴个小气泡
+  if (Math.random() < .25) {
+    const myMsgs = get().messages.filter(m => m.role === 'me');
+    if (myMsgs.length) {
+      const target = myMsgs[myMsgs.length - 1];
+      if (!target.bubbleText) {
+        const chip = pick(MINI_PRESETS);
+        await sleep(randInt(500, 1200));
+        commit(s => {
+          const m = s.messages.find(x => x.id === target.id);
+          if (m) m.bubbleText = chip;
+        });
+        scheduleRender();
+      }
+    }
+  }
 }
 
 /* ---------- 主动消息 ---------- */
@@ -886,35 +922,170 @@ function sendSticker(url) {
   triggerReply({ allowCall: false });
 }
 
-function openStickerPicker() {
-  const stickers = get().stickers || [];
-  openSheet(`
-    ${sheetTitle('表情包')}
-    <div class="sticker-grid">
-      ${stickers.map(s => `<button class="sticker-cell" data-pick="${s.id}"><img src="${escapeHtml(s.url)}" alt=""></button>`).join('')}
-      <button class="sticker-cell add-cell" id="pickerUpload">
-        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>上传</span>
-      </button>
-    </div>
-  `);
-  $$('#sheet [data-pick]').forEach(btn => {
-    btn.onclick = () => {
-      const sticker = get().stickers.find(s => s.id === btn.dataset.pick);
-      if (sticker) sendSticker(sticker.url);
-    };
+const KAOMOJI_PRESETS = [
+  '^ ^', '(´• ω •`)', '(｡•́︿•̀｡)', '(╯°□°）╯', '( ´•̥̥̥ω•̥̥̥` )',
+  '(´･ω･`)', '( ˘ ³˘)♥', '(灬ºωº灬)', '(*´∀`)~♥', '(｡♥‿♥｡)',
+  '(┛ಠ_ಠ)┛彡┻━┻', '( ͡° ͜ʖ ͡°)', '(¬‿¬)', '( ͡°ᴥ ͡° ʋ)', 'ʕ•ᴥ•ʔ',
+  '(=^･ω･^=)', '( ˘･з･)', 'ᕕ( ᐛ )ᕗ', '(ง •̀_•́)ง', 'ლ(╹◡╹ლ)',
+];
+
+const EMOJI_PRESETS = [
+  '😀','😁','😂','🤣','😊','😍','🥰','😘','😜','🤪','😎','🤩',
+  '🥳','😇','🤗','🤭','🤫','🤔','😐','😑','😶','🙄','😏','😒',
+  '😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢',
+  '😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰',
+  '😥','😓','🤗','🤔','🤭','🥱','😴','🤤','😪','😵','🤐','🥴',
+  '🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','🥳','😈','👿','👹',
+  '👺','🤡','💩','👻','💀','☠️','👽','🤖','💋','💌','💘','💝',
+  '💖','💗','💓','💞','💕','💟','❣️','💔','❤️','🧡','💛','💚',
+  '💙','💜','🖤','🤍','🤎','💯','💢','💥','💫','💦','💨','🕳️',
+  '👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘',
+  '🤙','👈','👉','👆','👇','☝️','👊','✊','🤛','🤜','👏','🙌',
+  '👐','🤲','🤝','🙏','👍','👎','✍️','💪','🦾','🦿','🦵','🦶',
+];
+
+function sendEmojiText(text) {
+  const id = uid();
+  fresh.add(id);
+  commit(s => {
+    s.messages.push({
+      id,
+      role: 'me',
+      type: 'emoji',
+      text,
+      ts: Date.now(),
+      read: false,
+      seen: true,
+      senderId: '',
+    });
   });
-  $('#pickerUpload').onclick = async () => {
-    const file = await pickFile('image/*');
-    if (!file) return;
-    try {
-      const url = await prepareSticker(file);
-      commit(s => { s.stickers.unshift({ id: uid(), url, at: Date.now() }); });
-      openStickerPicker();
-      toast('已添加');
-    } catch {
-      toast('图片处理失败');
-    }
-  };
+  closeSheet();
+  playSound();
+  scheduleRender(true);
+  triggerReply({ allowCall: false });
+}
+
+function openStickerPicker(tab = 'stickers', sub = 'public') {
+  const s = get();
+  const stickers = s.stickers || [];
+  const myKaomoji = s.kaomoji || [];
+  const myEmoji = s.emojiMine || [];
+
+  let gridHtml = '';
+  if (tab === 'stickers') {
+    const list = sub === 'public'
+      ? stickers
+      : stickers; // 表情包公用=我的（上传的都是我的）
+    gridHtml = `
+      <div class="sticker-grid">
+        ${list.map(st => `<button class="sticker-cell" data-pick="${st.id}"><img src="${escapeHtml(st.url)}" alt=""></button>`).join('')}
+        <button class="sticker-cell add-cell" id="pickerUpload">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>上传</span>
+        </button>
+      </div>`;
+  } else if (tab === 'kaomoji') {
+    const list = sub === 'public' ? KAOMOJI_PRESETS : myKaomoji.map(k => k.text);
+    gridHtml = `
+      <div class="kaomoji-grid">
+        ${list.map((t, i) => `<button class="kaomoji-cell" data-kao="${i}">${escapeHtml(t)}</button>`).join('') || '<div class="card-empty">空</div>'}
+      </div>
+      ${sub === 'mine' ? `<button class="ghost-btn wide" id="kaomojiAdd">添加颜文字</button>` : ''}`;
+  } else {
+    const list = sub === 'public' ? EMOJI_PRESETS : myEmoji.map(e => e.text);
+    gridHtml = `
+      <div class="emoji-grid">
+        ${list.map((t, i) => `<button class="emoji-cell" data-em="${i}">${escapeHtml(t)}</button>`).join('') || '<div class="card-empty">空</div>'}
+      </div>
+      ${sub === 'mine' ? `<button class="ghost-btn wide" id="emojiAdd">添加 emoji</button>` : ''}`;
+  }
+
+  openSheet(`
+    ${sheetTitle('表情')}
+    <div class="picker-tabs" id="pickerTabs">
+      <button data-ptab="stickers" class="${tab === 'stickers' ? 'active' : ''}">表情包</button>
+      <button data-ptab="kaomoji" class="${tab === 'kaomoji' ? 'active' : ''}">颜文字</button>
+      <button data-ptab="emoji" class="${tab === 'emoji' ? 'active' : ''}">emoji</button>
+    </div>
+    <div class="picker-subtabs" id="pickerSubtabs">
+      <button data-psub="public" class="${sub === 'public' ? 'active' : ''}">公用</button>
+      <button data-psub="mine" class="${sub === 'mine' ? 'active' : ''}">我的</button>
+    </div>
+    <div class="picker-body">${gridHtml}</div>
+  `);
+
+  $$('#pickerTabs button').forEach(b => {
+    b.onclick = () => openStickerPicker(b.dataset.ptab, sub);
+  });
+  $$('#pickerSubtabs button').forEach(b => {
+    b.onclick = () => openStickerPicker(tab, b.dataset.psub);
+  });
+
+  if (tab === 'stickers') {
+    $$('#sheet [data-pick]').forEach(btn => {
+      btn.onclick = () => {
+        const sticker = get().stickers.find(x => x.id === btn.dataset.pick);
+        if (sticker) sendSticker(sticker.url);
+      };
+    });
+    const up = $('#pickerUpload');
+    if (up) up.onclick = async () => {
+      const file = await pickFile('image/*');
+      if (!file) return;
+      try {
+        const url = await prepareSticker(file);
+        commit(s => { s.stickers.unshift({ id: uid(), url, at: Date.now() }); });
+        openStickerPicker('stickers', sub);
+        toast('已添加');
+      } catch {
+        toast('图片处理失败');
+      }
+    };
+  } else if (tab === 'kaomoji') {
+    const list = sub === 'public' ? KAOMOJI_PRESETS : myKaomoji.map(k => k.text);
+    $$('#sheet [data-kao]').forEach(btn => {
+      btn.onclick = () => sendEmojiText(list[Number(btn.dataset.kao)]);
+      // 长按删除（仅我的）
+      if (sub === 'mine') {
+        btn.oncontextmenu = e => {
+          e.preventDefault();
+          const idx = Number(btn.dataset.kao);
+          commit(s => { s.kaomoji.splice(idx, 1); });
+          openStickerPicker('kaomoji', 'mine');
+        };
+      }
+    });
+    const add = $('#kaomojiAdd');
+    if (add) add.onclick = () => {
+      promptSheet({ title: '添加颜文字', placeholder: '输入颜文字', confirm: '添加' }).then(text => {
+        const t = (text || '').trim();
+        if (!t) return;
+        commit(s => { s.kaomoji.unshift({ id: uid(), text: t, at: Date.now() }); });
+        openStickerPicker('kaomoji', 'mine');
+      });
+    };
+  } else {
+    const list = sub === 'public' ? EMOJI_PRESETS : myEmoji.map(e => e.text);
+    $$('#sheet [data-em]').forEach(btn => {
+      btn.onclick = () => sendEmojiText(list[Number(btn.dataset.em)]);
+      if (sub === 'mine') {
+        btn.oncontextmenu = e => {
+          e.preventDefault();
+          const idx = Number(btn.dataset.em);
+          commit(s => { s.emojiMine.splice(idx, 1); });
+          openStickerPicker('emoji', 'mine');
+        };
+      }
+    });
+    const add = $('#emojiAdd');
+    if (add) add.onclick = () => {
+      promptSheet({ title: '添加 emoji', placeholder: '输入 emoji', confirm: '添加' }).then(text => {
+        const t = (text || '').trim();
+        if (!t) return;
+        commit(s => { s.emojiMine.unshift({ id: uid(), text: t, at: Date.now() }); });
+        openStickerPicker('emoji', 'mine');
+      });
+    };
+  }
 }
 
 function openNudgePrompt() {
@@ -924,7 +1095,6 @@ function openNudgePrompt() {
     const label = suffix ? `我拍了拍${name} ${suffix}` : `我拍了拍${name}`;
     pushSelf({ type: 'nudge', text: label });
     scheduleRender(true);
-    setTimeout(() => addIncoming({ text: '干嘛', senderName: persona().name }), 900);
   });
 }
 
@@ -949,7 +1119,6 @@ function openAttachPanel() {
         closeSheet();
         pushSelf({ type: 'nudge', text: `你拍了拍「${persona().name || 'TA'}」` });
         scheduleRender(true);
-        setTimeout(() => addIncoming({ text: '干嘛', senderName: persona().name }), 900);
         return;
       }
       if (kind === 'burst') {

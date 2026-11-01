@@ -1,4 +1,4 @@
-import { uid, toast } from './util.js?v=20261031T';
+import { uid, toast } from './util.js?v=20261031U';
 
 const KEY = 'zika.state.v1';
 const AT_KEY = 'zika.state.v1.at';
@@ -156,6 +156,7 @@ function defaults(withSeed = true) {
       momentPostGapMin: 20,
       momentPostGapMax: 180,
       recallChance: 15,
+      letter: { enabled: true, minMin: 30, maxMin: 180, chance: 15 },
     },
     tts: {
       provider: 'minimax',
@@ -177,6 +178,9 @@ function defaults(withSeed = true) {
       items: [{ id: uid(), text: '拍了拍你', at: Date.now() }],
     },
     stickers: [],
+    kaomoji: [],
+    emojiMine: [],
+    letters: { inbox: [], outbox: [] },
     moments: { bg: '', posts: [] },
     music: { tracks: [], mode: 'sequence', together: false, togetherCount: 0, current: 0, apiBase: '', cookie: '', uid: '', nickname: '', msgStay: 5, sessionStart: 0, history: [] },
     messages: [],
@@ -264,20 +268,20 @@ function persistNow() {
     saveTimer = null;
   }
   const at = Date.now();
+  // 每次都尝试写 localStorage（同步落盘最可靠），失败仅本次降级到 IndexedDB，
+  // 不再永久禁用——之前一旦某次写满就再也不写 localStorage，刷新后读回旧数据，
+  // 导致删掉的字卡 / 表情包又冒出来。
   let localFailed = false;
-  if (localOk) {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(state));
-      localStorage.setItem(AT_KEY, String(at));
-    } catch {
-      localOk = false;
-      localFailed = true;
-    }
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+    localStorage.setItem(AT_KEY, String(at));
+    localOk = true;
+  } catch {
+    localFailed = true;
   }
   // IndexedDB 支持结构化存储，不用把整个状态转成字符串，写入更快、容量也大得多
   const wrote = idbWrite({ state, at });
   if (localFailed) {
-    // 只有连大容量存储都写不进去时才提示，扩容后不再打扰
     wrote.then(ok => {
       if (!ok && !shared.quotaWarned) {
         shared.quotaWarned = true;

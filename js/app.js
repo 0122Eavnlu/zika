@@ -1,16 +1,17 @@
-import { initAppearance } from './appearance.js?v=20261031T';
-import { initSettings } from './settings.js?v=20261031T';
-import { initCards } from './cards.js?v=20261031T';
-import { initChat } from './chat.js?v=20261031T';
-import { initCall, hideCall } from './call.js?v=20261031T';
-import { initStatus, openStatusSheet } from './status.js?v=20261031T';
-import { initMoments } from './moments.js?v=20261031T';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031T';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031T';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031T';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031T';
-import { get, subscribe, commit } from './state.js?v=20261031T';
-import { openMeSheet } from './chat.js?v=20261031T';
+import { initAppearance } from './appearance.js?v=20261031U';
+import { initSettings } from './settings.js?v=20261031U';
+import { initCards } from './cards.js?v=20261031U';
+import { initChat } from './chat.js?v=20261031U';
+import { initCall, hideCall } from './call.js?v=20261031U';
+import { initStatus, openStatusSheet } from './status.js?v=20261031U';
+import { initMoments } from './moments.js?v=20261031U';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261031U';
+import { initLetters } from './letters.js?v=20261031U';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261031U';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261031U';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261031U';
+import { get, subscribe, commit } from './state.js?v=20261031U';
+import { openMeSheet } from './chat.js?v=20261031U';
 
 /* 首页重绘缓存：避免每次都把同一张超大的 base64 重新赋给 style，
    反复赋值会让移动端整块重排、非常卡。 */
@@ -577,7 +578,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261031T', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261031U', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -652,6 +653,7 @@ function boot() {
   initMoments();
   initMusic();
   initStatus();
+  initLetters();
   bindHome();
   bindBackButtons();
   handleHistory();

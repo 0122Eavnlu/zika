@@ -13,7 +13,7 @@
 <meta name="application-name" content="字卡">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=20261031T">
+<link rel="stylesheet" href="css/style.css?v=20261031U">
 </head>
 <body>
 
@@ -193,6 +193,16 @@
               </span>
               <span class="app-name">设定</span>
             </button>
+            <button class="app" data-app="letters" aria-label="信箱">
+              <span class="tile">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 7.5h18v9.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7.5z"/>
+                  <path d="M3 7.5l9 6.5 9-6.5"/>
+                </svg>
+              </span>
+              <span class="app-name">信箱</span>
+              <span class="badge" id="letterBadge" hidden>0</span>
+            </button>
           </div>
           </div>
         </div>
@@ -343,6 +353,52 @@
         <button class="batch-btn" id="batchBlock">屏蔽</button>
         <button class="batch-btn danger" id="batchDelete">删除</button>
         <button class="batch-btn" id="batchCancel">取消</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 信箱 -->
+  <section class="screen" id="screen-letters" aria-hidden="true">
+    <header class="app-head">
+      <button class="icon-btn" data-close aria-label="返回">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>
+      </button>
+      <h1 class="app-title">信箱</h1>
+      <div class="head-actions spacer"></div>
+    </header>
+    <div class="app-body letters-body">
+      <div class="tabs" id="letterTabs">
+        <button data-ltab="inbox" class="active">收到的信</button>
+        <button data-ltab="outbox">寄出的信</button>
+        <button data-ltab="write">写封信</button>
+        <button data-ltab="data">信件数据</button>
+      </div>
+
+      <div class="tab-panel" id="letter-inbox">
+        <div class="letter-list" id="inboxList"></div>
+      </div>
+      <div class="tab-panel" id="letter-outbox" hidden>
+        <div class="letter-list" id="outboxList"></div>
+      </div>
+      <div class="tab-panel" id="letter-write" hidden>
+        <div class="letter-compose">
+          <p class="letter-hint">从字卡库随机拼 5~30 张组成一封信，可手动修改后寄出</p>
+          <button class="ghost-btn wide" id="letterGen">换一组字卡</button>
+          <textarea class="letter-text" id="letterText" rows="8" placeholder="信件内容..."></textarea>
+          <div class="letter-meta">
+            <span id="letterCount">0 字</span>
+            <button class="btn-ink" id="letterSend">寄信</button>
+          </div>
+        </div>
+      </div>
+      <div class="tab-panel" id="letter-data" hidden>
+        <section class="group">
+          <h2 class="group-title">信件数据</h2>
+          <button class="ghost-btn wide" id="letterExport">导出信件数据</button>
+          <button class="ghost-btn wide" id="letterImport">导入信件数据</button>
+          <button class="ghost-btn wide danger" id="letterClear">清空所有信件</button>
+        </section>
+        <p class="letter-note">信件保存在本地 IndexedDB，仅存于本设备。</p>
       </div>
     </div>
   </section>
@@ -581,6 +637,30 @@
         <div class="row">
           <span class="row-label">通知</span>
           <button class="switch" id="notifySwitch" aria-label="通知"></button>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">来信</h2>
+        <div class="row">
+          <span class="row-label">开启来信</span>
+          <button class="switch" data-switch="behavior.letter.enabled" aria-label="开启来信"></button>
+        </div>
+        <div class="row">
+          <span class="row-label">间隔</span>
+          <div class="range-pair">
+            <input class="num" type="number" min="1" max="1440" data-input="behavior.letter.minMin">
+            <span class="tilde">—</span>
+            <input class="num" type="number" min="1" max="1440" data-input="behavior.letter.maxMin">
+            <span class="unit">分</span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="row-label">概率</span>
+          <div class="slider-row">
+            <input type="range" min="0" max="100" step="1" class="range" data-range="behavior.letter.chance">
+            <span class="range-val" data-range-val="behavior.letter.chance"></span>
+          </div>
         </div>
       </section>
 
@@ -946,6 +1026,6 @@
   <style id="user-font"></style>
 </div>
 
-<script type="module" src="js/app.js?v=20261031T"></script>
+<script type="module" src="js/app.js?v=20261031U"></script>
 </body>
 </html>
