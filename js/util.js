@@ -103,8 +103,12 @@ export function fileToDataUrl(file) {
 
 export async function prepareSticker(file, maxSize = 640) {
   if (!file || !file.type.startsWith('image/')) throw new Error('not-image');
-  // GIF 无法在浏览器里重新压缩动图，取首帧降采样为 PNG，保留透明、大幅节省空间
-  if (file.type === 'image/gif') return compressImage(file, maxSize, undefined, 'image/png');
+  // 动图（GIF / APNG）一旦经过 canvas 重绘就只剩首帧，这里原样保留动画
+  const animated = file.type === 'image/gif' || file.type === 'image/apng' || file.type === 'image/webp';
+  if (animated) {
+    if (file.size > 6 * 1024 * 1024) throw new Error('too-large');
+    return fileToDataUrl(file);
+  }
   return compressImage(file, maxSize, .8, 'image/jpeg');
 }
 

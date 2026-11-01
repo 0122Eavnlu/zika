@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261101AH';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101AH';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101AH';
-import * as router from './router.js?v=20261101AH';
-import { playSound } from './audio.js?v=20261101AH';
-import { startCall } from './call.js?v=20261101AH';
-import { openMoments } from './moments.js?v=20261101AH';
-import { pickLyric, isListening } from './music.js?v=20261101AH';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101AH';
+import { get, commit, subscribe } from './state.js?v=20261101AI';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101AI';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101AI';
+import * as router from './router.js?v=20261101AI';
+import { playSound } from './audio.js?v=20261101AI';
+import { startCall } from './call.js?v=20261101AI';
+import { openMoments } from './moments.js?v=20261101AI';
+import { pickLyric, isListening } from './music.js?v=20261101AI';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101AI';
 
 let busy = false;
 let replying = false;
@@ -1048,8 +1048,8 @@ function openStickerPicker(tab = 'stickers') {
         commit(s => { s.stickers.unshift({ id: uid(), url, at: Date.now() }); });
         openStickerPicker('stickers');
         toast('已添加');
-      } catch {
-        toast('图片处理失败');
+      } catch (err) {
+        toast(err && err.message === 'too-large' ? '动图太大了，最大 6MB' : '图片处理失败');
       }
     };
   } else if (tab === 'kaomoji') {
