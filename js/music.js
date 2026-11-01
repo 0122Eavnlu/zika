@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261101AA';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101AA';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101AA';
-import * as router from './router.js?v=20261101AA';
+import { get, commit, subscribe } from './state.js?v=20261101AB';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101AB';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101AB';
+import * as router from './router.js?v=20261101AB';
 
 const session = [];
 const lyricsMap = new Map();
@@ -221,35 +221,56 @@ function syncPlayButton() {
 
 const COVER_GRADIENT = 'linear-gradient(150deg, #a99a7c, #7d6f55 55%, #5d5343)';
 
+const coverUrlCache = new Map();
+
 function hiRes(url) {
-  return url.replace(/([?&]param=)\d+y\d+/i, (m, key) => `${key}1024y1024`);
+  return String(url || '').replace(/([?&]param=)\d+y\d+/i, (m, key) => `${key}1024y1024`);
+}
+
+/* meting 的 type=pic 会 302 到网易云 CDN 的 90×90 缩略图，糊。
+   这里先跟一次重定向拿到真实图片地址，再把 param 提到 1024，封面才清楚。 */
+function resolveCover(url) {
+  const base = httpsUrl(url);
+  if (!base) return Promise.resolve('');
+  if (!/(meting|i-meto|injiahow|w4t).*type=pic/i.test(base)) return Promise.resolve(hiRes(base));
+  if (coverUrlCache.has(base)) return coverUrlCache.get(base);
+  const task = fetch(base, { method: 'HEAD', redirect: 'follow' })
+    .then(res => hiRes(res.url) || hiRes(base))
+    .catch(() => hiRes(base));
+  coverUrlCache.set(base, task);
+  return task;
 }
 
 function applyCover(el, track) {
-  const url = hiRes(httpsUrl(track && track.cover));
+  const key = httpsUrl(track && track.cover);
+  if (el.dataset.coverKey === key) return;
+  el.dataset.coverKey = key;
   const quiet = () => {
     el.classList.remove('has-art');
     el.style.backgroundImage = COVER_GRADIENT;
   };
-  if (!url) {
-    el.dataset.coverKey = '';
+  if (!key) {
     quiet();
     return;
   }
-  if (el.dataset.coverKey === url) return;
-  el.dataset.coverKey = url;
-  quiet();
-  const img = new Image();
-  img.onload = () => {
-    if (el.dataset.coverKey !== url) return;
-    el.style.backgroundImage = `url("${url.replace(/"/g, '%22')}")`;
-    el.classList.add('has-art');
-  };
-  img.onerror = () => {
-    if (el.dataset.coverKey !== url) return;
-    quiet();
-  };
-  img.src = url;
+  resolveCover(key).then(url => {
+    if (el.dataset.coverKey !== key) return;
+    if (!url) {
+      quiet();
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      if (el.dataset.coverKey !== key) return;
+      el.style.backgroundImage = `url("${url.replace(/"/g, '%22')}")`;
+      el.classList.add('has-art');
+    };
+    img.onerror = () => {
+      if (el.dataset.coverKey !== key) return;
+      quiet();
+    };
+    img.src = url;
+  });
 }
 
 function render() {

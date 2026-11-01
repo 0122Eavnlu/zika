@@ -1,17 +1,17 @@
-import { initAppearance } from './appearance.js?v=20261101AA';
-import { initSettings } from './settings.js?v=20261101AA';
-import { initCards } from './cards.js?v=20261101AA';
-import { initChat } from './chat.js?v=20261101AA';
-import { initCall, hideCall } from './call.js?v=20261101AA';
-import { initStatus, openStatusSheet } from './status.js?v=20261101AA';
-import { initMoments } from './moments.js?v=20261101AA';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101AA';
-import { initLetters } from './letters.js?v=20261101AA';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101AA';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101AA';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101AA';
-import { get, subscribe, commit } from './state.js?v=20261101AA';
-import { openMeSheet } from './chat.js?v=20261101AA';
+import { initAppearance } from './appearance.js?v=20261101AB';
+import { initSettings } from './settings.js?v=20261101AB';
+import { initCards } from './cards.js?v=20261101AB';
+import { initChat } from './chat.js?v=20261101AB';
+import { initCall, hideCall } from './call.js?v=20261101AB';
+import { initStatus, openStatusSheet } from './status.js?v=20261101AB';
+import { initMoments } from './moments.js?v=20261101AB';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101AB';
+import { initLetters } from './letters.js?v=20261101AB';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101AB';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101AB';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101AB';
+import { get, subscribe, commit } from './state.js?v=20261101AB';
+import { openMeSheet } from './chat.js?v=20261101AB';
 
 /* 首页重绘缓存：避免每次都把同一张超大的 base64 重新赋给 style，
    反复赋值会让移动端整块重排、非常卡。 */
@@ -58,6 +58,8 @@ function renderHome() {
   if (name) name.textContent = s.me.name || '我';
   const status = $('#homeStatus');
   if (status) status.textContent = s.persona.status || '添加个性签名';
+  const loc = $('#homeLoc');
+  if (loc) loc.textContent = s.ui.homeLoc || '添加定位';
 
   renderPins(s);
 
@@ -490,6 +492,13 @@ function bindHome() {
   $('#homeName')?.addEventListener('click', () => openMeSheet());
   $('#homeBioEdit')?.addEventListener('click', () => openStatusSheet());
   $('#homeStatus')?.addEventListener('click', () => openStatusSheet());
+  $('.hp-loc')?.addEventListener('click', () => {
+    promptSheet({ title: '定位', value: get().ui.homeLoc || '', placeholder: '写一句你的定位' }).then(text => {
+      if (text === null) return;
+      commit(s => { s.ui.homeLoc = text.trim(); });
+      renderHome();
+    });
+  });
   $('#homeFav')?.addEventListener('click', openFavSheet);
   $$('.app[data-app]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -581,7 +590,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261101AA', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261101AB', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
