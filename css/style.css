@@ -3345,7 +3345,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   gap: 0;
   min-height: 100%;
   padding-top: 2px;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 .hp-top {
   display: flex;
@@ -3355,6 +3355,8 @@ select.input option { background: var(--surface); color: var(--ink); }
 .hp-top .hp-name { margin-top: 4px; }
 .hp-top .hp-bio-row { margin-top: 6px; }
 .hp-top .hp-loc { margin-top: 6px; }
+.hp1 .hp-clock { margin-top: 14px; }
+.hp1 .hp-lower { margin-top: 14px; margin-bottom: 10px; }
 
 /* 头像 / 名字 / 签名 / 位置 下方的白色透明渐变底 —— 与封面同宽 */
 .hp1::before {
@@ -3560,12 +3562,12 @@ select.input option { background: var(--surface); color: var(--ink); }
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 30px;
 }
 .hp-pins {
   position: relative;
   flex: 1;
   height: 108px;
+  margin-left: 12px;
 }
 .polaroid {
   position: absolute;

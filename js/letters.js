@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261101C';
-import { $, $$, escapeHtml, timeText, toast, pick, randInt, randFloat, uid, downloadBlob, pickFile } from './util.js?v=20261101C';
-import * as router from './router.js?v=20261101C';
-import { confirmSheet } from './ui.js?v=20261101C';
+import { get, commit, subscribe } from './state.js?v=20261101D';
+import { $, $$, escapeHtml, timeText, toast, pick, randInt, randFloat, uid, downloadBlob, pickFile } from './util.js?v=20261101D';
+import * as router from './router.js?v=20261101D';
+import { confirmSheet } from './ui.js?v=20261101D';
 
 let letterTimer = null;
 let letterSig = '';
