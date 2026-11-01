@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261101U';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101U';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101U';
-import * as router from './router.js?v=20261101U';
-import { playSound } from './audio.js?v=20261101U';
-import { startCall } from './call.js?v=20261101U';
-import { openMoments } from './moments.js?v=20261101U';
-import { pickLyric, isListening } from './music.js?v=20261101U';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101U';
+import { get, commit, subscribe } from './state.js?v=20261101V';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101V';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101V';
+import * as router from './router.js?v=20261101V';
+import { playSound } from './audio.js?v=20261101V';
+import { startCall } from './call.js?v=20261101V';
+import { openMoments } from './moments.js?v=20261101V';
+import { pickLyric, isListening } from './music.js?v=20261101V';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101V';
 
 let busy = false;
 let replying = false;
@@ -124,21 +124,19 @@ function buildMessage(msg, idx) {
     && (prev.senderId || '') === (msg.senderId || '')
     && prev.type !== 'nudge' && prev.type !== 'recall'
     && type !== 'nudge' && type !== 'recall';
-  const timeOn = s.ui.timeOn;
-  const readOn = s.ui.readOn;
 
   // 已读：对方头像下方显示双对号；对方之后没回复过则用浅色
   let readHtml = '';
-  if (isMe && msg.read && readOn) {
+  if (isMe && msg.read) {
     const all = s.messages;
     const idx = all.findIndex(m => m.id === msg.id);
     const hasThemAfter = all.slice(idx + 1).some(m => m.role === 'them');
     readHtml = `<span class="read${hasThemAfter ? '' : ' unread'}">✓✓</span>`;
   }
 
-  const timeHtml = timeOn ? `<span class="t">${timeText(msg.ts)}</span>` : '';
-  const themMeta = timeHtml ? `<div class="avatar-meta">${timeHtml}</div>` : '';
-  const meMeta = (timeHtml || readHtml) ? `<div class="avatar-meta">${timeHtml}${readHtml ? `<br>${readHtml}` : ''}</div>` : '';
+  const timeHtml = `<span class="t">${timeText(msg.ts)}</span>`;
+  const themMeta = `<div class="avatar-meta">${timeHtml}</div>`;
+  const meMeta = `<div class="avatar-meta">${timeHtml}${readHtml ? `<br>${readHtml}` : ''}</div>`;
 
   let bubbleCls = 'bubble';
   let inner = '';

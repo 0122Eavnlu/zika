@@ -651,15 +651,15 @@ svg { display: block; }
   max-width: 56px;
 }
 .msg .avatar-meta {
-  font-size: 10px;
-  line-height: 1.3;
-  color: var(--ink-3);
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--ink);
   letter-spacing: .03em;
   text-align: center;
   word-break: break-word;
   font-variant-numeric: tabular-nums;
 }
-.msg .avatar-meta .read { color: var(--accent); letter-spacing: -.1em; padding-left: .1em; }
+.msg .avatar-meta .read { color: var(--ink); }
 .msg .avatar-meta .read.unread { color: var(--ink-3); opacity: .85; }
 .msg.me .avatar { cursor: pointer; }
 .msg.no-avatar { gap: 0; }
@@ -1632,25 +1632,30 @@ select.input option { background: var(--surface); color: var(--ink); }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 11px;
+  padding: 0;
+  background: none;
+  box-shadow: none;
   line-height: 1.4;
   white-space: normal;
 }
+.msg.me .bubble.sticker { background: none; }
 .bubble.sticker img {
   display: block;
-  height: 1.7em;
-  width: auto;
-  max-width: 100%;
-  max-height: 4em;
-  object-fit: contain;
-  border-radius: 6px;
+  width: 132px;
+  height: auto;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 14px;
 }
-.bubble.sticker .sticker-text { font-size: 1em; color: inherit; }
+.bubble.sticker .sticker-text { font-size: 1em; color: var(--ink); }
 .bubble.emoji {
-  padding: 8px 12px 9px;
-  font-size: 1em;
-  line-height: 1.55;
+  padding: 0 2px;
+  background: none;
+  box-shadow: none;
+  font-size: 34px;
+  line-height: 1.15;
 }
+.msg.me .bubble.emoji { background: none; color: var(--ink); }
 .bubble.lyric {
   background: #fff;
   min-width: 130px;
