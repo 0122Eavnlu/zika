@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261031U';
-import { $, $$, escapeHtml, timeText, toast, pick, randInt, randFloat, uid, downloadBlob, pickFile } from './util.js?v=20261031U';
-import * as router from './router.js?v=20261031U';
-import { confirmSheet } from './ui.js?v=20261031U';
+import { get, commit, subscribe } from './state.js?v=20261031V';
+import { $, $$, escapeHtml, timeText, toast, pick, randInt, randFloat, uid, downloadBlob, pickFile } from './util.js?v=20261031V';
+import * as router from './router.js?v=20261031V';
+import { confirmSheet } from './ui.js?v=20261031V';
 
 let letterTimer = null;
 let letterSig = '';
@@ -109,11 +109,9 @@ function sendLetter() {
 }
 
 function maybeReplyLetter() {
-  if (Math.random() * 100 < 60) {
-    setTimeout(() => {
-      receiveLetter(genLetterText());
-    }, randInt(30, 120) * 1000);
-  }
+  setTimeout(() => {
+    receiveLetter(genLetterText());
+  }, randInt(30, 120) * 1000);
 }
 
 function receiveLetter(text) {
