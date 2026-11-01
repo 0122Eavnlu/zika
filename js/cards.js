@@ -1,7 +1,8 @@
-import { get, commit, subscribe } from './state.js?v=20261101BA';
-import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, prepareSticker, setAvatar } from './util.js?v=20261101BA';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet, actionSheet } from './ui.js?v=20261101BA';
-import * as router from './router.js?v=20261101BA';
+import { get, commit, subscribe } from './state.js?v=20261101BB';
+import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, prepareSticker, setAvatar } from './util.js?v=20261101BB';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet, actionSheet } from './ui.js?v=20261101BB';
+import { PRESET_TYPES, PRESET_ITEMS, PRESET_CATEGORIES, presetItemState } from './presets.js?v=20261101BB';
+import * as router from './router.js?v=20261101BB';
 
 const norm = text => text.replace(/\s+/g, ' ').trim();
 
@@ -10,6 +11,10 @@ let query = '';
 let sortMode = 'new';
 let selecting = false;
 let tab = 'cards';
+let libTab = 'mine';
+let presetType = 'emotion';
+let presetCat = 'all';
+let presetQuery = '';
 const selected = new Set();
 
 /* ---------- 数据 ---------- */
@@ -227,8 +232,113 @@ function renderEmoji() {
   `).join('')}</div>`;
 }
 
+/* ---------- 系统预设字卡 ---------- */
+
+function presetTypeName(id) {
+  return (PRESET_TYPES.find(t => t.id === id) || {}).name || '';
+}
+
+function renderLibTabs() {
+  const s = get();
+  $$('#cardLibTabs button').forEach(btn => btn.classList.toggle('on', btn.dataset.lib === libTab));
+  $('#libMineCount').textContent = String(s.cards.items.length);
+  $('#libPresetCount').textContent = String(PRESET_ITEMS.length);
+  $('#libMine').hidden = libTab !== 'mine';
+  $('#libPreset').hidden = libTab !== 'preset';
+  $('#cardAdd').hidden = tab === 'cards' && libTab === 'preset';
+}
+
+function renderPreset() {
+  const s = get();
+  const pr = s.presets || {};
+  $('#presetSwitch').classList.toggle('on', Boolean(pr.on));
+  $$('#presetProbCard [data-pval]').forEach(btn => {
+    const type = btn.dataset.pval;
+    btn.textContent = String(Number(pr.types?.[type]?.prob ?? 0));
+  });
+  $$('#presetTypeTabs button').forEach(btn => btn.classList.toggle('on', btn.dataset.ptypeTab === presetType));
+
+  const cats = ['all', ...(PRESET_CATEGORIES[presetType] || [])];
+  $('#presetCats').innerHTML = cats.map(c => {
+    const name = c === 'all' ? '全部' : c;
+    const count = PRESET_ITEMS.filter(it => it.type === presetType && (c === 'all' || it.cat === c)).length;
+    return `<button class="pchip ${presetCat === c ? 'on' : ''}" data-pcat="${escapeHtml(c)}">${escapeHtml(name)}<b>${count}</b></button>`;
+  }).join('');
+
+  let items = PRESET_ITEMS.filter(it => it.type === presetType);
+  if (presetCat !== 'all') items = items.filter(it => it.cat === presetCat);
+  if (presetQuery) {
+    const q = presetQuery.toLowerCase();
+    items = items.filter(it => it.text.toLowerCase().includes(q) || it.cat.toLowerCase().includes(q));
+  }
+  $('#presetCount').textContent = items.length ? `共 ${items.length} 条` : '';
+
+  const list = $('#presetList');
+  if (!items.length) {
+    list.innerHTML = `<div class="card-empty">空</div>`;
+    return;
+  }
+  list.innerHTML = items.map(it => {
+    const st = presetItemState(s, it);
+    return `
+      <div class="preset-item ${st.on ? '' : 'off'}" data-preset="${it.id}">
+        <div class="preset-main">
+          <div class="preset-text">${escapeHtml(it.text)}</div>
+          <div class="preset-sub">${escapeHtml(presetTypeName(it.type))} · ${escapeHtml(it.cat)}</div>
+        </div>
+        <button class="preset-prob" data-pprob="${it.id}" aria-label="概率">${st.prob}</button>
+        <button class="switch sm ${st.on ? 'on' : ''}" data-ptoggle="${it.id}" aria-label="开关"></button>
+      </div>`;
+  }).join('');
+}
+
+function presetOverride(id, item) {
+  const s = get();
+  if (!s.presets.items[id]) s.presets.items[id] = { on: true, prob: item.prob };
+  return s.presets.items[id];
+}
+
+function setPresetProb(id) {
+  const item = PRESET_ITEMS.find(it => it.id === id);
+  if (!item) return;
+  const cur = presetItemState(get(), item).prob;
+  promptSheet({ title: '字卡概率', value: String(cur), placeholder: '0 - 100', confirm: '保存' }).then(raw => {
+    if (raw === null) return;
+    const n = Math.max(0, Math.min(100, Math.round(Number(raw))));
+    if (!Number.isFinite(n)) { toast('请输入 0 - 100'); return; }
+    commit(s => { presetOverride(id, item).prob = n; });
+  });
+}
+
+function resetPresets() {
+  confirmSheet({ title: '恢复预设默认', text: '所有预设字卡的开关与概率将恢复默认', confirm: '恢复' }).then(ok => {
+    if (!ok) return;
+    commit(s => {
+      s.presets.items = {};
+      s.presets.on = true;
+      PRESET_TYPES.forEach(t => { s.presets.types[t.id] = { prob: t.prob }; });
+    });
+    toast('已恢复默认');
+  });
+}
+
+function setLibTab(next) {
+  libTab = next;
+  if (next !== 'mine') {
+    selecting = false;
+    selected.clear();
+  }
+  render();
+}
+
 function render() {
+  renderLibTabs();
   if (tab === 'cards') {
+    if (libTab !== 'mine') {
+      $('#batchBar').hidden = true;
+      renderPreset();
+      return;
+    }
     renderChips();
     renderList();
     renderBatchBar();
@@ -530,6 +640,12 @@ function openBatchAdd() {
 }
 
 function openCardMenu() {
+  if (libTab === 'preset') {
+    actionSheet('系统预设字卡', [
+      { label: '恢复所有预设默认', onClick: resetPresets },
+    ]);
+    return;
+  }
   actionSheet('字卡库', [
     { label: '批量添加', onClick: openBatchAdd },
     { label: '导入 TXT', onClick: () => importFile() },
@@ -560,6 +676,74 @@ function bind() {
     else openCardSheet({});
   };
   $('#cardMenu').onclick = openCardMenu;
+  $('#cardLibTabs').addEventListener('click', event => {
+    const btn = event.target.closest('[data-lib]');
+    if (btn) setLibTab(btn.dataset.lib);
+  });
+  $('#presetSwitch').onclick = () => commit(s => { s.presets.on = !s.presets.on; });
+  $('#presetProbCard').addEventListener('click', event => {
+    const stepBtn = event.target.closest('[data-step]');
+    if (stepBtn) {
+      const type = stepBtn.dataset.stepType;
+      const delta = Number(stepBtn.dataset.step) || 0;
+      commit(s => {
+        if (!s.presets.types[type]) s.presets.types[type] = { prob: 0 };
+        s.presets.types[type].prob = Math.max(0, Math.min(100, Math.round(Number(s.presets.types[type].prob || 0) + delta)));
+      });
+      return;
+    }
+    const valBtn = event.target.closest('[data-pval]');
+    if (!valBtn) return;
+    const type = valBtn.dataset.pval;
+    const cur = Number(get().presets.types?.[type]?.prob ?? 0);
+    promptSheet({ title: '设置概率', value: String(cur), placeholder: '0 - 100', confirm: '保存' }).then(raw => {
+      if (raw === null) return;
+      const n = Math.round(Number(raw));
+      if (!Number.isFinite(n)) { toast('请输入 0 - 100'); return; }
+      commit(s => {
+        if (!s.presets.types[type]) s.presets.types[type] = { prob: 0 };
+        s.presets.types[type].prob = Math.max(0, Math.min(100, n));
+      });
+    });
+  });
+  $('#presetTypeTabs').addEventListener('click', event => {
+    const btn = event.target.closest('[data-ptype-tab]');
+    if (!btn) return;
+    presetType = btn.dataset.ptypeTab;
+    presetCat = 'all';
+    renderPreset();
+  });
+  $('#presetCats').addEventListener('click', event => {
+    const chip = event.target.closest('[data-pcat]');
+    if (!chip) return;
+    presetCat = chip.dataset.pcat;
+    renderPreset();
+  });
+  const presetSearch = $('#presetSearch');
+  presetSearch.addEventListener('input', () => {
+    presetQuery = presetSearch.value.trim();
+    $('#presetSearchClear').hidden = !presetQuery;
+    renderPreset();
+  });
+  $('#presetSearchClear').onclick = () => {
+    presetSearch.value = '';
+    presetQuery = '';
+    $('#presetSearchClear').hidden = true;
+    renderPreset();
+  };
+  $('#presetReset').onclick = resetPresets;
+  $('#presetList').addEventListener('click', event => {
+    const tog = event.target.closest('[data-ptoggle]');
+    if (tog) {
+      const item = PRESET_ITEMS.find(it => it.id === tog.dataset.ptoggle);
+      if (!item) return;
+      const cur = presetItemState(get(), item).on;
+      commit(s => { presetOverride(item.id, item).on = !cur; });
+      return;
+    }
+    const prob = event.target.closest('[data-pprob]');
+    if (prob) setPresetProb(prob.dataset.pprob);
+  });
   $('#cardTabs').addEventListener('click', event => {
     const btn = event.target.closest('[data-tab]');
     if (btn) setTab(btn.dataset.tab);

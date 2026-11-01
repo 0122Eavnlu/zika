@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icons/icon-app-180.png">
 <link rel="icon" href="icons/icon-app-192.png" type="image/png">
 <link rel="preload" as="image" href="icons/splash-art.png">
-<link rel="stylesheet" href="css/style.css?v=20261101BA">
+<link rel="stylesheet" href="css/style.css?v=20261101BB">
 </head>
 <body>
 
@@ -344,26 +344,97 @@
       </div>
 
       <div class="tab-panel" id="panel-cards">
-        <div class="search">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><path d="M15 15l4 4"/></svg>
-          <input id="cardSearch" placeholder="搜索" autocomplete="off">
-          <button class="clear-btn" id="cardSearchClear" aria-label="清除" hidden>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
-          </button>
+        <div class="seg-tabs" id="cardLibTabs">
+          <button class="on" data-lib="mine">可自定义字卡<b id="libMineCount">0</b></button>
+          <button data-lib="preset">系统预设字卡<b id="libPresetCount">0</b></button>
         </div>
-        <div class="chips" id="cardChips"></div>
-        <div class="list-toolbar">
-          <span class="count" id="cardCount"></span>
-          <div class="toolbar-right">
-            <select class="sort-select" id="cardSort">
-              <option value="new">最新</option>
-              <option value="old">最早</option>
-              <option value="alpha">拼音</option>
-            </select>
-            <button class="text-btn" id="cardSelectBtn">选择</button>
+
+        <div id="libMine">
+          <div class="search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><path d="M15 15l4 4"/></svg>
+            <input id="cardSearch" placeholder="搜索" autocomplete="off">
+            <button class="clear-btn" id="cardSearchClear" aria-label="清除" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
+            </button>
           </div>
+          <div class="chips" id="cardChips"></div>
+          <div class="list-toolbar">
+            <span class="count" id="cardCount"></span>
+            <div class="toolbar-right">
+              <select class="sort-select" id="cardSort">
+                <option value="new">最新</option>
+                <option value="old">最早</option>
+                <option value="alpha">拼音</option>
+              </select>
+              <button class="text-btn" id="cardSelectBtn">选择</button>
+            </div>
+          </div>
+          <div class="card-list" id="cardList"></div>
         </div>
-        <div class="card-list" id="cardList"></div>
+
+        <div id="libPreset" hidden>
+          <div class="preset-card">
+            <div class="preset-switch-row">
+              <div class="preset-switch-main">
+                <div class="preset-switch-title">使用系统预设字卡</div>
+                <div class="preset-switch-desc">开启后，对方回复会按概率附带情绪 / 心意 / 交流意图字卡</div>
+              </div>
+              <button class="switch" id="presetSwitch" aria-label="使用系统预设字卡"></button>
+            </div>
+            <div class="preset-prob-list" id="presetProbCard">
+              <div class="preset-prob-row" data-ptype="emotion">
+                <span class="pp-label">情绪字卡概率</span>
+                <div class="pp-stepper">
+                  <button data-step="-5" data-step-type="emotion" aria-label="减少">−</button>
+                  <button class="pp-val" data-pval="emotion">70</button>
+                  <button data-step="5" data-step-type="emotion" aria-label="增加">＋</button>
+                </div>
+              </div>
+              <div class="preset-prob-row" data-ptype="heart">
+                <span class="pp-label">心意字卡概率</span>
+                <div class="pp-stepper">
+                  <button data-step="-5" data-step-type="heart" aria-label="减少">−</button>
+                  <button class="pp-val" data-pval="heart">40</button>
+                  <button data-step="5" data-step-type="heart" aria-label="增加">＋</button>
+                </div>
+              </div>
+              <div class="preset-prob-row" data-ptype="intent">
+                <span class="pp-label">交流意图字卡概率</span>
+                <div class="pp-stepper">
+                  <button data-step="-5" data-step-type="intent" aria-label="减少">−</button>
+                  <button class="pp-val" data-pval="intent">40</button>
+                  <button data-step="5" data-step-type="intent" aria-label="增加">＋</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="preset-type-tabs" id="presetTypeTabs">
+            <button class="on" data-ptype-tab="emotion">情绪</button>
+            <button data-ptype-tab="heart">心意</button>
+            <button data-ptype-tab="intent">交流意图</button>
+          </div>
+
+          <p class="preset-hint">三类各自独立判定，一次回复可能同时出现 1~3 条；每一类、每一条都可以单独关闭。</p>
+
+          <div class="pchips" id="presetCats"></div>
+
+          <div class="search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><path d="M15 15l4 4"/></svg>
+            <input id="presetSearch" placeholder="搜索预设字卡" autocomplete="off">
+            <button class="clear-btn" id="presetSearchClear" aria-label="清除" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
+            </button>
+          </div>
+
+          <div class="list-toolbar">
+            <span class="count" id="presetCount"></span>
+            <div class="toolbar-right">
+              <button class="text-btn" id="presetReset">恢复默认</button>
+            </div>
+          </div>
+          <div class="card-list preset-list" id="presetList"></div>
+        </div>
       </div>
 
       <div class="tab-panel" id="panel-stickers" hidden>
@@ -1074,6 +1145,6 @@
   <style id="user-font"></style>
 </div>
 
-<script type="module" src="js/app.js?v=20261101BA"></script>
+<script type="module" src="js/app.js?v=20261101BB"></script>
 </body>
 </html>

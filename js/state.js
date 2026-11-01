@@ -1,4 +1,4 @@
-import { uid, toast } from './util.js?v=20261101BA';
+import { uid, toast } from './util.js?v=20261101BB';
 
 const KEY = 'zika.state.v1';
 const AT_KEY = 'zika.state.v1.at';
@@ -174,6 +174,15 @@ function defaults(withSeed = true) {
     },
     group: { enabled: false, members },
     cards: seed.cards,
+    presets: {
+      on: true,
+      types: {
+        emotion: { prob: 70 },
+        heart: { prob: 40 },
+        intent: { prob: 40 },
+      },
+      items: {},
+    },
     nudge: {
       enabled: true,
       chance: 3,

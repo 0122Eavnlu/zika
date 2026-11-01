@@ -1,12 +1,13 @@
-import { get, commit, subscribe } from './state.js?v=20261101BA';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BA';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BA';
-import * as router from './router.js?v=20261101BA';
-import { playSound } from './audio.js?v=20261101BA';
-import { startCall } from './call.js?v=20261101BA';
-import { openMoments } from './moments.js?v=20261101BA';
-import { pickLyric, isListening } from './music.js?v=20261101BA';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101BA';
+import { get, commit, subscribe } from './state.js?v=20261101BB';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BB';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BB';
+import * as router from './router.js?v=20261101BB';
+import { playSound } from './audio.js?v=20261101BB';
+import { startCall } from './call.js?v=20261101BB';
+import { openMoments } from './moments.js?v=20261101BB';
+import { pickLyric, isListening } from './music.js?v=20261101BB';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101BB';
+import { rollPresetTags } from './presets.js?v=20261101BB';
 
 let busy = false;
 let replying = false;
@@ -17,6 +18,7 @@ const openMeta = new Set();
 const fresh = new Set();
 
 const SEPARATORS = ['，', '、', '；', '。'];
+const RESEND_CHANCE = 0.5;
 const CALL_ICON = `<svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="12.5" height="10" rx="3"/><path d="M15 11.2l5.4-3.1a.6.6 0 0 1 .9.5v6.8a.6.6 0 0 1-.9.5l-5.4-3.1z"/></svg>`;
 
 const readLabel = style => ({ text: '已读', check: '✓', double: '✓✓' }[style] || '已读');
@@ -140,9 +142,17 @@ function buildMessage(msg, idx) {
     readHtml = `<span class="read${hasThemAfter ? '' : ' unread'}">✓✓</span>`;
   }
 
-  const timeHtml = `<span class="t">${fullTimeText(msg.ts)}</span>`;
+  const resend = Boolean(msg.resend);
+  const timeHtml = resend ? '' : `<span class="t">${fullTimeText(msg.ts)}</span>`;
   const themMeta = `<div class="avatar-meta">${timeHtml}</div>`;
-  const meMeta = `<div class="avatar-meta">${timeHtml}${readHtml ? `<br>${readHtml}` : ''}</div>`;
+  const meMeta = `<div class="avatar-meta">${timeHtml}${readHtml ? `${timeHtml ? '<br>' : ''}${readHtml}` : ''}</div>`;
+
+  const tagsHtml = Array.isArray(msg.tags) && msg.tags.length
+    ? `<div class="bubble-tags">${msg.tags.map(t => `<span class="bubble-tag"><i>${escapeHtml(t.type || '')}</i>${escapeHtml(t.text || '')}</span>`).join('')}</div>`
+    : '';
+  const footHtml = resend
+    ? `<div class="msg-foot"><span class="meta-resend">补发</span><span class="t">${fullTimeText(msg.ts)}</span></div>`
+    : '';
 
   let bubbleCls = 'bubble';
   let inner = '';
@@ -220,7 +230,7 @@ function buildMessage(msg, idx) {
       ${isMe ? `<button data-fa="recall" aria-label="撤回">${FA_UNDO}</button>` : ''}
       <button data-fa="del" class="danger" aria-label="删除">${FA_TRASH}</button>
     </div>`;
-  return `<div class="msg ${isMe ? 'me' : 'them'} ${type === 'quiz' ? 'quiz-msg' : ''} ${grouped ? 'grouped' : ''} ${showAvatar || isMe ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${avatarColThem}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}${mini}<div class="${bubbleCls}">${inner}</div>${actions}</div>${avatarColMe}</div>`;
+  return `<div class="msg ${isMe ? 'me' : 'them'} ${type === 'quiz' ? 'quiz-msg' : ''} ${grouped ? 'grouped' : ''} ${showAvatar || isMe ? '' : 'no-avatar'} ${openMeta.has(msg.id) ? 'show-meta' : ''} ${fresh.has(msg.id) ? 'fresh' : ''}" data-id="${msg.id}">${avatarColThem}<div class="bubble-wrap">${showName ? `<div class="sender-name">${escapeHtml(sender.name)}</div>` : ''}${mini}<div class="${bubbleCls}">${inner}</div>${tagsHtml}${footHtml}${actions}</div>${avatarColMe}</div>`;
 }
 
 function render(forceBottom = false) {
@@ -311,6 +321,7 @@ function addIncoming(msgParts) {
       song: msgParts.song || '',
       lyric: msgParts.lyric || '',
       lead: msgParts.lead || '',
+      tags: msgParts.tags || [],
       seen,
     });
   });
@@ -326,13 +337,16 @@ function markSelfRead() {
 
 /* 对方撤回：把刚发的消息换成一条居中提示，带上对方昵称 */
 function recallMessage(id) {
+  let resendInfo = null;
   commit(st => {
     const idx = st.messages.findIndex(m => m.id === id);
     if (idx < 0) return;
     const old = st.messages[idx];
+    if (old.type === 'recall') return;
     const who = old.senderId
       ? ((st.group.members || []).find(x => x.id === old.senderId) || st.persona).name
       : st.persona.name;
+    resendInfo = { role: 'them', senderId: old.senderId || '', text: old.text || old.voiceText || '' };
     st.messages[idx] = {
       id: old.id,
       role: 'them',
@@ -344,14 +358,18 @@ function recallMessage(id) {
     };
   });
   scheduleRender(true);
+  scheduleResend(resendInfo);
 }
 
 /* 我也能撤回自己的消息 */
 function recallMine(id) {
+  let resendInfo = null;
   commit(st => {
     const idx = st.messages.findIndex(m => m.id === id);
     if (idx < 0) return;
     const old = st.messages[idx];
+    if (old.type === 'recall') return;
+    resendInfo = { role: 'me', senderId: '', text: old.text || old.voiceText || '' };
     st.messages[idx] = {
       id: old.id,
       role: 'me',
@@ -363,6 +381,39 @@ function recallMine(id) {
     };
   });
   scheduleRender(true);
+  scheduleResend(resendInfo);
+}
+
+/* 撤回之后有 50% 概率补发一条，气泡下方标「补发」 */
+function scheduleResend(info) {
+  if (!info || Math.random() >= RESEND_CHANCE) return;
+  setTimeout(() => {
+    let text = info.text;
+    if (info.role === 'them') {
+      const pool = availableCards();
+      const others = pool.filter(c => c.text !== info.text);
+      const chosen = pick(others.length ? others : pool);
+      text = chosen ? chosen.text : '';
+    }
+    if (!text) return;
+    const id = uid();
+    fresh.add(id);
+    commit(st => {
+      const msg = {
+        id,
+        role: info.role,
+        type: 'text',
+        text,
+        ts: Date.now(),
+        resend: true,
+        seen: true,
+        senderId: info.role === 'them' ? (info.senderId || '') : '',
+      };
+      if (info.role === 'me') msg.read = false;
+      st.messages.push(msg);
+    });
+    scheduleRender(true);
+  }, randInt(1200, 2200));
 }
 
 function markSeen() {
@@ -784,12 +835,13 @@ export async function triggerReply({ proactive = false, allowCall = true } = {})
       ? parts[0]
       : parts.map((t, i) => (i < parts.length - 1 ? t.replace(/[。！？!?…，,；;、]+$/, '') : t)).join(sep);
     const sender = randomSender();
-    const firstId = addIncoming({ text, quote, senderId: sender?.id || '', senderName: sender?.name || '' });
+    const firstId = addIncoming({ text, quote, senderId: sender?.id || '', senderName: sender?.name || '', tags: rollPresetTags(get()) });
     playSound();
     afterAiMessage(firstId, text);
   } else {
     let firstId = '';
     let firstText = '';
+    const presetTags = rollPresetTags(get());
     for (let i = 0; i < chosen.length; i++) {
       const sender = randomSender();
       const id = addIncoming({
@@ -797,6 +849,7 @@ export async function triggerReply({ proactive = false, allowCall = true } = {})
         quote: i === 0 ? quote : '',
         senderId: sender?.id || '',
         senderName: sender?.name || '',
+        tags: i === 0 ? presetTags : [],
       });
       if (!firstId) { firstId = id; firstText = chosen[i].text; }
       if (i === 0) playSound();
