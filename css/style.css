@@ -3346,7 +3346,9 @@ select.input option { background: var(--surface); color: var(--ink); }
   min-height: 100%;
   padding-top: 2px;
   --cover-h: clamp(112px, 15vh, 148px);
-  --av-h: clamp(96px, 13vh, 112px);
+  --av-h: clamp(76px, 10vh, 88px);
+  --pins-h: clamp(96px, 13vh, 118px);
+  --pin-w: clamp(70px, 9vh, 84px);
   --card-r: 26px;
 }
 
@@ -3358,12 +3360,15 @@ select.input option { background: var(--surface); color: var(--ink); }
   padding: calc(var(--av-h) * .5 + 8px) 18px 16px;
   text-align: center;
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--paper) 72%, transparent) 0%,
-    color-mix(in srgb, var(--paper) 96%, transparent) 42%,
-    var(--paper) 100%);
+    rgba(255, 255, 255, 0) 0%,
+    color-mix(in srgb, var(--paper) 70%, transparent) 14%,
+    color-mix(in srgb, var(--paper) 96%, transparent) 40%,
+    var(--paper) 68%,
+    color-mix(in srgb, var(--paper) 85%, transparent) 86%,
+    rgba(255, 255, 255, 0) 100%);
   backdrop-filter: blur(10px) saturate(150%);
   -webkit-backdrop-filter: blur(10px) saturate(150%);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--paper) 60%, transparent), var(--shadow-sm);
+  box-shadow: none;
 }
 
 .hp1 .hp-name,
@@ -3408,13 +3413,13 @@ select.input option { background: var(--surface); color: var(--ink); }
 .hp-avatar {
   position: absolute;
   top: calc(var(--av-h) * -.5);
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  margin: 0 auto;
   z-index: 2;
   width: var(--av-h);
   height: var(--av-h);
-  margin: 0;
-  padding: 3px;
+  padding: 2px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -3553,8 +3558,10 @@ select.input option { background: var(--surface); color: var(--ink); }
 
 .hp-lower {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  justify-content: space-between;
   gap: 10px;
+  width: 94%;
 }
 .hp-pins {
   position: relative;
@@ -3612,19 +3619,19 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .pin-clip svg { width: 100%; height: 100%; }
 .hp1 .home-grid {
-  width: 94%;
+  width: auto;
   flex: 0 0 auto;
   height: auto;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 18px 0;
-  margin: 2px 0 0;
-  padding: 2px 0 0;
+  gap: 14px 10px;
+  margin: 0 0 0 auto;
+  padding: 0;
   align-content: center;
   justify-items: center;
 }
-.home-grid .tile { width: 56px; height: 56px; border-radius: 16px; }
-.home-grid .tile svg { width: 27px; height: 27px; }
+.home-grid .tile { width: 52px; height: 52px; border-radius: 16px; }
+.home-grid .tile svg { width: 25px; height: 25px; }
 .home-grid .app-name { font-size: 11px; }
 
 .hp1 .hp-cover,
