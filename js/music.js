@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261101T';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101T';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101T';
-import * as router from './router.js?v=20261101T';
+import { get, commit, subscribe } from './state.js?v=20261101U';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101U';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101U';
+import * as router from './router.js?v=20261101U';
 
 const session = [];
 const lyricsMap = new Map();
@@ -1312,6 +1312,50 @@ function updateDots() {
   lastDotIndex = next;
 }
 
+/* 底部小气泡：拖动时按方向拉伸，松手超过阈值就切页 */
+function bindDotSwipe() {
+  const dots = $('#pageDots');
+  if (!dots) return;
+  const items = $$('.dot', dots);
+  let sx = 0;
+  let dx = 0;
+  let dragging = false;
+
+  const clear = () => {
+    items.forEach(d => { d.style.transform = ''; d.style.transformOrigin = ''; });
+  };
+
+  dots.addEventListener('touchstart', event => {
+    if (event.touches.length !== 1) return;
+    sx = event.touches[0].clientX;
+    dx = 0;
+    dragging = true;
+  }, { passive: true });
+
+  dots.addEventListener('touchmove', event => {
+    if (!dragging || event.touches.length !== 1) return;
+    dx = event.touches[0].clientX - sx;
+    const p = Math.max(0, Math.min(1, Math.abs(dx) / 110));
+    const target = dx < 0 ? 1 : 0;
+    // 往哪边滑，目标气泡就从那一侧的边缘长出来
+    const origin = dx < 0 ? '100% 50%' : '0 50%';
+    items.forEach((d, i) => {
+      d.style.transformOrigin = origin;
+      d.style.transform = `scaleX(${i === target ? .27 + .73 * p : 1 - .73 * p})`;
+    });
+  }, { passive: true });
+
+  dots.addEventListener('touchend', event => {
+    if (!dragging) return;
+    dragging = false;
+    const open = $('#screen-music').classList.contains('active');
+    const dir = dx < -50 ? 'music' : dx > 50 ? 'home' : '';
+    clear();
+    if (dir === 'music' && !open) router.open('music');
+    else if (dir === 'home' && open) router.close();
+  });
+}
+
 export function isListening() {
   return Boolean(audio && audio.src && !audio.paused);
 }
@@ -1377,6 +1421,7 @@ export function initMusic() {
   bind();
 
   updateDots();
+  bindDotSwipe();
   const obs = new MutationObserver(updateDots);
   obs.observe($('#app'), { attributes: true, attributeFilter: ['class'] });
   $$('.screen').forEach(el => obs.observe(el, { attributes: true, attributeFilter: ['class'] }));

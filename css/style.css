@@ -2736,15 +2736,25 @@ select.input option { background: var(--surface); color: var(--ink); }
   align-items: center;
   gap: 16px;
   pointer-events: none;
+  touch-action: pan-y;
 }
 .page-dots .dot {
+  position: relative;
   width: 26px; height: 7px;
   border-radius: 4px;
   background: var(--ink-3, rgba(0,0,0,.26));
   opacity: .65;
+  pointer-events: auto;
+  touch-action: pan-y;
   transform: scaleX(.27);
   transform-origin: 50% 50%;
   transition: transform .5s cubic-bezier(.32, 1.55, .5, 1), opacity .3s var(--ease), background .3s;
+}
+/* 扩大触摸热区，方便从气泡上起手滑动 */
+.page-dots .dot::after {
+  content: "";
+  position: absolute;
+  inset: -16px -12px;
 }
 .page-dots .dot.active {
   transform: scaleX(1);
@@ -3647,7 +3657,7 @@ select.input option { background: var(--surface); color: var(--ink); }
 .home-grid .tile { width: 50px; height: 50px; border-radius: 15px; }
 .home-grid .tile svg { width: 24px; height: 24px; }
 .home-grid .app-name { font-size: 11px; }
-.hp1 .home-grid .app:nth-child(odd) { margin-left: -8px; }
+.hp1 .home-grid .app:nth-child(odd) { margin-left: -16px; }
 .home-grid .badge {
   top: -5px;
   left: calc(50% + 15px);
