@@ -3346,6 +3346,10 @@ select.input option { background: var(--surface); color: var(--ink); }
   min-height: 100%;
   padding-top: 2px;
   justify-content: space-between;
+  --cover-h: clamp(150px, 26vh, 230px);
+  --pins-h: clamp(116px, 19vh, 168px);
+  --pin-w: clamp(84px, 13vh, 122px);
+  --av-h: clamp(88px, 12vh, 104px);
 }
 .hp-top {
   display: flex;
@@ -3364,8 +3368,8 @@ select.input option { background: var(--surface); color: var(--ink); }
   z-index: -1;
   left: 6%;
   right: 6%;
-  top: 110px;
-  height: 180px;
+  top: calc(var(--cover-h) * 0.78);
+  height: calc(var(--cover-h) * 1.32);
   border-radius: 22px;
   pointer-events: none;
   background: linear-gradient(180deg,
@@ -3399,7 +3403,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   position: relative;
   width: 88%;
   align-self: center;
-  height: 140px;
+  height: var(--cover-h);
   border-radius: 22px;
   background: color-mix(in srgb, var(--surface-2) 70%, transparent) center / cover no-repeat;
   box-shadow: inset 0 0 0 1px var(--line-2), var(--shadow-sm);
@@ -3420,9 +3424,9 @@ select.input option { background: var(--surface); color: var(--ink); }
   align-self: center;
   position: relative;
   z-index: 2;
-  width: 88px;
-  height: 88px;
-  margin: -44px 0 0;
+  width: var(--av-h);
+  height: var(--av-h);
+  margin: calc(var(--av-h) / -2) 0 0;
   padding: 3px;
   border-radius: 50%;
   display: grid;
@@ -3494,7 +3498,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   width: 88%;
   align-self: center;
   border-radius: 22px;
-  padding: 11px 14px 9px;
+  padding: clamp(11px, 1.6vh, 18px) 14px clamp(9px, 1.3vh, 15px);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line-2), var(--shadow-sm);
 }
@@ -3539,14 +3543,14 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .hp-hearts i::before { content: "♥"; }
 .hp-week {
-  margin-top: 10px;
+  margin-top: clamp(8px, 1.3vh, 13px);
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
 }
 .hp-week span {
   text-align: center;
-  padding: 6px 0;
+  padding: clamp(6px, 1.1vh, 10px) 0;
   border-radius: 10px;
   font-size: 10.5px;
   color: var(--ink-3);
@@ -3565,14 +3569,14 @@ select.input option { background: var(--surface); color: var(--ink); }
 .hp-pins {
   position: relative;
   flex: 1;
-  height: 104px;
+  height: var(--pins-h);
   margin-left: 8px;
 }
 .polaroid {
   position: absolute;
   top: 0;
   left: 0;
-  width: 76px;
+  width: var(--pin-w);
   padding: 6px 6px 0;
   border-radius: 3px;
   background: #fdfcf7;
@@ -3582,10 +3586,10 @@ select.input option { background: var(--surface); color: var(--ink); }
   transition: transform .3s var(--ease);
   cursor: pointer;
 }
-.polaroid:nth-child(2) { left: 72px; top: 6px; }
+.polaroid:nth-child(2) { left: calc(var(--pin-w) * 0.92); top: 6px; }
 .polaroid .pin-card {
-  width: 64px;
-  height: 64px;
+  width: calc(var(--pin-w) - 12px);
+  height: calc(var(--pin-w) - 12px);
   margin: 0;
   padding: 0;
   border-radius: 1px;
@@ -3620,7 +3624,7 @@ select.input option { background: var(--surface); color: var(--ink); }
 .hp1 .home-grid {
   flex: 1;
   min-width: 0;
-  height: 104px;
+  height: var(--pins-h);
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px 10px;

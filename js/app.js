@@ -1,17 +1,17 @@
-import { initAppearance } from './appearance.js?v=20261101E';
-import { initSettings } from './settings.js?v=20261101E';
-import { initCards } from './cards.js?v=20261101E';
-import { initChat } from './chat.js?v=20261101E';
-import { initCall, hideCall } from './call.js?v=20261101E';
-import { initStatus, openStatusSheet } from './status.js?v=20261101E';
-import { initMoments } from './moments.js?v=20261101E';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101E';
-import { initLetters } from './letters.js?v=20261101E';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101E';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101E';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101E';
-import { get, subscribe, commit } from './state.js?v=20261101E';
-import { openMeSheet } from './chat.js?v=20261101E';
+import { initAppearance } from './appearance.js?v=20261101F';
+import { initSettings } from './settings.js?v=20261101F';
+import { initCards } from './cards.js?v=20261101F';
+import { initChat } from './chat.js?v=20261101F';
+import { initCall, hideCall } from './call.js?v=20261101F';
+import { initStatus, openStatusSheet } from './status.js?v=20261101F';
+import { initMoments } from './moments.js?v=20261101F';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101F';
+import { initLetters } from './letters.js?v=20261101F';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101F';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101F';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101F';
+import { get, subscribe, commit } from './state.js?v=20261101F';
+import { openMeSheet } from './chat.js?v=20261101F';
 
 /* 首页重绘缓存：避免每次都把同一张超大的 base64 重新赋给 style，
    反复赋值会让移动端整块重排、非常卡。 */
@@ -102,7 +102,7 @@ function renderPins(s) {
   if (key === lastPinsKey && box.childElementCount) return;
   lastPinsKey = key;
   if (!pins.length) {
-    box.style.height = '104px';
+    box.style.height = 'var(--pins-h, 116px)';
     box.innerHTML = `
       <div class="polaroid" data-pin="add" style="--rot:-6deg;z-index:1">
         <button class="pin-card" aria-label="添加照片"><span class="pin-empty">＋</span></button>
@@ -110,7 +110,7 @@ function renderPins(s) {
       </div>`;
     return;
   }
-  box.style.height = pins.length > 1 ? '104px' : '104px';
+  box.style.height = 'var(--pins-h, 116px)';
   box.innerHTML = pins.map((p, i) => `
     <div class="polaroid" data-pin="${p.id}" style="--rot:${Number(p.rot) || 0}deg;z-index:${i + 1}">
       ${i === pins.length - 1 ? PIN_CLIP : ''}
@@ -578,7 +578,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261101E', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261101F', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
