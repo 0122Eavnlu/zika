@@ -143,18 +143,19 @@ svg { display: block; }
 .splash-pair {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
 }
-.splash-pair svg {
-  width: 104px;
-  height: 104px;
+.splash-art {
+  width: min(84vw, 340px);
+  height: auto;
   display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  animation: splashFloat 5s ease-in-out infinite;
 }
-.splash-bear { animation: splashFloat 4.2s ease-in-out infinite; }
-.splash-rabbit { animation: splashFloat 4.9s ease-in-out .5s infinite; }
 @keyframes splashFloat {
-  0%, 100% { transform: translateY(4px); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { transform: translateY(5px); }
+  50% { transform: translateY(-9px); }
 }
 
 .splash-by {
