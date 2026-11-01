@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261101AG';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101AG';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101AG';
-import * as router from './router.js?v=20261101AG';
-import { playSound } from './audio.js?v=20261101AG';
-import { startCall } from './call.js?v=20261101AG';
-import { openMoments } from './moments.js?v=20261101AG';
-import { pickLyric, isListening } from './music.js?v=20261101AG';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101AG';
+import { get, commit, subscribe } from './state.js?v=20261101AH';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101AH';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101AH';
+import * as router from './router.js?v=20261101AH';
+import { playSound } from './audio.js?v=20261101AH';
+import { startCall } from './call.js?v=20261101AH';
+import { openMoments } from './moments.js?v=20261101AH';
+import { pickLyric, isListening } from './music.js?v=20261101AH';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101AH';
 
 let busy = false;
 let replying = false;
@@ -1415,6 +1415,16 @@ export function initChat() {
   $('#quoteCancel').onclick = clearQuote;
   $('#chatMore').onclick = openChatMenu;
   $('#chatAvatar').onclick = () => openMoments('chat');
+  $('#chatName').onclick = () => {
+    promptSheet({ title: '昵称', value: persona().name || '', placeholder: '输入昵称', confirm: '保存' }).then(text => {
+      if (text === null) return;
+      const name = text.trim();
+      if (!name) return;
+      commit(s => { s.persona.name = name; });
+      updateIdentity();
+      toast('已更新昵称');
+    });
+  };
   $('#chatCallBtn').onclick = () => {
     if (navigator.vibrate) navigator.vibrate(4);
     startCall();
