@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261101AQ';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101AQ';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101AQ';
-import * as router from './router.js?v=20261101AQ';
-import { playSound } from './audio.js?v=20261101AQ';
-import { startCall } from './call.js?v=20261101AQ';
-import { openMoments } from './moments.js?v=20261101AQ';
-import { pickLyric, isListening } from './music.js?v=20261101AQ';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101AQ';
+import { get, commit, subscribe } from './state.js?v=20261101AR';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101AR';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101AR';
+import * as router from './router.js?v=20261101AR';
+import { playSound } from './audio.js?v=20261101AR';
+import { startCall } from './call.js?v=20261101AR';
+import { openMoments } from './moments.js?v=20261101AR';
+import { pickLyric, isListening } from './music.js?v=20261101AR';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101AR';
 
 let busy = false;
 let replying = false;
@@ -944,7 +944,6 @@ function sendMessage() {
 
 const ICON_STICKER = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.4 13.6c.9 1.6 2.2 2.4 3.6 2.4s2.7-.8 3.6-2.4"/><circle cx="9" cy="9.4" r="1.1"/><circle cx="15" cy="9.4" r="1.1"/></svg>`;
 const ICON_HAND = `<svg viewBox="0 0 24 24"><path d="M8 13.4V7.6a1.5 1.5 0 0 1 3 0v4.2V5.6a1.5 1.5 0 0 1 3 0v6.2V7a1.5 1.5 0 0 1 3 0v7.6a5.6 5.6 0 0 1-5.6 5.6h-1a4.4 4.4 0 0 1-4.4-4.4v-1.5l-1.7 1a1.5 1.5 0 0 1-2-2.2z"/></svg>`;
-const ICON_LIST = `<svg viewBox="0 0 24 24"><path d="M4 7h11M4 12h11M4 17h7"/><path d="M18.4 15.5l1.6 1.6 3-3.4"/></svg>`;
 const ICON_IMAGE = `<svg viewBox="0 0 24 24"><rect x="3.2" y="5" width="17.6" height="14" rx="3"/><path d="M4.4 16.6l4.3-4.2a1.2 1.2 0 0 1 1.7 0l3.4 3.3M12.4 14.4l1.8-1.7a1.2 1.2 0 0 1 1.7 0l2.3 2.2"/><circle cx="8" cy="9.4" r="1.3"/></svg>`;
 const ICON_RECORD = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.6V12l3.2 1.9"/></svg>`;
 const ICON_QUIZ = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4"/><circle cx="12" cy="16.9" r=".9" fill="currentColor" stroke="none"/></svg>`;
@@ -1108,7 +1107,6 @@ function openAttachPanel() {
     <div class="attach-list">
       <button class="attach-row" data-attach="sticker">${ICON_STICKER}<span>表情包</span></button>
       <button class="attach-row" data-attach="nudge">${ICON_HAND}<span>拍一拍</span></button>
-      <button class="attach-row" data-attach="burst">${ICON_LIST}<span>连发</span></button>
       <button class="attach-row" data-attach="image">${ICON_IMAGE}<span>图片</span></button>
       <button class="attach-row" data-attach="record">${ICON_RECORD}<span>记录</span></button>
       <button class="attach-row" data-attach="quiz">${ICON_QUIZ}<span>问问TA</span></button>
@@ -1122,16 +1120,6 @@ function openAttachPanel() {
         closeSheet();
         pushSelf({ type: 'nudge', text: `你拍了拍「${persona().name || 'TA'}」` });
         scheduleRender(true);
-        return;
-      }
-      if (kind === 'burst') {
-        closeSheet();
-        ['想你了', '在干嘛', '理理我'].forEach((text, i) => {
-          setTimeout(() => {
-            pushSelf({ text });
-            scheduleRender(true);
-          }, 260 * i);
-        });
         return;
       }
       if (kind === 'image') { pickChatImage(); return; }
