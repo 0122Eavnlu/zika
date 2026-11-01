@@ -3490,6 +3490,8 @@ select.input option { background: var(--surface); color: var(--ink); }
 .hp-loc-pin { font-size: 11px; }
 
 .hp-clock {
+  width: 88%;
+  align-self: center;
   border-radius: 22px;
   padding: 11px 14px 9px;
   background: var(--surface);
@@ -3558,6 +3560,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-bottom: 16px;
 }
 .hp-pins {
   position: relative;
