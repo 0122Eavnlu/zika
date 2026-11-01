@@ -1629,28 +1629,28 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 
 .bubble.sticker {
-  padding: 0;
-  background: none;
-  box-shadow: none;
-  line-height: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  line-height: 1.4;
+  white-space: normal;
 }
-.msg.me .bubble.sticker { background: none; }
 .bubble.sticker img {
   display: block;
-  width: 132px;
-  height: auto;
-  max-height: 180px;
-  object-fit: cover;
-  border-radius: 14px;
+  height: 1.7em;
+  width: auto;
+  max-width: 100%;
+  max-height: 4em;
+  object-fit: contain;
+  border-radius: 6px;
 }
+.bubble.sticker .sticker-text { font-size: 1em; color: inherit; }
 .bubble.emoji {
-  padding: 0 2px;
-  background: none;
-  box-shadow: none;
-  font-size: 34px;
-  line-height: 1.15;
+  padding: 8px 12px 9px;
+  font-size: 1em;
+  line-height: 1.55;
 }
-.msg.me .bubble.emoji { background: none; color: var(--ink); }
 .bubble.lyric {
   background: #fff;
   min-width: 130px;
@@ -3647,7 +3647,7 @@ select.input option { background: var(--surface); color: var(--ink); }
 .home-grid .tile { width: 50px; height: 50px; border-radius: 15px; }
 .home-grid .tile svg { width: 24px; height: 24px; }
 .home-grid .app-name { font-size: 11px; }
-.hp1 .home-grid .app:nth-child(odd) { transform: translateX(-23px); }
+.hp1 .home-grid .app:nth-child(odd) { margin-left: -8px; }
 .home-grid .badge {
   top: -5px;
   left: calc(50% + 15px);

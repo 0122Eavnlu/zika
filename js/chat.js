@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261101S';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101S';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101S';
-import * as router from './router.js?v=20261101S';
-import { playSound } from './audio.js?v=20261101S';
-import { startCall } from './call.js?v=20261101S';
-import { openMoments } from './moments.js?v=20261101S';
-import { pickLyric, isListening } from './music.js?v=20261101S';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101S';
+import { get, commit, subscribe } from './state.js?v=20261101T';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101T';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101T';
+import * as router from './router.js?v=20261101T';
+import { playSound } from './audio.js?v=20261101T';
+import { startCall } from './call.js?v=20261101T';
+import { openMoments } from './moments.js?v=20261101T';
+import { pickLyric, isListening } from './music.js?v=20261101T';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101T';
 
 let busy = false;
 let replying = false;
@@ -144,7 +144,8 @@ function buildMessage(msg, idx) {
   let inner = '';
   if (type === 'sticker') {
     bubbleCls = 'bubble sticker';
-    inner = `<img src="${escapeHtml(msg.stickerUrl || '')}" alt="">`;
+    const t = msg.text ? `<span class="sticker-text">${escapeHtml(msg.text)}</span>` : '';
+    inner = `${t}<img src="${escapeHtml(msg.stickerUrl || '')}" alt="">`;
   } else if (type === 'emoji') {
     bubbleCls = 'bubble emoji';
     inner = escapeHtml(msg.text || '');
@@ -714,7 +715,10 @@ export async function triggerReply({ proactive = false, allowCall = true } = {})
 
   const stickers = get().stickers || [];
   if (stickers.length && Math.random() * 100 < Number(b.stickerChance ?? 5)) {
-    addIncoming({ type: 'sticker', stickerUrl: pick(stickers).url });
+    // 一半单独发表情包，一半和一句话一起发
+    const withText = Math.random() < .5;
+    const text = withText && pool.length ? pick(pool).text.trim() : '';
+    addIncoming({ type: 'sticker', stickerUrl: pick(stickers).url, text });
     playSound();
     replying = false;
     setSpeakState(false);
@@ -728,6 +732,22 @@ export async function triggerReply({ proactive = false, allowCall = true } = {})
   const quote = useQuote ? pickQuote() : '';
   const groupOn = get().group.enabled;
   const randomSender = () => (groupOn ? pick(get().group.members) : null);
+
+  // 颜文字：单独发，或和一句话一起发
+  const kaoList = (get().kaomoji || []).map(k => (typeof k === 'string' ? k : k.text)).filter(Boolean);
+  if (kaoList.length && Math.random() * 100 < Number(b.emojiChance ?? 20) / 2) {
+    const ka = pick(kaoList);
+    const withText = Math.random() < .5 && pool.length > 0;
+    const text = withText ? `${pick(pool).text.trim()} ${ka}` : ka;
+    const sender = randomSender();
+    const id = addIncoming({ type: 'emoji', text, senderId: sender?.id || '', senderName: sender?.name || '' });
+    playSound();
+    afterAiMessage(id, text);
+    replying = false;
+    setSpeakState(false);
+    await afterReply();
+    return;
+  }
 
   if (b.chain) {
     const sep = pick(SEPARATORS);
