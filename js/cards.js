@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261031V';
-import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, prepareSticker, setAvatar } from './util.js?v=20261031V';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet, actionSheet } from './ui.js?v=20261031V';
-import * as router from './router.js?v=20261031V';
+import { get, commit, subscribe } from './state.js?v=20261031W';
+import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, prepareSticker, setAvatar } from './util.js?v=20261031W';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet, actionSheet } from './ui.js?v=20261031W';
+import * as router from './router.js?v=20261031W';
 
 const norm = text => text.replace(/\s+/g, ' ').trim();
 
@@ -195,6 +195,38 @@ function renderNudge() {
   `).join('');
 }
 
+function renderKaomoji() {
+  const items = get().kaomoji || [];
+  const list = $('#kaomojiList');
+  if (!items.length) {
+    list.innerHTML = `<div class="card-empty">空</div>`;
+    return;
+  }
+  list.innerHTML = items.map(it => `
+    <div class="nudge-item" data-kaomoji="${it.id}">
+      <span class="nudge-name">${escapeHtml(it.text)}</span>
+      <button class="nudge-remove" data-kaomoji-del="${it.id}">删除</button>
+    </div>
+  `).join('');
+}
+
+function renderEmoji() {
+  const items = get().emojiMine || [];
+  const list = $('#emojiList');
+  if (!items.length) {
+    list.innerHTML = `<div class="card-empty">空</div>`;
+    return;
+  }
+  list.innerHTML = `<div class="emoji-grid">${items.map(it => `
+    <div class="emoji-cell-wrap" data-emoji="${it.id}">
+      <button class="emoji-cell">${escapeHtml(it.text)}</button>
+      <button class="del" data-emoji-del="${it.id}" aria-label="删除">
+        <svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7l-10 10"/></svg>
+      </button>
+    </div>
+  `).join('')}</div>`;
+}
+
 function render() {
   if (tab === 'cards') {
     renderChips();
@@ -204,6 +236,8 @@ function render() {
   }
   $('#batchBar').hidden = true;
   if (tab === 'stickers') renderStickers();
+  else if (tab === 'kaomoji') renderKaomoji();
+  else if (tab === 'emoji') renderEmoji();
   else renderNudge();
 }
 
@@ -212,6 +246,8 @@ function setTab(next) {
   $$('#cardTabs button').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === next));
   $('#panel-cards').hidden = next !== 'cards';
   $('#panel-stickers').hidden = next !== 'stickers';
+  $('#panel-kaomoji').hidden = next !== 'kaomoji';
+  $('#panel-emoji').hidden = next !== 'emoji';
   $('#panel-nudge').hidden = next !== 'nudge';
   if (next !== 'cards') {
     selecting = false;
@@ -420,6 +456,42 @@ function addNudge() {
   });
 }
 
+function addKaomoji() {
+  promptSheet({ title: '颜文字', placeholder: '输入颜文字，一行一个', confirm: '添加' }).then(text => {
+    if (!text || !text.trim()) return;
+    const lines = text.split(/\r?\n/).map(t => t.trim()).filter(Boolean);
+    if (!lines.length) return;
+    let added = 0;
+    commit(s => {
+      lines.forEach(line => {
+        if (!s.kaomoji.some(k => k.text === line)) {
+          s.kaomoji.unshift({ id: uid(), text: line, at: Date.now() + added });
+          added++;
+        }
+      });
+    });
+    toast(added ? `已添加 ${added}` : '已存在');
+  });
+}
+
+function addEmoji() {
+  promptSheet({ title: 'emoji', placeholder: '输入 emoji，一行一个', confirm: '添加' }).then(text => {
+    if (!text || !text.trim()) return;
+    const lines = text.split(/\r?\n/).map(t => t.trim()).filter(Boolean);
+    if (!lines.length) return;
+    let added = 0;
+    commit(s => {
+      lines.forEach(line => {
+        if (!s.emojiMine.some(e => e.text === line)) {
+          s.emojiMine.unshift({ id: uid(), text: line, at: Date.now() + added });
+          added++;
+        }
+      });
+    });
+    toast(added ? `已添加 ${added}` : '已存在');
+  });
+}
+
 function editNudge(id) {
   const item = get().nudge.items.find(x => x.id === id);
   if (!item) return;
@@ -483,6 +555,8 @@ function bind() {
   $('#cardAdd').onclick = () => {
     if (tab === 'stickers') uploadSticker();
     else if (tab === 'nudge') addNudge();
+    else if (tab === 'kaomoji') addKaomoji();
+    else if (tab === 'emoji') addEmoji();
     else openCardSheet({});
   };
   $('#cardMenu').onclick = openCardMenu;
@@ -513,6 +587,22 @@ function bind() {
     }
     const item = event.target.closest('[data-nudge]');
     if (item) editNudge(item.dataset.nudge);
+  });
+  $('#kaomojiAddBtn').onclick = addKaomoji;
+  $('#kaomojiList').addEventListener('click', event => {
+    const del = event.target.closest('[data-kaomoji-del]');
+    if (del) {
+      commit(s => { s.kaomoji = s.kaomoji.filter(x => x.id !== del.dataset.kaomojiDel); });
+      toast('已删除');
+    }
+  });
+  $('#emojiAddBtn').onclick = addEmoji;
+  $('#emojiList').addEventListener('click', event => {
+    const del = event.target.closest('[data-emoji-del]');
+    if (del) {
+      commit(s => { s.emojiMine = s.emojiMine.filter(x => x.id !== del.dataset.emojiDel); });
+      toast('已删除');
+    }
   });
   $('#cardSelectBtn').onclick = () => {
     selecting = !selecting;

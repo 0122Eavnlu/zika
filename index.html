@@ -13,7 +13,7 @@
 <meta name="application-name" content="字卡">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=20261031V">
+<link rel="stylesheet" href="css/style.css?v=20261031W">
 </head>
 <body>
 
@@ -296,6 +296,8 @@
       <div class="tabs" id="cardTabs">
         <button data-tab="cards" class="active">字卡</button>
         <button data-tab="stickers">表情包</button>
+        <button data-tab="kaomoji">颜文字</button>
+        <button data-tab="emoji">emoji</button>
         <button data-tab="nudge">拍一拍</button>
       </div>
 
@@ -325,6 +327,16 @@
       <div class="tab-panel" id="panel-stickers" hidden>
         <div class="sticker-grid" id="stickerGrid"></div>
         <button class="ghost-btn wide" id="stickerUpload">上传表情包 · 最多 100 张</button>
+      </div>
+
+      <div class="tab-panel" id="panel-kaomoji" hidden>
+        <div class="kaomoji-list" id="kaomojiList"></div>
+        <button class="ghost-btn wide" id="kaomojiAddBtn">添加颜文字</button>
+      </div>
+
+      <div class="tab-panel" id="panel-emoji" hidden>
+        <div class="emoji-list" id="emojiList"></div>
+        <button class="ghost-btn wide" id="emojiAddBtn">添加 emoji</button>
       </div>
 
       <div class="tab-panel" id="panel-nudge" hidden>
@@ -1026,6 +1038,6 @@
   <style id="user-font"></style>
 </div>
 
-<script type="module" src="js/app.js?v=20261031V"></script>
+<script type="module" src="js/app.js?v=20261031W"></script>
 </body>
 </html>

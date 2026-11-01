@@ -1856,6 +1856,37 @@ select.input option { background: var(--surface); color: var(--ink); }
 }
 .emoji-cell:active { transform: scale(.92); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
 
+/* 字卡库 emoji 列表：带删除按钮的包裹 */
+.emoji-cell-wrap {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.emoji-cell-wrap .emoji-cell {
+  width: 100%;
+  height: 100%;
+  box-shadow: none;
+  background: transparent;
+}
+.emoji-cell-wrap .del {
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--ink) 62%, transparent);
+  color: var(--paper);
+  z-index: 2;
+}
+.emoji-cell-wrap .del svg { width: 10px; height: 10px; }
+.emoji-cell-wrap .del svg * { stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; }
+
+/* 字卡库颜文字列表复用 nudge-item 样式 */
+.kaomoji-list { display: flex; flex-direction: column; gap: 9px; padding: 0 0 8px; }
+
 .nudge-list { display: flex; flex-direction: column; gap: 9px; padding: 0 0 8px; }
 .nudge-item {
   display: flex;

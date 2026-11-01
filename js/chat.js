@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261031V';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031V';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031V';
-import * as router from './router.js?v=20261031V';
-import { playSound } from './audio.js?v=20261031V';
-import { startCall } from './call.js?v=20261031V';
-import { openMoments } from './moments.js?v=20261031V';
-import { pickLyric, isListening } from './music.js?v=20261031V';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031V';
+import { get, commit, subscribe } from './state.js?v=20261031W';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261031W';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261031W';
+import * as router from './router.js?v=20261031W';
+import { playSound } from './audio.js?v=20261031W';
+import { startCall } from './call.js?v=20261031W';
+import { openMoments } from './moments.js?v=20261031W';
+import { pickLyric, isListening } from './music.js?v=20261031W';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261031W';
 
 let busy = false;
 let replying = false;
@@ -922,28 +922,6 @@ function sendSticker(url) {
   triggerReply({ allowCall: false });
 }
 
-const KAOMOJI_PRESETS = [
-  '^ ^', '(´• ω •`)', '(｡•́︿•̀｡)', '(╯°□°）╯', '( ´•̥̥̥ω•̥̥̥` )',
-  '(´･ω･`)', '( ˘ ³˘)♥', '(灬ºωº灬)', '(*´∀`)~♥', '(｡♥‿♥｡)',
-  '(┛ಠ_ಠ)┛彡┻━┻', '( ͡° ͜ʖ ͡°)', '(¬‿¬)', '( ͡°ᴥ ͡° ʋ)', 'ʕ•ᴥ•ʔ',
-  '(=^･ω･^=)', '( ˘･з･)', 'ᕕ( ᐛ )ᕗ', '(ง •̀_•́)ง', 'ლ(╹◡╹ლ)',
-];
-
-const EMOJI_PRESETS = [
-  '😀','😁','😂','🤣','😊','😍','🥰','😘','😜','🤪','😎','🤩',
-  '🥳','😇','🤗','🤭','🤫','🤔','😐','😑','😶','🙄','😏','😒',
-  '😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢',
-  '😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰',
-  '😥','😓','🤗','🤔','🤭','🥱','😴','🤤','😪','😵','🤐','🥴',
-  '🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','🥳','😈','👿','👹',
-  '👺','🤡','💩','👻','💀','☠️','👽','🤖','💋','💌','💘','💝',
-  '💖','💗','💓','💞','💕','💟','❣️','💔','❤️','🧡','💛','💚',
-  '💙','💜','🖤','🤍','🤎','💯','💢','💥','💫','💦','💨','🕳️',
-  '👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘',
-  '🤙','👈','👉','👆','👇','☝️','👊','✊','🤛','🤜','👏','🙌',
-  '👐','🤲','🤝','🙏','👍','👎','✍️','💪','🦾','🦿','🦵','🦶',
-];
-
 function sendEmojiText(text) {
   const id = uid();
   fresh.add(id);
@@ -965,7 +943,7 @@ function sendEmojiText(text) {
   triggerReply({ allowCall: false });
 }
 
-function openStickerPicker(tab = 'stickers', sub = 'public') {
+function openStickerPicker(tab = 'stickers') {
   const s = get();
   const stickers = s.stickers || [];
   const myKaomoji = s.kaomoji || [];
@@ -973,30 +951,27 @@ function openStickerPicker(tab = 'stickers', sub = 'public') {
 
   let gridHtml = '';
   if (tab === 'stickers') {
-    const list = sub === 'public'
-      ? stickers
-      : stickers; // 表情包公用=我的（上传的都是我的）
     gridHtml = `
       <div class="sticker-grid">
-        ${list.map(st => `<button class="sticker-cell" data-pick="${st.id}"><img src="${escapeHtml(st.url)}" alt=""></button>`).join('')}
+        ${stickers.map(st => `<button class="sticker-cell" data-pick="${st.id}"><img src="${escapeHtml(st.url)}" alt=""></button>`).join('')}
         <button class="sticker-cell add-cell" id="pickerUpload">
           <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>上传</span>
         </button>
       </div>`;
   } else if (tab === 'kaomoji') {
-    const list = sub === 'public' ? KAOMOJI_PRESETS : myKaomoji.map(k => k.text);
+    const list = myKaomoji.map(k => k.text);
     gridHtml = `
       <div class="kaomoji-grid">
-        ${list.map((t, i) => `<button class="kaomoji-cell" data-kao="${i}">${escapeHtml(t)}</button>`).join('') || '<div class="card-empty">空</div>'}
+        ${list.map((t, i) => `<button class="kaomoji-cell" data-kao="${i}">${escapeHtml(t)}</button>`).join('') || '<div class="card-empty">还没有颜文字，去字卡库添加</div>'}
       </div>
-      ${sub === 'mine' ? `<button class="ghost-btn wide" id="kaomojiAdd">添加颜文字</button>` : ''}`;
+      <button class="ghost-btn wide" id="kaomojiAdd">添加颜文字</button>`;
   } else {
-    const list = sub === 'public' ? EMOJI_PRESETS : myEmoji.map(e => e.text);
+    const list = myEmoji.map(e => e.text);
     gridHtml = `
       <div class="emoji-grid">
-        ${list.map((t, i) => `<button class="emoji-cell" data-em="${i}">${escapeHtml(t)}</button>`).join('') || '<div class="card-empty">空</div>'}
+        ${list.map((t, i) => `<button class="emoji-cell" data-em="${i}">${escapeHtml(t)}</button>`).join('') || '<div class="card-empty">还没有 emoji，去字卡库添加</div>'}
       </div>
-      ${sub === 'mine' ? `<button class="ghost-btn wide" id="emojiAdd">添加 emoji</button>` : ''}`;
+      <button class="ghost-btn wide" id="emojiAdd">添加 emoji</button>`;
   }
 
   openSheet(`
@@ -1006,18 +981,11 @@ function openStickerPicker(tab = 'stickers', sub = 'public') {
       <button data-ptab="kaomoji" class="${tab === 'kaomoji' ? 'active' : ''}">颜文字</button>
       <button data-ptab="emoji" class="${tab === 'emoji' ? 'active' : ''}">emoji</button>
     </div>
-    <div class="picker-subtabs" id="pickerSubtabs">
-      <button data-psub="public" class="${sub === 'public' ? 'active' : ''}">公用</button>
-      <button data-psub="mine" class="${sub === 'mine' ? 'active' : ''}">我的</button>
-    </div>
     <div class="picker-body">${gridHtml}</div>
   `);
 
   $$('#pickerTabs button').forEach(b => {
-    b.onclick = () => openStickerPicker(b.dataset.ptab, sub);
-  });
-  $$('#pickerSubtabs button').forEach(b => {
-    b.onclick = () => openStickerPicker(tab, b.dataset.psub);
+    b.onclick = () => openStickerPicker(b.dataset.ptab);
   });
 
   if (tab === 'stickers') {
@@ -1034,25 +1002,22 @@ function openStickerPicker(tab = 'stickers', sub = 'public') {
       try {
         const url = await prepareSticker(file);
         commit(s => { s.stickers.unshift({ id: uid(), url, at: Date.now() }); });
-        openStickerPicker('stickers', sub);
+        openStickerPicker('stickers');
         toast('已添加');
       } catch {
         toast('图片处理失败');
       }
     };
   } else if (tab === 'kaomoji') {
-    const list = sub === 'public' ? KAOMOJI_PRESETS : myKaomoji.map(k => k.text);
+    const list = myKaomoji.map(k => k.text);
     $$('#sheet [data-kao]').forEach(btn => {
       btn.onclick = () => sendEmojiText(list[Number(btn.dataset.kao)]);
-      // 长按删除（仅我的）
-      if (sub === 'mine') {
-        btn.oncontextmenu = e => {
-          e.preventDefault();
-          const idx = Number(btn.dataset.kao);
-          commit(s => { s.kaomoji.splice(idx, 1); });
-          openStickerPicker('kaomoji', 'mine');
-        };
-      }
+      btn.oncontextmenu = e => {
+        e.preventDefault();
+        const idx = Number(btn.dataset.kao);
+        commit(s => { s.kaomoji.splice(idx, 1); });
+        openStickerPicker('kaomoji');
+      };
     });
     const add = $('#kaomojiAdd');
     if (add) add.onclick = () => {
@@ -1060,21 +1025,19 @@ function openStickerPicker(tab = 'stickers', sub = 'public') {
         const t = (text || '').trim();
         if (!t) return;
         commit(s => { s.kaomoji.unshift({ id: uid(), text: t, at: Date.now() }); });
-        openStickerPicker('kaomoji', 'mine');
+        openStickerPicker('kaomoji');
       });
     };
   } else {
-    const list = sub === 'public' ? EMOJI_PRESETS : myEmoji.map(e => e.text);
+    const list = myEmoji.map(e => e.text);
     $$('#sheet [data-em]').forEach(btn => {
       btn.onclick = () => sendEmojiText(list[Number(btn.dataset.em)]);
-      if (sub === 'mine') {
-        btn.oncontextmenu = e => {
-          e.preventDefault();
-          const idx = Number(btn.dataset.em);
-          commit(s => { s.emojiMine.splice(idx, 1); });
-          openStickerPicker('emoji', 'mine');
-        };
-      }
+      btn.oncontextmenu = e => {
+        e.preventDefault();
+        const idx = Number(btn.dataset.em);
+        commit(s => { s.emojiMine.splice(idx, 1); });
+        openStickerPicker('emoji');
+      };
     });
     const add = $('#emojiAdd');
     if (add) add.onclick = () => {
@@ -1082,7 +1045,7 @@ function openStickerPicker(tab = 'stickers', sub = 'public') {
         const t = (text || '').trim();
         if (!t) return;
         commit(s => { s.emojiMine.unshift({ id: uid(), text: t, at: Date.now() }); });
-        openStickerPicker('emoji', 'mine');
+        openStickerPicker('emoji');
       });
     };
   }
