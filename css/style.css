@@ -3366,9 +3366,9 @@ select.input option { background: var(--surface); color: var(--ink); }
   text-align: center;
   background: linear-gradient(180deg,
     rgba(255, 255, 255, 0) 0%,
-    color-mix(in srgb, var(--paper) 42%, transparent) 18%,
-    color-mix(in srgb, var(--paper) 72%, transparent) 42%,
-    color-mix(in srgb, var(--paper) 92%, transparent) 72%,
+    color-mix(in srgb, var(--paper) 58%, transparent) 14%,
+    color-mix(in srgb, var(--paper) 82%, transparent) 36%,
+    color-mix(in srgb, var(--paper) 97%, transparent) 62%,
     var(--paper) 100%);
   backdrop-filter: blur(10px) saturate(150%);
   -webkit-backdrop-filter: blur(10px) saturate(150%);
