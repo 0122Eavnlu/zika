@@ -544,7 +544,7 @@ svg { display: block; }
 #screen-chat .identity {
   position: absolute;
   left: 50%;
-  bottom: 8px;
+  bottom: -2px;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
@@ -3389,8 +3389,9 @@ select.input option { background: var(--surface); color: var(--ink); }
   padding: max(10px, env(safe-area-inset-top)) 34px calc(env(safe-area-inset-bottom) + 8px);
 }
 .home-page::-webkit-scrollbar { display: none; }
-/* P1 底部要给分页小圆点留出空间，避免小字条压到圆点上 */
+/* P1 顶部留白再大一点，整体内容往下放 */
 .home-page[data-hpage="0"] {
+  padding-top: calc(max(10px, env(safe-area-inset-top)) + 18px);
   padding-bottom: calc(env(safe-area-inset-bottom) + 26px);
 }
 .hp1 {
