@@ -1,9 +1,16 @@
+/* zika sw v20261031Z */
+const CACHE_VERSION = '20261031Z';
+
 self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
 });
 
 // 始终获取最新文件，避免浏览器缓存旧版本

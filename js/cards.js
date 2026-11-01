@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261031X';
-import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, prepareSticker, setAvatar } from './util.js?v=20261031X';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet, actionSheet } from './ui.js?v=20261031X';
-import * as router from './router.js?v=20261031X';
+import { get, commit, subscribe } from './state.js?v=20261031Z';
+import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, prepareSticker, setAvatar } from './util.js?v=20261031Z';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet, actionSheet } from './ui.js?v=20261031Z';
+import * as router from './router.js?v=20261031Z';
 
 const norm = text => text.replace(/\s+/g, ' ').trim();
 
@@ -588,16 +588,16 @@ function bind() {
     const item = event.target.closest('[data-nudge]');
     if (item) editNudge(item.dataset.nudge);
   });
-  $('#kaomojiAddBtn').onclick = addKaomoji;
-  $('#kaomojiList').addEventListener('click', event => {
+  $('#kaomojiAddBtn')?.addEventListener('click', addKaomoji);
+  $('#kaomojiList')?.addEventListener('click', event => {
     const del = event.target.closest('[data-kaomoji-del]');
     if (del) {
       commit(s => { s.kaomoji = s.kaomoji.filter(x => x.id !== del.dataset.kaomojiDel); });
       toast('已删除');
     }
   });
-  $('#emojiAddBtn').onclick = addEmoji;
-  $('#emojiList').addEventListener('click', event => {
+  $('#emojiAddBtn')?.addEventListener('click', addEmoji);
+  $('#emojiList')?.addEventListener('click', event => {
     const del = event.target.closest('[data-emoji-del]');
     if (del) {
       commit(s => { s.emojiMine = s.emojiMine.filter(x => x.id !== del.dataset.emojiDel); });
