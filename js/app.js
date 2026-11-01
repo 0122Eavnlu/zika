@@ -1,17 +1,17 @@
-import { initAppearance } from './appearance.js?v=20261101AS';
-import { initSettings } from './settings.js?v=20261101AS';
-import { initCards } from './cards.js?v=20261101AS';
-import { initChat } from './chat.js?v=20261101AS';
-import { initCall, hideCall } from './call.js?v=20261101AS';
-import { initStatus, openStatusSheet } from './status.js?v=20261101AS';
-import { initMoments } from './moments.js?v=20261101AS';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101AS';
-import { initLetters } from './letters.js?v=20261101AS';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101AS';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101AS';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101AS';
-import { get, subscribe, commit } from './state.js?v=20261101AS';
-import { openMeSheet } from './chat.js?v=20261101AS';
+import { initAppearance } from './appearance.js?v=20261101AT';
+import { initSettings } from './settings.js?v=20261101AT';
+import { initCards } from './cards.js?v=20261101AT';
+import { initChat } from './chat.js?v=20261101AT';
+import { initCall, hideCall } from './call.js?v=20261101AT';
+import { initStatus, openStatusSheet } from './status.js?v=20261101AT';
+import { initMoments } from './moments.js?v=20261101AT';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101AT';
+import { initLetters } from './letters.js?v=20261101AT';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101AT';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101AT';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101AT';
+import { get, subscribe, commit } from './state.js?v=20261101AT';
+import { openMeSheet } from './chat.js?v=20261101AT';
 
 /* 首页重绘缓存：避免每次都把同一张超大的 base64 重新赋给 style，
    反复赋值会让移动端整块重排、非常卡。 */
@@ -592,7 +592,6 @@ function bindHome() {
   });
   $('#homeAvatar')?.addEventListener('click', () => openMeSheet());
   $('#homeName')?.addEventListener('click', () => openMeSheet());
-  $('#homeBioEdit')?.addEventListener('click', () => openStatusSheet());
   $('#homeStatus')?.addEventListener('click', () => openStatusSheet());
   $('#homeNoteEdit')?.addEventListener('click', openNotesEditor);
   $('.hp-loc')?.addEventListener('click', () => {
@@ -693,7 +692,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261101AS', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261101AT', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {

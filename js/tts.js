@@ -1,5 +1,5 @@
-import { get } from './state.js?v=20261101AS';
-import { toast } from './util.js?v=20261101AS';
+import { get } from './state.js?v=20261101AT';
+import { toast } from './util.js?v=20261101AT';
 
 const DEFAULTS = {
   provider: 'minimax',
