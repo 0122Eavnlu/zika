@@ -3361,11 +3361,10 @@ select.input option { background: var(--surface); color: var(--ink); }
   text-align: center;
   background: linear-gradient(180deg,
     rgba(255, 255, 255, 0) 0%,
-    color-mix(in srgb, var(--paper) 70%, transparent) 14%,
-    color-mix(in srgb, var(--paper) 96%, transparent) 40%,
-    var(--paper) 68%,
-    color-mix(in srgb, var(--paper) 85%, transparent) 86%,
-    rgba(255, 255, 255, 0) 100%);
+    color-mix(in srgb, var(--paper) 42%, transparent) 18%,
+    color-mix(in srgb, var(--paper) 72%, transparent) 42%,
+    color-mix(in srgb, var(--paper) 92%, transparent) 72%,
+    var(--paper) 100%);
   backdrop-filter: blur(10px) saturate(150%);
   -webkit-backdrop-filter: blur(10px) saturate(150%);
   box-shadow: none;
@@ -3567,6 +3566,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   position: relative;
   flex: 1;
   height: var(--pins-h);
+  transform: translateY(-8px);
   margin-left: 8px;
 }
 .polaroid {
