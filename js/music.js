@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261101BB';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101BB';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101BB';
-import * as router from './router.js?v=20261101BB';
+import { get, commit, subscribe } from './state.js?v=20261101BC';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101BC';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101BC';
+import * as router from './router.js?v=20261101BC';
 
 const session = [];
 const lyricsMap = new Map();
@@ -850,8 +850,15 @@ async function ensureLyrics() {
   } catch {}
 }
 
-function cleanLyrics(text) {
+/* 去掉 LRC 时间轴标记（[00:14.49] 或行首裸时间 00:14.49），避免歌词里带时间 */
+function stripLrcTimes(text) {
   return text
+    .replace(/\[[0-9]{1,3}:[0-9]{2}(?:[.:][0-9]{1,3})?\]/g, '')
+    .replace(/^[0-9]{1,3}:[0-9]{2}(?:[.:][0-9]{1,3})?\s*/gm, '');
+}
+
+function cleanLyrics(text) {
+  return stripLrcTimes(text)
     .replace(/\r/g, '')
     .split('\n')
     .map(line => line.trim())
@@ -1415,7 +1422,7 @@ let lastLyric = '';
 async function lyricsOf(track) {
   if (!track) return '';
   const cached = track.lyrics || lyricsMap.get(track.id) || '';
-  if (cached) return cached;
+  if (cached) return stripLrcTimes(cached);
   if (!track.lrcUrl) return '';
   try {
     const res = await fetch(track.lrcUrl);

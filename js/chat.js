@@ -1,13 +1,13 @@
-import { get, commit, subscribe } from './state.js?v=20261101BB';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BB';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BB';
-import * as router from './router.js?v=20261101BB';
-import { playSound } from './audio.js?v=20261101BB';
-import { startCall } from './call.js?v=20261101BB';
-import { openMoments } from './moments.js?v=20261101BB';
-import { pickLyric, isListening } from './music.js?v=20261101BB';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101BB';
-import { rollPresetTags } from './presets.js?v=20261101BB';
+import { get, commit, subscribe } from './state.js?v=20261101BC';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BC';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BC';
+import * as router from './router.js?v=20261101BC';
+import { playSound } from './audio.js?v=20261101BC';
+import { startCall } from './call.js?v=20261101BC';
+import { openMoments } from './moments.js?v=20261101BC';
+import { pickLyric, isListening } from './music.js?v=20261101BC';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101BC';
+import { rollPresetTags } from './presets.js?v=20261101BC';
 
 let busy = false;
 let replying = false;
@@ -19,6 +19,20 @@ const fresh = new Set();
 
 const SEPARATORS = ['，', '、', '；', '。'];
 const RESEND_CHANCE = 0.5;
+const LRC_TIME_RE = /(?:\[\d{1,3}:\d{2}(?:[.:]\d{1,3})?\]|\d{1,3}:\d{2}(?:[.:]\d{1,3})?)\s*/g;
+
+/* 清掉旧歌词消息里残留的时间轴（00:14.49） */
+function stripStoredLyricTimes() {
+  const dirty = get().messages.some(m => m.type === 'lyric' && /\d{1,3}:\d{2}/.test(m.text || ''));
+  if (!dirty) return;
+  commit(st => {
+    st.messages.forEach(m => {
+      if (m.type !== 'lyric') return;
+      if (m.text) m.text = m.text.replace(LRC_TIME_RE, '').trim();
+      if (m.lyric) m.lyric = m.lyric.replace(LRC_TIME_RE, '').trim();
+    });
+  });
+}
 const CALL_ICON = `<svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="12.5" height="10" rx="3"/><path d="M15 11.2l5.4-3.1a.6.6 0 0 1 .9.5v6.8a.6.6 0 0 1-.9.5l-5.4-3.1z"/></svg>`;
 
 const readLabel = style => ({ text: '已读', check: '✓', double: '✓✓' }[style] || '已读');
@@ -1444,6 +1458,7 @@ function openChatMenu() {
 /* ---------- 初始化 ---------- */
 
 export function initChat() {
+  stripStoredLyricTimes();
   bindMessageEvents();
   $('#micBtn').onclick = () => {
     if (navigator.vibrate) navigator.vibrate(6);
