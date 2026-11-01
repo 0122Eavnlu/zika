@@ -1,11 +1,11 @@
-import { get, commit, subscribe, getPath, setPath, exportState, importState, resetState } from './state.js?v=20261101AM';
-import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, compressDataUrl, setAvatar, getInputNumber } from './util.js?v=20261101AM';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js?v=20261101AM';
-import { playItem } from './audio.js?v=20261101AM';
-import * as router from './router.js?v=20261101AM';
-import { openStatusSheet } from './status.js?v=20261101AM';
-import { openMeSheet } from './chat.js?v=20261101AM';
-import { speak, cloneVoice, hasTTS } from './tts.js?v=20261101AM';
+import { get, commit, subscribe, getPath, setPath, exportState, importState, resetState } from './state.js?v=20261101AN';
+import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, compressImage, compressDataUrl, setAvatar, getInputNumber } from './util.js?v=20261101AN';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet } from './ui.js?v=20261101AN';
+import { playItem } from './audio.js?v=20261101AN';
+import * as router from './router.js?v=20261101AN';
+import { openStatusSheet } from './status.js?v=20261101AN';
+import { openMeSheet } from './chat.js?v=20261101AN';
+import { speak, cloneVoice, hasTTS } from './tts.js?v=20261101AN';
 
 /* ---------- 通用控件 ---------- */
 
