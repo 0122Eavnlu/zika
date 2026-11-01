@@ -3361,17 +3361,17 @@ select.input option { background: var(--surface); color: var(--ink); }
 /* 个人信息白色主卡片（头像一半叠在横幅上，一半落进卡片） */
 .hp-card {
   position: relative;
-  width: 94%;
+  width: 88%;
   margin-top: -15px;
   border-radius: var(--card-r);
   padding: calc(var(--av-h) * .5 + 8px) 18px 16px;
   text-align: center;
   background: linear-gradient(180deg,
-    rgba(255, 255, 255, 0) 0%,
-    color-mix(in srgb, var(--paper) 58%, transparent) 14%,
-    color-mix(in srgb, var(--paper) 82%, transparent) 36%,
-    color-mix(in srgb, var(--paper) 97%, transparent) 62%,
-    var(--paper) 100%);
+    var(--paper) 0%,
+    color-mix(in srgb, var(--paper) 97%, transparent) 30%,
+    color-mix(in srgb, var(--paper) 82%, transparent) 58%,
+    color-mix(in srgb, var(--paper) 42%, transparent) 88%,
+    rgba(255, 255, 255, 0) 100%);
   backdrop-filter: blur(10px) saturate(150%);
   -webkit-backdrop-filter: blur(10px) saturate(150%);
   box-shadow: none;
@@ -3573,7 +3573,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   position: relative;
   flex: 1;
   height: var(--pins-h);
-  transform: translateY(-20px);
+  transform: translateY(-30px);
   margin-left: 8px;
 }
 .polaroid {
@@ -3640,7 +3640,7 @@ select.input option { background: var(--surface); color: var(--ink); }
 .home-grid .tile { width: 50px; height: 50px; border-radius: 15px; }
 .home-grid .tile svg { width: 24px; height: 24px; }
 .home-grid .app-name { font-size: 11px; }
-.hp1 .home-grid .app:nth-child(odd) { transform: translateX(-10px); }
+.hp1 .home-grid .app:nth-child(odd) { transform: translateX(-15px); }
 
 .hp1 .hp-cover,
 .hp1 .hp-clock,
