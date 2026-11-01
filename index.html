@@ -13,7 +13,7 @@
 <meta name="application-name" content="字卡">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css?v=20261101AN">
+<link rel="stylesheet" href="css/style.css?v=20261101AO">
 </head>
 <body>
 
@@ -21,13 +21,44 @@
 
   <!-- 开场 -->
   <div class="splash" id="splash">
-    <div class="splash-glow"></div>
-    <div class="splash-inner">
-      <svg class="enso" viewBox="0 0 120 120" aria-hidden="true">
-        <circle cx="60" cy="60" r="43"/>
-      </svg>
-      <span class="splash-dot"></span>
-      <div class="splash-title"><span>雨</span><span>沉</span></div>
+    <div class="splash-stage">
+      <div class="splash-pair">
+        <svg class="splash-bear" viewBox="0 0 120 112" aria-hidden="true">
+          <circle cx="24" cy="30" r="15" fill="#f3bfcd"/>
+          <circle cx="24" cy="30" r="8" fill="#eba9bd"/>
+          <circle cx="96" cy="30" r="15" fill="#f3bfcd"/>
+          <circle cx="96" cy="30" r="8" fill="#eba9bd"/>
+          <ellipse cx="60" cy="62" rx="46" ry="40" fill="#f7cdd9"/>
+          <ellipse cx="30" cy="84" rx="11" ry="6" fill="#f0b3c5" opacity=".85"/>
+          <ellipse cx="90" cy="84" rx="11" ry="6" fill="#f0b3c5" opacity=".85"/>
+          <rect x="18" y="50" width="36" height="24" rx="10" fill="#58555a"/>
+          <rect x="66" y="50" width="36" height="24" rx="10" fill="#58555a"/>
+          <path d="M54 59h12" stroke="#58555a" stroke-width="5"/>
+          <circle cx="30" cy="58" r="3" fill="#ffffff" opacity=".5"/>
+          <circle cx="78" cy="58" r="3" fill="#ffffff" opacity=".5"/>
+          <path d="M54 86q6 4 12 0" stroke="#c9788f" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        </svg>
+        <svg class="splash-rabbit" viewBox="0 0 120 112" aria-hidden="true">
+          <g fill="#e6cab3">
+            <ellipse cx="43" cy="26" rx="10" ry="25" transform="rotate(-8 43 26)"/>
+            <ellipse cx="77" cy="26" rx="10" ry="25" transform="rotate(8 77 26)"/>
+            <ellipse cx="60" cy="72" rx="42" ry="36"/>
+          </g>
+          <ellipse cx="43" cy="26" rx="5" ry="16" fill="#d7b096" transform="rotate(-8 43 26)"/>
+          <ellipse cx="77" cy="26" rx="5" ry="16" fill="#d7b096" transform="rotate(8 77 26)"/>
+          <ellipse cx="60" cy="86" rx="20" ry="14" fill="#f6e7d8"/>
+          <ellipse cx="24" cy="90" rx="9" ry="6" fill="#dcb69c"/>
+          <ellipse cx="96" cy="90" rx="9" ry="6" fill="#dcb69c"/>
+          <path d="M60 78l-4 5h8z" fill="#b98f74"/>
+          <rect x="20" y="58" width="34" height="22" rx="9" fill="none" stroke="#6e6a68" stroke-width="4"/>
+          <rect x="66" y="58" width="34" height="22" rx="9" fill="none" stroke="#6e6a68" stroke-width="4"/>
+          <path d="M54 67h12" stroke="#6e6a68" stroke-width="4"/>
+          <path d="M28 68l6-4 6 4" stroke="#6e6a68" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M80 68l6-4 6 4" stroke="#6e6a68" stroke-width="3" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="splash-by">Rian by Evan</div>
+      <div class="splash-bar"><i></i></div>
     </div>
   </div>
 
@@ -1060,6 +1091,6 @@
   <style id="user-font"></style>
 </div>
 
-<script type="module" src="js/app.js?v=20261101AN"></script>
+<script type="module" src="js/app.js?v=20261101AO"></script>
 </body>
 </html>
