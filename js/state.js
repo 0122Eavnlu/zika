@@ -1,4 +1,4 @@
-import { uid, toast } from './util.js?v=20261101AZ';
+import { uid, toast } from './util.js?v=20261101BA';
 
 const KEY = 'zika.state.v1';
 const AT_KEY = 'zika.state.v1.at';

@@ -2127,14 +2127,13 @@ select.input option { background: var(--surface); color: var(--ink); }
 .call-pill-hang svg { width: 15px; height: 15px; }
 .call-pill-hang svg path { fill: #fff; stroke: none; }
 
-/* 减少动效 */
+/* 减少动效：只缩短动画，不再把开场整个隐藏 */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
   }
-  .splash { display: none; }
 }
 
 /* ============ 朋友圈 ============ */
