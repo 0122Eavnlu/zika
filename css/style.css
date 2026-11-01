@@ -3361,15 +3361,15 @@ select.input option { background: var(--surface); color: var(--ink); }
   z-index: 1;
   flex: 0 0 auto;
   display: flex;
-  width: 200%;
+  width: 300%;
   height: 100%;
   transition: transform .52s var(--ease);
   touch-action: pan-y;
   will-change: transform;
 }
 .home-page {
-  flex: 0 0 50%;
-  width: 50%;
+  flex: 0 0 33.3333%;
+  width: 33.3333%;
   height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -3945,6 +3945,97 @@ select.input option { background: var(--surface); color: var(--ink); }
   pointer-events: auto;
 }
 .home-dots .dot.active { width: 16px; background: var(--ink); }
+
+/* ============ P3 天气 ============ */
+.hp3 {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100%;
+  justify-content: flex-start;
+  margin-top: 10px;
+}
+
+.wx-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 18px;
+  border-radius: 24px;
+  overflow: hidden;
+  color: #1b2a3d;
+  background: linear-gradient(135deg, #8ec5fc, #c9ddf7 58%, #ffe9b8);
+  box-shadow: 0 20px 44px -28px rgba(20, 22, 28, .55), inset 0 0 0 1px rgba(255, 255, 255, .24);
+  transition: background .65s var(--ease), color .5s var(--ease);
+  animation: appIn .8s var(--ease) both;
+}
+.wx-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .28), transparent 52%);
+  pointer-events: none;
+}
+.wx-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: currentColor;
+}
+.wx-icon svg { width: 34px; height: 34px; }
+.wx-icon svg * {
+  stroke: currentColor;
+  stroke-width: 1.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.wx-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.wx-temp {
+  font-size: 25px;
+  font-weight: 400;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.wx-desc {
+  font-size: 12px;
+  letter-spacing: .1em;
+  opacity: .78;
+  white-space: nowrap;
+}
+.wx-loc {
+  flex: 0 0 auto;
+  text-align: right;
+  font-size: 13px;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.wx-loc small {
+  display: block;
+  margin-top: 3px;
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  opacity: .68;
+}
+
+/* 天气配色：卡片背景随之切换 */
+.wx-card.wx-clear  { background: linear-gradient(135deg, #8ec5fc, #c9ddf7 58%, #ffe9b8); color: #1b2a3d; }
+.wx-card.wx-cloudy { background: linear-gradient(135deg, #aeb8c2, #d5dbe1 58%, #9ea8b4); color: #1f2732; }
+.wx-card.wx-rain   { background: linear-gradient(135deg, #5b82a6, #3b5876 58%, #26405a); color: #f2f6fa; }
+.wx-card.wx-storm  { background: linear-gradient(135deg, #46505f, #2a3442 58%, #1b2331); color: #eef2f7; }
+.wx-card.wx-snow   { background: linear-gradient(135deg, #e6f1fb, #cfdff0 58%, #f6fbff); color: #1d2b38; }
+.wx-card.wx-fog    { background: linear-gradient(135deg, #c6d0d7, #dfe6ea 58%, #b9c3ca); color: #232c34; }
+.wx-card.wx-night  { background: linear-gradient(135deg, #33446a, #1e2740 58%, #0f1524); color: #eef2fb; }
 
 /* ============ 一起听 v5：黑胶播放页 ============ */
 .music-screen.is-listen { background: #0b0b0c; }

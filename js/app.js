@@ -1,17 +1,17 @@
-import { initAppearance } from './appearance.js?v=20261101AR';
-import { initSettings } from './settings.js?v=20261101AR';
-import { initCards } from './cards.js?v=20261101AR';
-import { initChat } from './chat.js?v=20261101AR';
-import { initCall, hideCall } from './call.js?v=20261101AR';
-import { initStatus, openStatusSheet } from './status.js?v=20261101AR';
-import { initMoments } from './moments.js?v=20261101AR';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101AR';
-import { initLetters } from './letters.js?v=20261101AR';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101AR';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101AR';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101AR';
-import { get, subscribe, commit } from './state.js?v=20261101AR';
-import { openMeSheet } from './chat.js?v=20261101AR';
+import { initAppearance } from './appearance.js?v=20261101AS';
+import { initSettings } from './settings.js?v=20261101AS';
+import { initCards } from './cards.js?v=20261101AS';
+import { initChat } from './chat.js?v=20261101AS';
+import { initCall, hideCall } from './call.js?v=20261101AS';
+import { initStatus, openStatusSheet } from './status.js?v=20261101AS';
+import { initMoments } from './moments.js?v=20261101AS';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101AS';
+import { initLetters } from './letters.js?v=20261101AS';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101AS';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101AS';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101AS';
+import { get, subscribe, commit } from './state.js?v=20261101AS';
+import { openMeSheet } from './chat.js?v=20261101AS';
 
 /* 首页重绘缓存：避免每次都把同一张超大的 base64 重新赋给 style，
    反复赋值会让移动端整块重排、非常卡。 */
@@ -66,6 +66,8 @@ function renderHome() {
   renderNotes(s);
 
   renderHomeMsgs(s);
+
+  renderWeather();
 
   renderWidgets(s);
   updateHomeDots();
@@ -327,11 +329,56 @@ function renderWidgets(s) {
 
 let homePage = 0;
 
+/* ---------- P3 天气（随机天气 + 随机地点，背景随天气切换） ---------- */
+const WX_LOCATIONS = ['英国伦敦', '万甄集团', '安庆', '上海'];
+const WX_CLOUD = `<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>`;
+const WX_ICONS = {
+  clear: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.2M12 19v2.2M2.8 12h2.2M19 12h2.2M5.5 5.5l1.6 1.6M16.9 16.9l1.6 1.6M18.5 5.5l-1.6 1.6M7.1 16.9l-1.6 1.6"/></svg>`,
+  cloudy: `<svg viewBox="0 0 24 24">${WX_CLOUD}</svg>`,
+  rain: `<svg viewBox="0 0 24 24">${WX_CLOUD}<path d="M8 21v-1M12 21v-1.4M16 21v-1"/></svg>`,
+  storm: `<svg viewBox="0 0 24 24">${WX_CLOUD}<path d="M13 19.2l1.6-3.4h-3l1.5-3"/></svg>`,
+  snow: `<svg viewBox="0 0 24 24">${WX_CLOUD}<path d="M8 21h.01M12 21h.01M16 21h.01"/></svg>`,
+  fog: `<svg viewBox="0 0 24 24">${WX_CLOUD}<path d="M5.5 21h6M13 21h5.5"/></svg>`,
+  night: `<svg viewBox="0 0 24 24"><path d="M20 13.6A8.1 8.1 0 1 1 10.4 4a6.4 6.4 0 0 0 9.6 9.6Z"/><path d="M5.4 5.2h.01M7.8 2.9h.01"/></svg>`,
+};
+const WX_TYPES = [
+  { key: 'clear', label: '晴', min: 18, max: 30 },
+  { key: 'cloudy', label: '多云', min: 12, max: 24 },
+  { key: 'rain', label: '小雨', min: 10, max: 20 },
+  { key: 'storm', label: '雷阵雨', min: 12, max: 22 },
+  { key: 'snow', label: '小雪', min: -5, max: 4 },
+  { key: 'fog', label: '雾', min: 7, max: 16 },
+  { key: 'night', label: '晴间多云', min: 6, max: 15 },
+];
+
+let wxState = null;
+
+function renderWeather() {
+  const card = $('#wxCard');
+  if (!card) return;
+  if (!wxState) {
+    const type = WX_TYPES[Math.floor(Math.random() * WX_TYPES.length)];
+    const loc = WX_LOCATIONS[Math.floor(Math.random() * WX_LOCATIONS.length)];
+    const temp = type.min + Math.floor(Math.random() * (type.max - type.min + 1));
+    wxState = { type, loc, temp };
+  }
+  const { type, loc, temp } = wxState;
+  card.className = `wx-card wx-${type.key}`;
+  $('#wxIcon').innerHTML = WX_ICONS[type.key];
+  $('#wxTemp').textContent = `${temp}°`;
+  $('#wxDesc').textContent = type.label;
+  $('#wxLoc').textContent = loc;
+}
+
+function homePageCount() {
+  return $$('#homePager .home-page').length || 2;
+}
+
 function setHomePage(next, animate = true) {
-  homePage = Math.max(0, Math.min(1, next));
+  homePage = Math.max(0, Math.min(homePageCount() - 1, next));
   const pager = $('#homePager');
   if (!pager) return;
-  const w = pager.offsetWidth / 2 || window.innerWidth;
+  const w = pager.offsetWidth / homePageCount() || window.innerWidth;
   pager.style.transition = animate ? '' : 'none';
   pager.style.transform = `translate3d(${-homePage * w}px, 0, 0)`;
   if (!animate) {
@@ -360,7 +407,7 @@ function bindPager() {
     if (event.touches.length !== 1) return;
     sx = event.touches[0].clientX;
     sy = event.touches[0].clientY;
-    base = -homePage * (pager.offsetWidth / 2 || window.innerWidth);
+    base = -homePage * (pager.offsetWidth / homePageCount() || window.innerWidth);
     dragging = false;
     pager.classList.add('dragging');
     pager.style.transition = 'none';
@@ -375,10 +422,11 @@ function bindPager() {
       if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.1) return;
       dragging = true;
     }
-    const w = pager.offsetWidth / 2 || window.innerWidth;
+    const w = pager.offsetWidth / homePageCount() || window.innerWidth;
     let move = dx;
-    if ((homePage === 0 && dx > 0) || (homePage === 1 && dx < 0)) move = dx * .32;
-    const x = Math.min(0, Math.max(-w, base + move));
+    if ((homePage === 0 && dx > 0) || (homePage === homePageCount() - 1 && dx < 0)) move = dx * .32;
+    const minX = -w * (homePageCount() - 1);
+    const x = Math.min(0, Math.max(minX, base + move));
     pager.style.transform = `translate3d(${x}px, 0, 0)`;
   }, { passive: true });
 
@@ -645,7 +693,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261101AR', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261101AS', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {
