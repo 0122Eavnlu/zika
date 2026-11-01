@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261101V';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101V';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101V';
-import * as router from './router.js?v=20261101V';
+import { get, commit, subscribe } from './state.js?v=20261101W';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101W';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101W';
+import * as router from './router.js?v=20261101W';
 
 const session = [];
 const lyricsMap = new Map();
@@ -1322,19 +1322,14 @@ function bindDotSwipe() {
   let dragging = false;
 
   const clear = () => {
-    items.forEach(d => { d.style.transform = ''; d.style.transformOrigin = ''; });
+    items.forEach(d => {
+      d.style.transform = '';
+      d.style.transformOrigin = '';
+    });
   };
 
-  dots.addEventListener('touchstart', event => {
-    if (event.touches.length !== 1) return;
-    sx = event.touches[0].clientX;
-    dx = 0;
-    dragging = true;
-  }, { passive: true });
-
-  dots.addEventListener('touchmove', event => {
-    if (!dragging || event.touches.length !== 1) return;
-    dx = event.touches[0].clientX - sx;
+  const move = clientX => {
+    dx = clientX - sx;
     const p = Math.max(0, Math.min(1, Math.abs(dx) / 110));
     const target = dx < 0 ? 1 : 0;
     // 往哪边滑，目标气泡就从那一侧的边缘长出来
@@ -1343,9 +1338,9 @@ function bindDotSwipe() {
       d.style.transformOrigin = origin;
       d.style.transform = `scaleX(${i === target ? .27 + .73 * p : 1 - .73 * p})`;
     });
-  }, { passive: true });
+  };
 
-  dots.addEventListener('touchend', event => {
+  const finish = () => {
     if (!dragging) return;
     dragging = false;
     const open = $('#screen-music').classList.contains('active');
@@ -1353,7 +1348,21 @@ function bindDotSwipe() {
     clear();
     if (dir === 'music' && !open) router.open('music');
     else if (dir === 'home' && open) router.close();
+  };
+
+  dots.addEventListener('pointerdown', event => {
+    if (event.button !== undefined && event.button !== 0) return;
+    sx = event.clientX;
+    dx = 0;
+    dragging = true;
+    if (dots.setPointerCapture) dots.setPointerCapture(event.pointerId);
   });
+  dots.addEventListener('pointermove', event => {
+    if (!dragging) return;
+    move(event.clientX);
+  });
+  dots.addEventListener('pointerup', finish);
+  dots.addEventListener('pointercancel', finish);
 }
 
 export function isListening() {

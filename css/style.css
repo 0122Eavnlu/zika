@@ -2740,7 +2740,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   justify-content: center;
   align-items: center;
   gap: 16px;
-  pointer-events: none;
+  pointer-events: auto;
   touch-action: pan-y;
 }
 .page-dots .dot {
@@ -3662,7 +3662,10 @@ select.input option { background: var(--surface); color: var(--ink); }
 .home-grid .tile { width: 50px; height: 50px; border-radius: 15px; }
 .home-grid .tile svg { width: 24px; height: 24px; }
 .home-grid .app-name { font-size: 11px; }
-.hp1 .home-grid .app:nth-child(odd) { margin-left: -16px; }
+.hp1 .home-grid .app:nth-child(odd) { margin-left: 0; }
+.hp1 .home-grid .app:nth-child(odd) .tile,
+.hp1 .home-grid .app:nth-child(odd) .app-name,
+.hp1 .home-grid .app:nth-child(odd) .badge { transform: translateX(-16px); }
 .home-grid .badge {
   top: -5px;
   left: calc(50% + 15px);
@@ -4743,9 +4746,9 @@ select.input option { background: var(--surface); color: var(--ink); }
 
 /* 播放键更明显 */
 .listen-ctl.play {
-  background: #fff;
-  color: #16161a;
-  box-shadow: 0 10px 26px -14px rgba(0, 0, 0, .8);
+  background: none;
+  color: #f4f4f6;
+  box-shadow: none;
 }
 .listen-ctl.play svg * { fill: currentColor; stroke: none; }
 

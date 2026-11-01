@@ -1,5 +1,5 @@
-/* zika sw v20261101V */
-const CACHE_VERSION = '20261101V';
+/* zika sw v20261101W */
+const CACHE_VERSION = '20261101W';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
