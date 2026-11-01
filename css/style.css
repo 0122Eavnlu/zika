@@ -2348,6 +2348,8 @@ select.input option { background: var(--surface); color: var(--ink); }
   padding: 4px 2px;
 }
 .moment-act:disabled { opacity: .55; cursor: default; }
+.moment-act.del { color: var(--ink-3); }
+.moment-act.del:active { color: var(--accent); }
 .moment-act .heart,
 .moment-act .bubble-ic {
   width: 15px; height: 15px;
@@ -3439,12 +3441,13 @@ select.input option { background: var(--surface); color: var(--ink); }
 .hp1 .hp-loc,
 .hp1 .hp-clock-left span,
 .hp1 .hp-clock-right,
-.hp1 .app-name {
-  color: var(--ink-2);
+.hp1 .app-name,
+.hp1 .note-line:not(.empty) {
+  color: color-mix(in srgb, var(--ink) 86%, var(--paper));
 }
 
 .hp1 .hp-week span:not(.today) {
-  color: var(--ink-2);
+  color: color-mix(in srgb, var(--ink) 80%, var(--paper));
 }
 
 .hp-cover {

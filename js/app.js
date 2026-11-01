@@ -1,17 +1,17 @@
-import { initAppearance } from './appearance.js?v=20261101AF';
-import { initSettings } from './settings.js?v=20261101AF';
-import { initCards } from './cards.js?v=20261101AF';
-import { initChat } from './chat.js?v=20261101AF';
-import { initCall, hideCall } from './call.js?v=20261101AF';
-import { initStatus, openStatusSheet } from './status.js?v=20261101AF';
-import { initMoments } from './moments.js?v=20261101AF';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101AF';
-import { initLetters } from './letters.js?v=20261101AF';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101AF';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101AF';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101AF';
-import { get, subscribe, commit } from './state.js?v=20261101AF';
-import { openMeSheet } from './chat.js?v=20261101AF';
+import { initAppearance } from './appearance.js?v=20261101AG';
+import { initSettings } from './settings.js?v=20261101AG';
+import { initCards } from './cards.js?v=20261101AG';
+import { initChat } from './chat.js?v=20261101AG';
+import { initCall, hideCall } from './call.js?v=20261101AG';
+import { initStatus, openStatusSheet } from './status.js?v=20261101AG';
+import { initMoments } from './moments.js?v=20261101AG';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101AG';
+import { initLetters } from './letters.js?v=20261101AG';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101AG';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101AG';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101AG';
+import { get, subscribe, commit } from './state.js?v=20261101AG';
+import { openMeSheet } from './chat.js?v=20261101AG';
 
 /* 首页重绘缓存：避免每次都把同一张超大的 base64 重新赋给 style，
    反复赋值会让移动端整块重排、非常卡。 */
@@ -45,7 +45,7 @@ function renderHome() {
 
   const hp2 = $('#hp2Cover');
   if (hp2) {
-    const img2 = s.ui.homeCover2 || s.ui.homeCover || '';
+    const img2 = s.ui.homeCover2 || '';
     if (img2 !== lastHp2Cover) {
       lastHp2Cover = img2;
       hp2.style.backgroundImage = img2 ? `url("${img2}")` : '';
@@ -645,7 +645,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261101AF', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261101AG', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {

@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261101AF';
-import { $, escapeHtml, timeText, setAvatar, toast, uid, randInt, pick, pickFile, compressImage } from './util.js?v=20261101AF';
-import { openSheet, closeSheet, sheetTitle, promptSheet } from './ui.js?v=20261101AF';
-import * as router from './router.js?v=20261101AF';
+import { get, commit, subscribe } from './state.js?v=20261101AG';
+import { $, escapeHtml, timeText, setAvatar, toast, uid, randInt, pick, pickFile, compressImage } from './util.js?v=20261101AG';
+import { openSheet, closeSheet, sheetTitle, promptSheet, confirmSheet } from './ui.js?v=20261101AG';
+import * as router from './router.js?v=20261101AG';
 
 let origin = 'home';
 let draft = { text: '', stickerUrl: '', imageUrl: '', fromCards: false };
@@ -9,6 +9,15 @@ let draft = { text: '', stickerUrl: '', imageUrl: '', fromCards: false };
 const HEART = `<svg viewBox="0 0 24 24"><path d="M12 20.2c-.3 0-.6-.1-.8-.3C6.9 16 3.6 13.2 2.1 10.7 1 8.8 1 6.3 2.4 4.7c1.6-1.8 4.4-1.9 6.2-.3.5.4 1 1 1.4 1.6.4-.6.9-1.2 1.4-1.6 1.8-1.6 4.6-1.5 6.2.3 1.4 1.6 1.4 4.1.3 6-1.5 2.5-4.8 5.3-9.1 9.2-.2.2-.5.3-.8.3z"/></svg>`;
 const BUBBLE = `<svg viewBox="0 0 24 24"><path d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H10l-4.6 3.1a.6.6 0 0 1-.9-.5V16.5H4A1.5 1.5 0 0 1 2.5 15V7A1.5 1.5 0 0 1 4 5.5z"/></svg>`;
 const STAR = `<svg viewBox="0 0 24 24"><path d="M12 3.8l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/></svg>`;
+const TRASH = `<svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.2 7V5.2a1.4 1.4 0 0 1 1.4-1.4h2.8a1.4 1.4 0 0 1 1.4 1.4V7M6.5 7l.9 12a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.9-12"/></svg>`;
+
+function deletePost(id) {
+  confirmSheet({ title: '删除这条朋友圈', text: '删除后无法恢复', confirm: '删除', danger: true }).then(ok => {
+    if (!ok) return;
+    commit(s => { s.moments.posts = s.moments.posts.filter(p => p.id !== id); });
+    toast('已删除');
+  });
+}
 
 function saveMoment(id) {
   const post = get().moments.posts.find(p => p.id === id);
@@ -185,6 +194,7 @@ function postHtml(post) {
         </button>
         <button class="moment-act" data-comment="${post.id}"><span class="bubble-ic">${BUBBLE}</span>${commentCount || ''}</button>
         <button class="moment-act" data-save="${post.id}" aria-label="收藏"><span class="save-ic">${STAR}</span></button>
+        <button class="moment-act del" data-del="${post.id}" aria-label="删除"><span class="save-ic">${TRASH}</span></button>
       </div>
     </div>
     ${commentHtml}
@@ -452,7 +462,9 @@ export function initMoments() {
     const commentBtn = event.target.closest('[data-comment]');
     if (commentBtn) { addComment(commentBtn.dataset.comment); return; }
     const saveBtn = event.target.closest('[data-save]');
-    if (saveBtn) saveMoment(saveBtn.dataset.save);
+    if (saveBtn) { saveMoment(saveBtn.dataset.save); return; }
+    const delBtn = event.target.closest('[data-del]');
+    if (delBtn) deletePost(delBtn.dataset.del);
   });
 
   router.register('moments', { onOpen: () => { render(); maybePost(); } });
