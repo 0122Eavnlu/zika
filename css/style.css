@@ -3362,6 +3362,7 @@ select.input option { background: var(--surface); color: var(--ink); }
 .hp-card {
   position: relative;
   width: 94%;
+  margin-top: -15px;
   border-radius: var(--card-r);
   padding: calc(var(--av-h) * .5 + 8px) 18px 16px;
   text-align: center;
@@ -3572,7 +3573,7 @@ select.input option { background: var(--surface); color: var(--ink); }
   position: relative;
   flex: 1;
   height: var(--pins-h);
-  transform: translateY(-8px);
+  transform: translateY(-20px);
   margin-left: 8px;
 }
 .polaroid {
@@ -3639,6 +3640,7 @@ select.input option { background: var(--surface); color: var(--ink); }
 .home-grid .tile { width: 50px; height: 50px; border-radius: 15px; }
 .home-grid .tile svg { width: 24px; height: 24px; }
 .home-grid .app-name { font-size: 11px; }
+.hp1 .home-grid .app:nth-child(odd) { transform: translateX(-10px); }
 
 .hp1 .hp-cover,
 .hp1 .hp-clock,
