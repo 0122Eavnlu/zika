@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261101B';
-import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, prepareSticker, setAvatar } from './util.js?v=20261101B';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet, actionSheet } from './ui.js?v=20261101B';
-import * as router from './router.js?v=20261101B';
+import { get, commit, subscribe } from './state.js?v=20261101C';
+import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, prepareSticker, setAvatar } from './util.js?v=20261101C';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet, actionSheet } from './ui.js?v=20261101C';
+import * as router from './router.js?v=20261101C';
 
 const norm = text => text.replace(/\s+/g, ' ').trim();
 
