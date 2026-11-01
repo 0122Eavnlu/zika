@@ -1,5 +1,5 @@
-/* zika sw v20261101AJ */
-const CACHE_VERSION = '20261101AJ';
+/* zika sw v20261101AK */
+const CACHE_VERSION = '20261101AK';
 const CORE = ['./', './index.html', './css/style.css', './js/app.js'];
 
 self.addEventListener('install', event => {
@@ -19,8 +19,8 @@ self.addEventListener('activate', event => {
   );
 });
 
-/* 打开页面：网络优先，拿不到就回退缓存，避免转圈/白屏 */
-/* 其它静态文件：先用缓存立刻显示，后台再更新，第二次打开就很快 */
+/* 打开页面：先用缓存的首页立刻显示，同时后台拿最新 HTML；
+   网络 1.2 秒内没响应就直接用缓存，彻底避免"每次打开都白屏等一下" */
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
@@ -33,15 +33,27 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
 
   if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req, { cache: 'no-store' })
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE_VERSION);
+      const cached = await cache.match(req) || await cache.match('./index.html');
+      const network = fetch(req, { cache: 'no-store' })
         .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE_VERSION).then(c => c.put(req, copy)).catch(() => {});
+          if (res && res.ok) cache.put(req, res.clone()).catch(() => {});
           return res;
         })
-        .catch(() => caches.match(req).then(hit => hit || caches.match('./index.html')))
-    );
+        .catch(() => null);
+      if (cached) {
+        const quick = await Promise.race([
+          network,
+          new Promise(resolve => setTimeout(() => resolve(null), 1200)),
+        ]);
+        if (quick) return quick;
+        network.catch(() => {});
+        return cached;
+      }
+      const res = await network;
+      return res || new Response('', { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    })());
     return;
   }
 
