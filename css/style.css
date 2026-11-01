@@ -659,7 +659,7 @@ svg { display: block; }
   word-break: break-word;
   font-variant-numeric: tabular-nums;
 }
-.msg .avatar-meta .read { color: var(--accent); }
+.msg .avatar-meta .read { color: var(--accent); letter-spacing: -.1em; padding-left: .1em; }
 .msg .avatar-meta .read.unread { color: var(--ink-3); opacity: .85; }
 .msg.me .avatar { cursor: pointer; }
 .msg.no-avatar { gap: 0; }
@@ -2738,17 +2738,22 @@ select.input option { background: var(--surface); color: var(--ink); }
   pointer-events: none;
 }
 .page-dots .dot {
-  width: 7px; height: 7px;
+  width: 26px; height: 7px;
   border-radius: 4px;
   background: var(--ink-3, rgba(0,0,0,.26));
   opacity: .65;
-  transition: width .32s var(--ease), opacity .32s var(--ease), background .32s;
+  transform: scaleX(.27);
+  transform-origin: 50% 50%;
+  transition: transform .5s cubic-bezier(.32, 1.55, .5, 1), opacity .3s var(--ease), background .3s;
 }
 .page-dots .dot.active {
-  width: 26px;
+  transform: scaleX(1);
   opacity: 1;
   background: var(--ink);
 }
+/* 往右滑：气泡从左边开始长；往左滑：从右边开始长 */
+.page-dots .dot.from-left { transform-origin: 0 50%; }
+.page-dots .dot.from-right { transform-origin: 100% 50%; }
 
 /* 添加音乐面板（网易云 / 本地） */
 .music-src-panel { display: flex; flex-direction: column; }

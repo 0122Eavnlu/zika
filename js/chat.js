@@ -1,12 +1,12 @@
-import { get, commit, subscribe } from './state.js?v=20261101R';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101R';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101R';
-import * as router from './router.js?v=20261101R';
-import { playSound } from './audio.js?v=20261101R';
-import { startCall } from './call.js?v=20261101R';
-import { openMoments } from './moments.js?v=20261101R';
-import { pickLyric, isListening } from './music.js?v=20261101R';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101R';
+import { get, commit, subscribe } from './state.js?v=20261101S';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101S';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101S';
+import * as router from './router.js?v=20261101S';
+import { playSound } from './audio.js?v=20261101S';
+import { startCall } from './call.js?v=20261101S';
+import { openMoments } from './moments.js?v=20261101S';
+import { pickLyric, isListening } from './music.js?v=20261101S';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101S';
 
 let busy = false;
 let replying = false;
@@ -127,17 +127,16 @@ function buildMessage(msg, idx) {
   const timeOn = s.ui.timeOn;
   const readOn = s.ui.readOn;
 
-  // 已读 / 已读不回：对方在这条之后回复过 → 已读；否则 → 已读不回
-  let readText = '';
+  // 已读：对方头像下方显示双对号；对方之后没回复过则用浅色
+  let readHtml = '';
   if (isMe && msg.read && readOn) {
     const all = s.messages;
     const idx = all.findIndex(m => m.id === msg.id);
     const hasThemAfter = all.slice(idx + 1).some(m => m.role === 'them');
-    readText = hasThemAfter ? '已读' : '已读不回';
+    readHtml = `<span class="read${hasThemAfter ? '' : ' unread'}">✓✓</span>`;
   }
 
   const timeHtml = timeOn ? `<span class="t">${timeText(msg.ts)}</span>` : '';
-  const readHtml = readText ? `<span class="read ${readText === '已读不回' ? 'unread' : ''}">${escapeHtml(readText)}</span>` : '';
   const themMeta = timeHtml ? `<div class="avatar-meta">${timeHtml}</div>` : '';
   const meMeta = (timeHtml || readHtml) ? `<div class="avatar-meta">${timeHtml}${readHtml ? `<br>${readHtml}` : ''}</div>` : '';
 
@@ -893,7 +892,6 @@ function sendMessage() {
 }
 
 const ICON_STICKER = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.4 13.6c.9 1.6 2.2 2.4 3.6 2.4s2.7-.8 3.6-2.4"/><circle cx="9" cy="9.4" r="1.1"/><circle cx="15" cy="9.4" r="1.1"/></svg>`;
-const ICON_TRANSFER = `<svg viewBox="0 0 24 24"><path d="M12 19V5M6.6 10.4L12 5l5.4 5.4"/></svg>`;
 const ICON_HAND = `<svg viewBox="0 0 24 24"><path d="M8 13.4V7.6a1.5 1.5 0 0 1 3 0v4.2V5.6a1.5 1.5 0 0 1 3 0v6.2V7a1.5 1.5 0 0 1 3 0v7.6a5.6 5.6 0 0 1-5.6 5.6h-1a4.4 4.4 0 0 1-4.4-4.4v-1.5l-1.7 1a1.5 1.5 0 0 1-2-2.2z"/></svg>`;
 const ICON_LIST = `<svg viewBox="0 0 24 24"><path d="M4 7h11M4 12h11M4 17h7"/><path d="M18.4 15.5l1.6 1.6 3-3.4"/></svg>`;
 const ICON_IMAGE = `<svg viewBox="0 0 24 24"><rect x="3.2" y="5" width="17.6" height="14" rx="3"/><path d="M4.4 16.6l4.3-4.2a1.2 1.2 0 0 1 1.7 0l3.4 3.3M12.4 14.4l1.8-1.7a1.2 1.2 0 0 1 1.7 0l2.3 2.2"/><circle cx="8" cy="9.4" r="1.3"/></svg>`;
@@ -1065,7 +1063,6 @@ function openAttachPanel() {
   openSheet(`
     <div class="attach-list">
       <button class="attach-row" data-attach="sticker">${ICON_STICKER}<span>表情包</span></button>
-      <button class="attach-row" data-attach="transfer">${ICON_TRANSFER}<span>转账</span></button>
       <button class="attach-row" data-attach="nudge">${ICON_HAND}<span>拍一拍</span></button>
       <button class="attach-row" data-attach="burst">${ICON_LIST}<span>连发</span></button>
       <button class="attach-row" data-attach="image">${ICON_IMAGE}<span>图片</span></button>
@@ -1077,7 +1074,6 @@ function openAttachPanel() {
     btn.onclick = () => {
       const kind = btn.dataset.attach;
       if (kind === 'sticker') { openStickerPicker(); return; }
-      if (kind === 'transfer') { openTransfer(); return; }
       if (kind === 'nudge') {
         closeSheet();
         pushSelf({ type: 'nudge', text: `你拍了拍「${persona().name || 'TA'}」` });
@@ -1294,15 +1290,6 @@ function resolveQuiz(id, chosen) {
     });
   });
   scheduleRender(true);
-}
-
-async function openTransfer() {
-  const value = await promptSheet({ title: '转账', placeholder: '输入金额', confirm: '转账' });
-  if (!value || !value.trim()) return;
-  closeSheet();
-  pushSelf({ text: `[转账] ¥${value.trim()}` });
-  scheduleRender(true);
-  setTimeout(() => addIncoming({ text: '收到啦，谢谢你', senderName: persona().name }), 1200);
 }
 
 async function pickChatImage() {

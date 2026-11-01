@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261101R';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101R';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101R';
-import * as router from './router.js?v=20261101R';
+import { get, commit, subscribe } from './state.js?v=20261101S';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101S';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101S';
+import * as router from './router.js?v=20261101S';
 
 const session = [];
 const lyricsMap = new Map();
@@ -1293,15 +1293,23 @@ function removeTrack(i) {
 
 /* ---------- 手势 ---------- */
 
+let lastDotIndex = 0;
+
 function updateDots() {
   const dots = $('#pageDots');
   if (!dots) return;
   const musicOpen = $('#screen-music').classList.contains('active');
   const anyOpen = $('#app').classList.contains('app-open') || $$('.screen.active').length > 0;
   dots.hidden = !(musicOpen || !anyOpen);
-  $$('.dot', dots).forEach(d => {
-    d.classList.toggle('active', (d.dataset.dot === 'music') === musicOpen);
+  const next = musicOpen ? 1 : 0;
+  $$('.dot', dots).forEach((d, i) => {
+    const active = (d.dataset.dot === 'music') === musicOpen;
+    d.classList.toggle('active', active);
+    // 往右边滑 → 新气泡从左侧长出来；往左边滑 → 从右侧长出来
+    d.classList.toggle('from-left', active && i > lastDotIndex);
+    d.classList.toggle('from-right', active && i < lastDotIndex);
   });
+  lastDotIndex = next;
 }
 
 export function isListening() {
