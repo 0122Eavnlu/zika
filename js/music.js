@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261101BD';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101BD';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101BD';
-import * as router from './router.js?v=20261101BD';
+import { get, commit, subscribe } from './state.js?v=20261101BE';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101BE';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101BE';
+import * as router from './router.js?v=20261101BE';
 
 const session = [];
 const lyricsMap = new Map();
@@ -301,6 +301,9 @@ function render() {
   if (wCover) applyCover(wCover, track);
   if ($('#musicNow')) $('#musicNow').textContent = track ? track.name : '还没有歌曲';
   if ($('#musicArtist')) $('#musicArtist').textContent = track ? (track.artist || '一起听歌') : '点右上角歌单按钮添加音乐';
+  if ($('#listenMeName')) $('#listenMeName').textContent = s.me?.name || '我';
+  if ($('#listenThemName')) $('#listenThemName').textContent = s.persona?.name || 'TA';
+  $('#musicLike')?.classList.toggle('on', isLiked(track));
   if ($('#wNow')) $('#wNow').textContent = track ? track.name : '还没有歌曲';
   if ($('#wArtist')) $('#wArtist').textContent = track ? (track.artist || '一起听歌') : '一起听歌';
   if ($('#musicModeLabel')) $('#musicModeLabel').textContent = (MODES.find(m => m.key === music().mode) || MODES[0]).label;
@@ -323,6 +326,18 @@ function render() {
     } else {
       bgEl.style.backgroundImage = '';
       bgEl.classList.add('empty');
+    }
+  }
+
+  const aura = $('#listenAura');
+  if (aura) {
+    if (track) {
+      aura.hidden = false;
+      applyCover(aura, track);
+    } else {
+      aura.hidden = true;
+      aura.dataset.coverKey = '';
+      aura.style.backgroundImage = '';
     }
   }
 
@@ -941,18 +956,44 @@ function renderLyrics(track) {
     lyricTimes = timed.length ? use.map(p => p.t) : [];
   }
   if (lyricTimes.length) syncLyric();
-  else markLyric();
+  markLyric();
 }
 
 function markLyric() {
   const box = $('#musicLyrics');
   if (!box) return;
   const items = [...box.children];
-  if (!items.length) return;
+  if (!items.length) {
+    updateListenLines();
+    return;
+  }
   const active = Math.min(lyricIdx, items.length - 1);
   items.forEach((el, i) => el.classList.toggle('active', i === active));
   const el = items[active];
   if (el) box.scrollTop = Math.max(0, el.offsetTop - box.clientHeight / 2 + el.offsetHeight / 2);
+  updateListenLines();
+}
+
+function updateListenLines() {
+  const nowLine = $('#listenNowLine');
+  if (!nowLine) return;
+  const kicker = $('#listenKicker');
+  const subLine = $('#listenSubLine');
+  const box = $('#musicLyrics');
+  const items = box ? [...box.children] : [];
+  const track = currentTrack();
+  const hasLyric = items.length > 1 || (items.length === 1 && items[0].textContent !== '暂未导入歌词');
+
+  if (hasLyric) {
+    const active = Math.min(lyricIdx, items.length - 1);
+    if (kicker) kicker.textContent = items[active - 1] ? items[active - 1].textContent : '';
+    nowLine.textContent = items[active].textContent;
+    if (subLine) subLine.textContent = items[active + 1] ? items[active + 1].textContent : '';
+    return;
+  }
+  if (kicker) kicker.textContent = track ? '正在播放' : '';
+  nowLine.textContent = track ? track.name : '还没有歌曲';
+  if (subLine) subLine.textContent = track ? (track.artist || '一起听歌') : '';
 }
 
 function syncLyric() {
@@ -973,7 +1014,38 @@ function updateListenCaption() {
   const st = music();
   const start = Number(st.sessionStart) || 0;
   const mins = st.together && start ? Math.floor((Date.now() - start) / 60000) : 0;
-  el.textContent = `TA就在你的身边 一起听了 ${mins} 分钟`;
+  el.textContent = `一起听了 ${mins} 分钟`;
+}
+
+function isLiked(track) {
+  return !!track && Array.isArray(music().liked) && music().liked.includes(track.id);
+}
+
+function toggleLike() {
+  const track = currentTrack();
+  if (!track) return;
+  const on = !isLiked(track);
+  commit(s => {
+    const arr = Array.isArray(s.music.liked) ? s.music.liked : (s.music.liked = []);
+    const i = arr.indexOf(track.id);
+    if (on && i < 0) arr.push(track.id);
+    if (!on && i >= 0) arr.splice(i, 1);
+  });
+  render();
+  toast(on ? '已喜欢' : '已取消喜欢');
+}
+
+let lyricViewOn = false;
+
+function setLyricView(on) {
+  lyricViewOn = Boolean(on);
+  const disc = $('#listenDiscView');
+  const wrap = $('#listenLyricsView');
+  if (disc) disc.hidden = lyricViewOn;
+  if (wrap) wrap.hidden = !lyricViewOn;
+  const btn = $('#listenLyricBtn');
+  if (btn) btn.textContent = lyricViewOn ? '唱片' : '歌词';
+  if (lyricViewOn) setTimeout(markLyric, 60);
 }
 
 function startLyricRoll() {
@@ -1016,6 +1088,7 @@ function goPage(next) {
 }
 
 function backMusic() {
+  setLyricView(false);
   router.close();
 }
 
@@ -1087,6 +1160,7 @@ function startTogether() {
     if (!s.music.sessionStart) s.music.sessionStart = Date.now();
   });
   startChatLoop();
+  setLyricView(false);
   goPage(1);
   if (!allTracks().length) {
     toast('先加一首歌吧');
@@ -1250,6 +1324,11 @@ function bind() {
   $('#musicMore').onclick = openMusicMore;
   $('#musicLogBack').onclick = () => { $('#musicLog').hidden = true; };
   $('#musicChatBtn').onclick = openReply;
+  $('#musicLike').onclick = toggleLike;
+  $('#listenAddBtn').onclick = openPlaylist;
+  $('#listenCommentBtn').onclick = openReply;
+  $('#listenTogetherBtn').onclick = openMusicMore;
+  $('#listenLyricBtn').onclick = () => setLyricView(!lyricViewOn);
   $('#musicMeAvatar2')?.addEventListener('click', openReply);
   $('#musicThemAvatar2')?.addEventListener('click', openReply);
   $('#musicThemAvatar')?.addEventListener('click', openReply);
