@@ -1,5 +1,5 @@
-import { get, commit } from './state.js?v=20261101BF';
-import { $, setAvatar, uid, randInt, toast } from './util.js?v=20261101BF';
+import { get, commit } from './state.js?v=20261101BG';
+import { $, setAvatar, uid, randInt, toast } from './util.js?v=20261101BG';
 
 let active = false;
 let connected = false;

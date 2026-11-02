@@ -1,13 +1,13 @@
-import { get, commit, subscribe } from './state.js?v=20261101BF';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BF';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BF';
-import * as router from './router.js?v=20261101BF';
-import { playSound } from './audio.js?v=20261101BF';
-import { startCall } from './call.js?v=20261101BF';
-import { openMoments } from './moments.js?v=20261101BF';
-import { pickLyric, isListening } from './music.js?v=20261101BF';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101BF';
-import { rollPresetTags } from './presets.js?v=20261101BF';
+import { get, commit, subscribe } from './state.js?v=20261101BG';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BG';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BG';
+import * as router from './router.js?v=20261101BG';
+import { playSound } from './audio.js?v=20261101BG';
+import { startCall } from './call.js?v=20261101BG';
+import { openMoments } from './moments.js?v=20261101BG';
+import { pickLyric, isListening } from './music.js?v=20261101BG';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101BG';
+import { rollPresetTags } from './presets.js?v=20261101BG';
 
 let busy = false;
 let replying = false;

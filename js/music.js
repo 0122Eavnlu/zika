@@ -1,7 +1,7 @@
-import { get, commit, subscribe } from './state.js?v=20261101BF';
-import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101BF';
-import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101BF';
-import * as router from './router.js?v=20261101BF';
+import { get, commit, subscribe } from './state.js?v=20261101BG';
+import { $, $$, escapeHtml, uid, pickFile, toast, setAvatar, compressImage } from './util.js?v=20261101BG';
+import { openSheet, closeSheet, sheetTitle } from './ui.js?v=20261101BG';
+import * as router from './router.js?v=20261101BG';
 
 const session = [];
 const lyricsMap = new Map();
@@ -16,6 +16,12 @@ const MODES = [
   { key: 'shuffle', label: '随机' },
 ];
 const MODE_KEYS = MODES.map(m => m.key);
+
+const MODE_ICONS = {
+  sequence: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h9M5 17h5"/><path d="M15.5 15.5l3 2.5-3 2.5"/></svg>`,
+  repeat: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9a7 7 0 0 1 12-3l2 2"/><path d="M19 4v4h-4"/><path d="M19 15a7 7 0 0 1-12 3l-2-2"/><path d="M5 20v-4h4"/><path d="M11.4 10l1.4-1v6"/></svg>`,
+  shuffle: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3.5l9 10h3.5"/><path d="M4 17h3.5l9-10h3.5"/><path d="M17.5 4l2.5 3-2.5 3"/><path d="M17.5 14l2.5 3-2.5 3"/></svg>`,
+};
 
 const PLAY_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 5.6v12.8l10.2-6.4z"/></svg>`;
 const PAUSE_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8.6" y="5.5" width="2.9" height="13" rx=".9"/><rect x="12.5" y="5.5" width="2.9" height="13" rx=".9"/></svg>`;
@@ -306,7 +312,7 @@ function render() {
   $('#musicLike')?.classList.toggle('on', isLiked(track));
   if ($('#wNow')) $('#wNow').textContent = track ? track.name : '还没有歌曲';
   if ($('#wArtist')) $('#wArtist').textContent = track ? (track.artist || '一起听歌') : '一起听歌';
-  if ($('#musicModeLabel')) $('#musicModeLabel').textContent = (MODES.find(m => m.key === music().mode) || MODES[0]).label;
+  if ($('#musicModeIcon')) $('#musicModeIcon').innerHTML = MODE_ICONS[music().mode] || MODE_ICONS.sequence;
 
   const lyrEl = $('#musicLyrics');
   if (lyrEl) {
@@ -329,9 +335,12 @@ function render() {
     }
   }
 
+  const screen = $('#screen-music');
+  if (screen) screen.classList.toggle('has-custom-bg', Boolean(s.ui.musicBg));
+
   const aura = $('#listenAura');
   if (aura) {
-    if (track) {
+    if (track && !s.ui.musicBg) {
       aura.hidden = false;
       applyCover(aura, track);
     } else {
@@ -1313,7 +1322,6 @@ function bind() {
   if (wPrev) wPrev.onclick = () => step(-1);
   const wNext = $('#wNext');
   if (wNext) wNext.onclick = () => step(1);
-  $('#musicListBtn').onclick = openPlaylist;
   $('#musicMode').onclick = () => {
     const next = MODE_KEYS[(MODE_KEYS.indexOf(music().mode) + 1) % MODE_KEYS.length];
     commit(s => { s.music.mode = next; });
@@ -1323,7 +1331,6 @@ function bind() {
   $('#musicBgBtn').onclick = changeMusicBg;
   $('#musicMore').onclick = openMusicMore;
   $('#musicLogBack').onclick = () => { $('#musicLog').hidden = true; };
-  $('#musicChatBtn').onclick = openReply;
   $('#musicLike').onclick = toggleLike;
   $('#listenAddBtn').onclick = openPlaylist;
   $('#listenCommentBtn').onclick = openReply;

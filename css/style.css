@@ -5914,36 +5914,6 @@ select.input option { background: var(--surface); color: var(--ink); }
   box-shadow: 0 6px 14px rgba(0, 0, 0, .5), inset 0 0 0 1px rgba(255, 255, 255, .5);
 }
 
-/* 右侧悬浮按钮 */
-.listen-fabs {
-  position: absolute;
-  right: -12px;
-  top: 46%;
-  transform: translateY(-18%);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  z-index: 5;
-}
-.listen-fab {
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  color: rgba(255, 255, 255, .9);
-  transition: transform .2s var(--spring), background .2s var(--ease);
-}
-.listen-fab:active { transform: scale(.9); background: rgba(255, 255, 255, .1); }
-.listen-fab svg { width: 27px; height: 27px; }
-.listen-fab svg * {
-  stroke: currentColor;
-  stroke-width: 1.7;
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 /* 歌词视图 */
 .listen-lyrics-wrap {
   position: relative;
@@ -6165,4 +6135,34 @@ select.input option { background: var(--surface); color: var(--ink); }
 .ml-listen .music-bubbles .music-msg.them {
   align-self: flex-end;
   margin-right: 1%;
+}
+
+/* 一起听：底部左右功能键 + 播放模式图标 */
+.ml-listen .listen-controls {
+  padding: 4px 12px 2px;
+}
+.ml-listen .listen-ctl.listen-extra {
+  width: 42px;
+  height: 42px;
+  color: rgba(244, 244, 246, .6);
+}
+.ml-listen .listen-ctl.listen-extra svg { width: 21px; height: 21px; }
+.listen-mode-icon { display: grid; place-items: center; width: 22px; height: 22px; }
+.listen-mode-icon svg { width: 22px; height: 22px; }
+.listen-mode-icon svg * {
+  stroke: currentColor;
+  stroke-width: 1.6;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 自定义背景：原图直出，不叠任何遮罩 */
+.music-screen.is-listen.has-custom-bg .music-bg {
+  filter: none;
+  opacity: 1;
+  transform: none;
+}
+.music-screen.is-listen.has-custom-bg::after {
+  background: none;
 }
