@@ -6149,3 +6149,20 @@ select.input option { background: var(--surface); color: var(--ink); }
 .ml-listen .listen-ctl.play svg { width: 26px; height: 26px; }
 .ml-listen .listen-ctl.play svg * { fill: currentColor; stroke: none; }
 .ml-listen .listen-ctl.play svg rect { fill: currentColor; stroke: none; }
+
+/* 一起听：聊天气泡贴着各自头像下方 */
+.listen-name { transition: opacity .2s var(--ease); }
+.listen-people:has(.music-msg) .listen-name { opacity: 0; }
+.ml-listen .music-bubbles {
+  top: calc(min(19vw, 74px) + 4px);
+  left: 16%;
+  right: 16%;
+}
+.ml-listen .music-bubbles .music-msg.me {
+  align-self: flex-start;
+  margin-left: 1%;
+}
+.ml-listen .music-bubbles .music-msg.them {
+  align-self: flex-end;
+  margin-right: 1%;
+}
