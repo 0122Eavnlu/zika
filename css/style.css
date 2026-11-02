@@ -6172,3 +6172,24 @@ select.input option { background: var(--surface); color: var(--ink); }
 .ml-listen .listen-stage {
   transform: translateY(-20px);
 }
+
+/* 气泡严格分列：我的在左头像下，对方的在右头像下；并抬到唱片之上 */
+.ml-listen .listen-head { position: relative; z-index: 8; }
+.ml-listen .music-bubbles {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  margin-top: 0;
+}
+.ml-listen .music-bubbles .music-msg.me {
+  order: 0;
+  align-self: flex-start;
+  margin-left: 0;
+  margin-right: 0;
+}
+.ml-listen .music-bubbles .music-msg.them {
+  order: 0;
+  align-self: flex-end;
+  margin-left: 0;
+  margin-right: 0;
+}
