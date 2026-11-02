@@ -6166,3 +6166,9 @@ select.input option { background: var(--surface); color: var(--ink); }
 .music-screen.is-listen.has-custom-bg::after {
   background: none;
 }
+
+/* 一起听：歌词、头像、唱片整体上移 20px */
+.ml-listen .listen-head,
+.ml-listen .listen-stage {
+  transform: translateY(-20px);
+}
