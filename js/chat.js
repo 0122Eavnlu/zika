@@ -1,13 +1,13 @@
-import { get, commit, subscribe } from './state.js?v=20261101BI';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BI';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BI';
-import * as router from './router.js?v=20261101BI';
-import { playSound } from './audio.js?v=20261101BI';
-import { startCall } from './call.js?v=20261101BI';
-import { openMoments } from './moments.js?v=20261101BI';
-import { pickLyric, isListening } from './music.js?v=20261101BI';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101BI';
-import { rollPresetTags } from './presets.js?v=20261101BI';
+import { get, commit, subscribe } from './state.js?v=20261101BJ';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BJ';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BJ';
+import * as router from './router.js?v=20261101BJ';
+import { playSound } from './audio.js?v=20261101BJ';
+import { startCall, startIncomingCall } from './call.js?v=20261101BJ';
+import { openMoments } from './moments.js?v=20261101BJ';
+import { pickLyric, isListening } from './music.js?v=20261101BJ';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101BJ';
+import { rollPresetTags } from './presets.js?v=20261101BJ';
 
 let busy = false;
 let replying = false;
@@ -103,6 +103,11 @@ function updateIdentity() {
 }
 
 function callSub(msg) {
+  const dir = msg.callDir || 'out';
+  if (dir === 'in') {
+    if (msg.callStatus === 'missed') return '未接听';
+    if (msg.callStatus === 'declined') return '已拒绝';
+  }
   if (msg.callStatus === 'missed') return '对方暂时没有接听';
   if (msg.callStatus === 'declined') return '对方已挂断';
   const sec = Math.max(0, Number(msg.callDur) || 0);
@@ -775,6 +780,12 @@ function setSpeakState(on) {
 export async function triggerReply({ proactive = false, allowCall = true } = {}) {
   if (replying) return;
   const b = get().behavior;
+
+  // 主动消息时，有概率直接来电（对方打给我）
+  if (proactive && Math.random() * 100 < Number(b.incomingCallChance ?? 15)) {
+    startIncomingCall();
+    return;
+  }
 
   if (!proactive && allowCall && Math.random() * 100 < Number(b.callChance ?? 20)) {
     startCall();

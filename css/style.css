@@ -2343,8 +2343,14 @@ select.input option { background: var(--surface); color: var(--ink); }
   font-variant-numeric: tabular-nums;
 }
 
-.call-hangup {
+.call-actions {
   margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+}
+.call-hangup {
   width: 96px; height: 96px;
   border-radius: 50%;
   background: #e5484d;
@@ -2361,6 +2367,30 @@ select.input option { background: var(--surface); color: var(--ink); }
 .call-hangup svg { width: 26px; height: 26px; }
 .call-hangup svg path { fill: #fff; stroke: none; }
 .call-hangup span { font-size: 12px; letter-spacing: .12em; }
+
+.call-answer {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  background: #2fb344;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  box-shadow: 0 14px 28px -16px rgba(47, 179, 68, .9);
+  transition: transform .2s var(--spring), filter .2s;
+}
+.call-answer:active { transform: scale(.94); filter: brightness(.94); }
+.call-answer svg { width: 28px; height: 28px; }
+.call-answer svg path { fill: #fff; stroke: none; }
+.call-answer span { font-size: 12px; letter-spacing: .12em; }
+.call-answer[hidden] { display: none !important; }
+
+/* 来电态：挂断=红色拒绝，接听=绿色 */
+.call-card.incoming .call-actions { gap: 56px; }
+.call-card.connected .call-actions { gap: 0; }
+.call-card.connected .call-answer { display: none; }
 
 /* 缩小后的悬浮条 */
 .call-pill {

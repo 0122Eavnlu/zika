@@ -1,4 +1,4 @@
-import { uid, toast } from './util.js?v=20261101BI';
+import { uid, toast } from './util.js?v=20261101BJ';
 
 const KEY = 'zika.state.v1';
 const AT_KEY = 'zika.state.v1.at';
@@ -148,6 +148,7 @@ function defaults(withSeed = true) {
       stickerChance: 20,
       emojiChance: 20,
       callChance: 10,
+      incomingCallChance: 15,
       callAnswer: 85,
       callHangup: 15,
       momentChance: 70,
@@ -220,6 +221,7 @@ function migrate(state) {
   state.behavior.stickerChance = 20;
   state.behavior.emojiChance = 20;
   state.behavior.callChance = 10;
+  state.behavior.incomingCallChance = 15;
   state.behavior.callAnswer = 85;
   state.behavior.callHangup = 15;
   state.behavior.readSkipRate = 0.1;

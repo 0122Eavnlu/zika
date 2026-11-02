@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icons/icon-app-180.png">
 <link rel="icon" href="icons/icon-app-192.png" type="image/png">
 <link rel="preload" as="image" href="icons/splash-art.png">
-<link rel="stylesheet" href="css/style.css?v=20261101BI">
+<link rel="stylesheet" href="css/style.css?v=20261101BJ">
 </head>
 <body>
 
@@ -1139,10 +1139,16 @@
       <div class="call-name" id="callName">阿墨</div>
       <div class="call-status" id="callStatus">正在等待对方接听…</div>
       <div class="call-timer" id="callTimer">00:00</div>
-      <button class="call-hangup" id="callHangup" aria-label="挂断">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 3.7l2.3 2.3c.5.5.5 1.3 0 1.8l-.8.8c1 1.8 2.6 3.4 4.4 4.4l.8-.8c.5-.5 1.3-.5 1.8 0l2.3 2.3c.5.5.5 1.3 0 1.8l-1 1c-1 1-2.4 1.4-3.7 1-4.5-1.6-8.5-5.6-10.1-10.1-.4-1.3 0-2.7 1-3.7l1-1c.5-.5 1.3-.5 1.8 0z"/></svg>
-        <span>挂断</span>
-      </button>
+      <div class="call-actions">
+        <button class="call-hangup" id="callHangup" aria-label="挂断">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 3.7l2.3 2.3c.5.5.5 1.3 0 1.8l-.8.8c1 1.8 2.6 3.4 4.4 4.4l.8-.8c.5-.5 1.3-.5 1.8 0l2.3 2.3c.5.5.5 1.3 0 1.8l-1 1c-1 1-2.4 1.4-3.7 1-4.5-1.6-8.5-5.6-10.1-10.1-.4-1.3 0-2.7 1-3.7l1-1c.5-.5 1.3-.5 1.8 0z"/></svg>
+          <span>挂断</span>
+        </button>
+        <button class="call-answer" id="callAnswer" aria-label="接听" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 4.2c5.7 0 10.3 4.3 10.3 10v3.3c0 1.1-.9 2-2 2h-2c-1.1 0-2-.9-2-2v-1.7c0-.8.5-1.5 1.3-1.7l2-.5c0-3.4-2.7-6-6-6l-.5 2c-.2.9-.9 1.3-1.7 1.3h-1.7c-1.1 0-2-.9-2-2v-2c0-1.1.9-2 2-2z"/></svg>
+          <span>接听</span>
+        </button>
+      </div>
     </div>
   </div>
   <div class="call-pill" id="callPill" hidden>
@@ -1189,6 +1195,6 @@
   <style id="user-font"></style>
 </div>
 
-<script type="module" src="js/app.js?v=20261101BI"></script>
+<script type="module" src="js/app.js?v=20261101BJ"></script>
 </body>
 </html>

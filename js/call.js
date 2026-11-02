@@ -1,11 +1,13 @@
-import { get, commit } from './state.js?v=20261101BI';
-import { $, setAvatar, uid, randInt, toast } from './util.js?v=20261101BI';
+import { get, commit } from './state.js?v=20261101BJ';
+import { $, setAvatar, uid, randInt, toast } from './util.js?v=20261101BJ';
 
 let active = false;
 let connected = false;
+let direction = 'out';     // 'out' = 我打给对方，'in' = 对方打给我
 let startedAt = 0;
 let tickId = null;
 let resolveId = null;
+let missId = null;
 let minimized = false;
 
 const fmt = sec => `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
@@ -38,6 +40,7 @@ function record(status, dur = 0) {
       type: 'call',
       text: '视频通话',
       callKind: 'video',
+      callDir: direction,
       callStatus: status,
       callDur: dur,
       ts: Date.now(),
@@ -50,8 +53,10 @@ function record(status, dur = 0) {
 function stopTimers() {
   clearInterval(tickId);
   clearTimeout(resolveId);
+  clearTimeout(missId);
   tickId = null;
   resolveId = null;
+  missId = null;
 }
 
 function expand() {
@@ -74,15 +79,21 @@ function end() {
   active = false;
   connected = false;
   minimized = false;
+  direction = 'out';
   stopTimers();
   $('#callLayer').hidden = true;
   $('#callPill').hidden = true;
+  const card = $('.call-card');
+  if (card) card.classList.remove('incoming', 'connected');
 }
+
+/* ---------- 我打给对方 ---------- */
 
 export function startCall() {
   if (active) return;
   active = true;
   connected = false;
+  direction = 'out';
   minimized = false;
   startedAt = Date.now();
 
@@ -94,6 +105,11 @@ export function startCall() {
   $('#callTimer').textContent = '00:00';
   $('#callPillTimer').textContent = '00:00';
   setStatus('正在等待对方接听…');
+
+  const card = $('.call-card');
+  card.classList.remove('incoming', 'connected');
+  $('#callAnswer').hidden = true;
+
   expand();
 
   stopTimers();
@@ -102,15 +118,14 @@ export function startCall() {
 }
 
 function resolveOutcome() {
-  if (!active) return;
+  if (!active || direction !== 'out') return;
   const b = get().behavior;
   const answer = Number(b.callAnswer ?? 20);
   const hangup = Number(b.callHangup ?? 5);
   const roll = Math.random() * 100;
 
   if (roll < answer) {
-    connected = true;
-    setStatus('正在通话…');
+    connectCall();
     return;
   }
 
@@ -128,15 +143,91 @@ function resolveOutcome() {
   setTimeout(end, 1600);
 }
 
+/* ---------- 对方打给我（来电） ---------- */
+
+export function startIncomingCall() {
+  if (active) return;
+  active = true;
+  connected = false;
+  direction = 'in';
+  minimized = false;
+  startedAt = Date.now();
+
+  const p = get().persona;
+  setAvatar($('#callAvatar'), p.name, p.avatar);
+  setAvatar($('#callPillAvatar'), p.name, p.avatar);
+  $('#callName').textContent = p.name || '';
+  $('#callPillName').textContent = p.name || '';
+  $('#callTimer').textContent = '00:00';
+  $('#callPillTimer').textContent = '00:00';
+  setStatus(`${p.name || '对方'} 来电 请接听`);
+
+  const card = $('.call-card');
+  card.classList.add('incoming');
+  card.classList.remove('connected');
+  $('#callAnswer').hidden = false;
+
+  expand();
+
+  stopTimers();
+  // 来电未接听的倒计时：20~30 秒后自动挂断，记为未接来电
+  missId = setTimeout(missedCall, randInt(20000, 30000));
+}
+
+function missedCall() {
+  if (!active || direction !== 'in' || connected) return;
+  setStatus('未接听');
+  record('missed');
+  notify('未接来电');
+  setTimeout(end, 1500);
+}
+
+function answerCall() {
+  if (!active || direction !== 'in' || connected) return;
+  clearTimeout(missId);
+  missId = null;
+  connectCall();
+}
+
+function connectCall() {
+  connected = true;
+  startedAt = Date.now();
+  setStatus('正在通话…');
+  $('#callTimer').textContent = '00:00';
+  const card = $('.call-card');
+  card.classList.add('connected');
+  card.classList.remove('incoming');
+  $('#callAnswer').hidden = true;
+  stopTimers();
+  tickId = setInterval(tick, 1000);
+}
+
+/* ---------- 挂断 / 拒绝 ---------- */
+
 function hangUp() {
   if (!active) return;
   const sec = elapsed();
   const wasConnected = connected;
+
+  // 来电未接通：我拒接
+  if (direction === 'in' && !wasConnected) {
+    setStatus('已拒绝');
+    record('declined');
+    notify('已拒绝来电');
+    active = false;
+    connected = false;
+    minimized = false;
+    stopTimers();
+    setTimeout(end, 900);
+    return;
+  }
+
+  if (wasConnected) record('ended', sec);
+
   active = false;
   connected = false;
   minimized = false;
   stopTimers();
-  if (wasConnected) record('ended', sec);
   end();
 }
 
@@ -151,6 +242,7 @@ export function hideCall() {
 
 export function initCall() {
   $('#callHangup').onclick = hangUp;
+  $('#callAnswer').onclick = answerCall;
   $('#callPillHangup').onclick = event => {
     event.stopPropagation();
     hangUp();
