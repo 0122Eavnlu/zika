@@ -1,14 +1,14 @@
-import { get, commit, subscribe } from './state.js?v=20261101BM';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BM';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BM';
-import * as router from './router.js?v=20261101BM';
-import { playSound } from './audio.js?v=20261101BM';
-import { startCall, startIncomingCall } from './call.js?v=20261101BM';
-import { openMoments } from './moments.js?v=20261101BM';
-import { pickLyric, isListening } from './music.js?v=20261101BM';
-import { speak, hasTTS, voiceRateChance, stopSpeak } from './tts.js?v=20261101BM';
-import { rollPresetTags } from './presets.js?v=20261101BM';
-import { composeFreeSentence } from './freesentence.js?v=20261101BM';
+import { get, commit, subscribe } from './state.js?v=20261101BN';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BN';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BN';
+import * as router from './router.js?v=20261101BN';
+import { playSound } from './audio.js?v=20261101BN';
+import { startCall, startIncomingCall } from './call.js?v=20261101BN';
+import { openMoments } from './moments.js?v=20261101BN';
+import { pickLyric, isListening } from './music.js?v=20261101BN';
+import { speak, hasTTS, voiceRateChance, stopSpeak } from './tts.js?v=20261101BN';
+import { rollPresetTags } from './presets.js?v=20261101BN';
+import { composeFreeSentence } from './freesentence.js?v=20261101BN';
 
 let busy = false;
 let replying = false;
@@ -1625,6 +1625,13 @@ async function startRecording() {
     return;
   }
 
+  // 用户可能在权限弹窗期间松手，必须再次检查
+  if (!rec.active) {
+    cleanupRecStream();
+    resetRec();
+    return;
+  }
+
   try {
     rec.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const src = rec.audioCtx.createMediaStreamSource(rec.stream);
@@ -1633,6 +1640,12 @@ async function startRecording() {
     src.connect(rec.analyser);
     drawRecWave();
   } catch {}
+
+  if (!rec.active) {
+    cleanupRecStream();
+    resetRec();
+    return;
+  }
 
   try {
     const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
@@ -1643,6 +1656,13 @@ async function startRecording() {
     resetRec();
     return;
   }
+
+  if (!rec.active) {
+    cleanupRecStream();
+    resetRec();
+    return;
+  }
+
   rec.recorder.ondataavailable = e => { if (e.data.size) rec.chunks.push(e.data); };
   rec.recorder.onstop = onRecStop;
   rec.recorder.start();
@@ -1747,21 +1767,54 @@ function micPointerMove(e) {
   }
 }
 
-function micPointerUp(e) {
-  if (!rec.active || (e.pointerId !== undefined && e.pointerId !== rec.pointerId)) return;
-  e.preventDefault();
+/* 统一停止入口：无论 recorder 是否已经创建都能正确收尾 */
+function stopRecording() {
   clearTimeout(rec.holdTimer);
+  const wasActive = rec.active;
+  rec.active = false;
   if (!rec.started) {
     resetRec();
-    if (navigator.vibrate) navigator.vibrate(6);
-    triggerReply();
-    return;
+    return wasActive;
   }
-  if (rec.recorder && rec.recorder.state !== 'inactive') {
-    rec.recorder.stop();
-  } else {
+  // 录音器还没创建好（getUserMedia 仍在进行），startRecording 会检查 rec.active 后自行退出
+  if (!rec.recorder || rec.recorder.state === 'inactive') {
+    cleanupRecStream();
+    stopRecVisual();
+    resetRec();
+    return wasActive;
+  }
+  // 录音器已创建，停止它（onstop 回调会处理后续）
+  try { rec.recorder.stop(); } catch {
+    cleanupRecStream();
+    stopRecVisual();
     resetRec();
   }
+  return wasActive;
+}
+
+function micPointerUp(e) {
+  if (!rec.active) return;
+  if (e.pointerId !== undefined && e.pointerId !== rec.pointerId) return;
+  e.preventDefault();
+  const wasShort = !rec.started;
+  stopRecording();
+  if (wasShort) {
+    if (navigator.vibrate) navigator.vibrate(6);
+    triggerReply();
+  }
+}
+
+/* 全局兜底：手指移出按钮 / 浏览器中断 / 页面隐藏 时也能停止录音 */
+function globalPointerUp(e) {
+  if (!rec.active) return;
+  if (e.pointerId !== undefined && e.pointerId !== rec.pointerId) return;
+  stopRecording();
+}
+
+function forceStopRecording() {
+  if (!rec.active) return;
+  rec.cancel = true;
+  stopRecording();
 }
 
 /* ---------- 语音播放 ---------- */
@@ -1832,6 +1885,17 @@ export function initChat() {
   micBtn.addEventListener('pointermove', micPointerMove);
   micBtn.addEventListener('pointerup', micPointerUp);
   micBtn.addEventListener('pointercancel', micPointerUp);
+  // 移动端兜底：部分浏览器 touch 事件比 pointer 更可靠
+  micBtn.addEventListener('touchend', e => { if (rec.active) { e.preventDefault(); stopRecording(); } }, { passive: false });
+  micBtn.addEventListener('touchcancel', () => { if (rec.active) stopRecording(); });
+  // 全局兜底：手指移出按钮区域也能停止
+  window.addEventListener('pointerup', globalPointerUp);
+  window.addEventListener('pointercancel', globalPointerUp);
+  window.addEventListener('touchend', () => { if (rec.active) stopRecording(); });
+  window.addEventListener('touchcancel', () => { if (rec.active) stopRecording(); });
+  // 页面隐藏 / 失焦时强制停止，避免录音残留
+  document.addEventListener('visibilitychange', forceStopRecording);
+  window.addEventListener('blur', forceStopRecording);
   $('#sendBtn').onclick = sendMessage;
   $('#plusBtn').onclick = openAttachPanel;
   $('#quoteCancel').onclick = clearQuote;

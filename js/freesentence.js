@@ -1,5 +1,5 @@
-import { get } from './state.js?v=20261101BM';
-import { pick, randInt } from './util.js?v=20261101BM';
+import { get } from './state.js?v=20261101BN';
+import { pick, randInt } from './util.js?v=20261101BN';
 
 const CAT_ORDER = ['who', 'action', 'degree', 'mood', 'thing', 'time', 'particle'];
 
