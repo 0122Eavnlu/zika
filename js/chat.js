@@ -1,14 +1,14 @@
-import { get, commit, subscribe } from './state.js?v=20261101BL';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BL';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BL';
-import * as router from './router.js?v=20261101BL';
-import { playSound } from './audio.js?v=20261101BL';
-import { startCall, startIncomingCall } from './call.js?v=20261101BL';
-import { openMoments } from './moments.js?v=20261101BL';
-import { pickLyric, isListening } from './music.js?v=20261101BL';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101BL';
-import { rollPresetTags } from './presets.js?v=20261101BL';
-import { composeFreeSentence } from './freesentence.js?v=20261101BL';
+import { get, commit, subscribe } from './state.js?v=20261101BM';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BM';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BM';
+import * as router from './router.js?v=20261101BM';
+import { playSound } from './audio.js?v=20261101BM';
+import { startCall, startIncomingCall } from './call.js?v=20261101BM';
+import { openMoments } from './moments.js?v=20261101BM';
+import { pickLyric, isListening } from './music.js?v=20261101BM';
+import { speak, hasTTS, voiceRateChance, stopSpeak } from './tts.js?v=20261101BM';
+import { rollPresetTags } from './presets.js?v=20261101BM';
+import { composeFreeSentence } from './freesentence.js?v=20261101BM';
 
 let busy = false;
 let replying = false;
@@ -494,8 +494,7 @@ function handleTap(row, id) {
   const msg = get().messages.find(m => m.id === id);
   if (!msg) return;
   if (msg.type === 'voice') {
-    if (hasTTS()) speak(msg.voiceText || '', { silent: true });
-    else toast('先在「设定 → 语音」里配置');
+    playVoiceMsg(msg, row);
     return;
   }
   // 点一下展开操作栏（关掉其它已展开的），再点空白处才收回
@@ -1523,6 +1522,300 @@ function showMomentPop(text, avatar) {
   momentPopTimer = setTimeout(hideMomentPop, 6000);
 }
 
+/* ---------- 按住说话 ---------- */
+const rec = {
+  active: false,
+  started: false,
+  stream: null,
+  recorder: null,
+  chunks: [],
+  startTime: 0,
+  holdTimer: null,
+  pointerId: null,
+  startY: 0,
+  cancel: false,
+  timerInterval: null,
+  recognition: null,
+  transcript: '',
+  audioCtx: null,
+  analyser: null,
+  rafId: 0,
+};
+
+const HOLD_DELAY = 260;
+const CANCEL_DIST = 90;
+const MIN_DURATION = 500;
+const MAX_DURATION = 60000;
+
+function blobToDataURL(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+}
+
+function formatRecTime(ms) {
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+function stopRecVisual() {
+  cancelAnimationFrame(rec.rafId);
+  rec.rafId = 0;
+  if (rec.timerInterval) { clearInterval(rec.timerInterval); rec.timerInterval = null; }
+  $('#recOverlay').hidden = true;
+  $('#recCard').classList.remove('cancel');
+  $('#micBtn').classList.remove('recording');
+}
+
+function cleanupRecStream() {
+  if (rec.stream) {
+    rec.stream.getTracks().forEach(t => t.stop());
+    rec.stream = null;
+  }
+  if (rec.audioCtx) {
+    rec.audioCtx.close().catch(() => {});
+    rec.audioCtx = null;
+    rec.analyser = null;
+  }
+  if (rec.recognition) {
+    try { rec.recognition.stop(); } catch {}
+    rec.recognition = null;
+  }
+}
+
+function resetRec() {
+  rec.active = false;
+  rec.started = false;
+  rec.chunks = [];
+  rec.recorder = null;
+  rec.pointerId = null;
+  rec.startY = 0;
+  rec.cancel = false;
+}
+
+function drawRecWave() {
+  if (!rec.analyser) return;
+  const data = new Uint8Array(rec.analyser.frequencyBinCount);
+  rec.analyser.getByteFrequencyData(data);
+  const bars = $$('#recWave i');
+  const step = Math.max(1, Math.floor(data.length / bars.length));
+  bars.forEach((bar, i) => {
+    const v = (data[i * step] || 0) / 255;
+    bar.style.height = `${8 + v * 32}px`;
+    bar.style.opacity = `${0.5 + v * 0.5}`;
+  });
+  rec.rafId = requestAnimationFrame(drawRecWave);
+}
+
+async function startRecording() {
+  rec.started = true;
+  rec.chunks = [];
+  rec.transcript = '';
+  rec.cancel = false;
+  rec.startTime = Date.now();
+
+  try {
+    rec.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch {
+    toast('麦克风权限被拒绝');
+    resetRec();
+    return;
+  }
+
+  try {
+    rec.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = rec.audioCtx.createMediaStreamSource(rec.stream);
+    rec.analyser = rec.audioCtx.createAnalyser();
+    rec.analyser.fftSize = 64;
+    src.connect(rec.analyser);
+    drawRecWave();
+  } catch {}
+
+  try {
+    const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+    rec.recorder = new MediaRecorder(rec.stream, mime ? { mimeType: mime } : undefined);
+  } catch {
+    toast('浏览器不支持录音');
+    cleanupRecStream();
+    resetRec();
+    return;
+  }
+  rec.recorder.ondataavailable = e => { if (e.data.size) rec.chunks.push(e.data); };
+  rec.recorder.onstop = onRecStop;
+  rec.recorder.start();
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) {
+    try {
+      rec.recognition = new SR();
+      rec.recognition.lang = 'zh-CN';
+      rec.recognition.continuous = true;
+      rec.recognition.interimResults = true;
+      rec.recognition.onresult = e => {
+        let text = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          text += e.results[i][0].transcript;
+        }
+        rec.transcript = (rec.transcript + text).trim();
+      };
+      rec.recognition.start();
+    } catch {}
+  }
+
+  $('#recOverlay').hidden = false;
+  $('#micBtn').classList.add('recording');
+  $('#recHint').textContent = '松开发送 · 上滑取消';
+  $('#recTime').textContent = '0:00';
+  if (navigator.vibrate) navigator.vibrate(10);
+
+  rec.timerInterval = setInterval(() => {
+    const dur = Date.now() - rec.startTime;
+    $('#recTime').textContent = formatRecTime(dur);
+    if (dur >= MAX_DURATION) {
+      if (rec.recorder && rec.recorder.state !== 'inactive') rec.recorder.stop();
+    }
+  }, 200);
+}
+
+function onRecStop() {
+  const mime = rec.recorder?.mimeType || 'audio/webm';
+  const blob = new Blob(rec.chunks, { type: mime });
+  cleanupRecStream();
+  const dur = Date.now() - rec.startTime;
+
+  if (rec.cancel) {
+    stopRecVisual();
+    resetRec();
+    return;
+  }
+  if (dur < MIN_DURATION) {
+    toast('说话时间太短');
+    stopRecVisual();
+    resetRec();
+    return;
+  }
+
+  stopRecVisual();
+  const text = rec.transcript || '语音消息';
+  const sec = Math.max(1, Math.round(dur / 1000));
+
+  blobToDataURL(blob).then(dataUrl => {
+    pushSelf({
+      type: 'voice',
+      voiceText: text,
+      voiceDur: sec,
+      voiceCaption: true,
+      voiceData: dataUrl,
+      voiceSelf: true,
+      quote: pendingQuote,
+    });
+    clearQuote();
+    playSound();
+    scheduleRender(true);
+    triggerReply({ allowCall: false });
+  }).catch(() => {
+    toast('录音失败');
+  }).finally(() => {
+    resetRec();
+  });
+}
+
+function micPointerDown(e) {
+  if (rec.active) return;
+  e.preventDefault();
+  rec.active = true;
+  rec.pointerId = e.pointerId;
+  rec.startY = e.clientY;
+  rec.started = false;
+  rec.cancel = false;
+  $('#micBtn').setPointerCapture?.(e.pointerId);
+  rec.holdTimer = setTimeout(() => {
+    if (rec.active) startRecording();
+  }, HOLD_DELAY);
+}
+
+function micPointerMove(e) {
+  if (!rec.active || e.pointerId !== rec.pointerId) return;
+  if (rec.started) {
+    const dy = rec.startY - e.clientY;
+    rec.cancel = dy > CANCEL_DIST;
+    $('#recCard').classList.toggle('cancel', rec.cancel);
+    $('#recHint').textContent = rec.cancel ? '松开取消' : '松开发送 · 上滑取消';
+  }
+}
+
+function micPointerUp(e) {
+  if (!rec.active || (e.pointerId !== undefined && e.pointerId !== rec.pointerId)) return;
+  e.preventDefault();
+  clearTimeout(rec.holdTimer);
+  if (!rec.started) {
+    resetRec();
+    if (navigator.vibrate) navigator.vibrate(6);
+    triggerReply();
+    return;
+  }
+  if (rec.recorder && rec.recorder.state !== 'inactive') {
+    rec.recorder.stop();
+  } else {
+    resetRec();
+  }
+}
+
+/* ---------- 语音播放 ---------- */
+let currentVoiceAudio = null;
+let currentVoiceMsgId = null;
+
+function stopVoicePlay() {
+  if (currentVoiceAudio) {
+    currentVoiceAudio.pause();
+    currentVoiceAudio = null;
+  }
+  stopSpeak();
+  if (currentVoiceMsgId) {
+    const prev = document.querySelector(`.msg[data-id="${currentVoiceMsgId}"] .bubble.voice`);
+    prev?.classList.remove('playing');
+    currentVoiceMsgId = null;
+  }
+}
+
+function playVoiceMsg(msg, row) {
+  if (currentVoiceMsgId === msg.id) {
+    stopVoicePlay();
+    return;
+  }
+  stopVoicePlay();
+
+  const bubble = row.querySelector('.bubble.voice');
+  currentVoiceMsgId = msg.id;
+
+  if (msg.voiceSelf && msg.voiceData) {
+    const audio = new Audio(msg.voiceData);
+    currentVoiceAudio = audio;
+    bubble?.classList.add('playing');
+    audio.onended = () => {
+      bubble?.classList.remove('playing');
+      if (currentVoiceAudio === audio) currentVoiceAudio = null;
+      if (currentVoiceMsgId === msg.id) currentVoiceMsgId = null;
+    };
+    audio.play().catch(() => {
+      toast('播放失败');
+      bubble?.classList.remove('playing');
+    });
+  } else {
+    if (hasTTS()) {
+      bubble?.classList.add('playing');
+      speak(msg.voiceText || '', { silent: true }).then(ok => {
+        if (!ok) bubble?.classList.remove('playing');
+      });
+    } else {
+      toast('先在「设定 → 语音」里配置');
+    }
+  }
+}
+
 /* ---------- 初始化 ---------- */
 
 export function initChat() {
@@ -1534,10 +1827,11 @@ export function initChat() {
     showMomentPop(detail.text, detail.avatar || '');
   });
   $('#momentPop').onclick = openMomentNotice;
-  $('#micBtn').onclick = () => {
-    if (navigator.vibrate) navigator.vibrate(6);
-    triggerReply();
-  };
+  const micBtn = $('#micBtn');
+  micBtn.addEventListener('pointerdown', micPointerDown);
+  micBtn.addEventListener('pointermove', micPointerMove);
+  micBtn.addEventListener('pointerup', micPointerUp);
+  micBtn.addEventListener('pointercancel', micPointerUp);
   $('#sendBtn').onclick = sendMessage;
   $('#plusBtn').onclick = openAttachPanel;
   $('#quoteCancel').onclick = clearQuote;

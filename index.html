@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icons/icon-app-180.png">
 <link rel="icon" href="icons/icon-app-192.png" type="image/png">
 <link rel="preload" as="image" href="icons/splash-art.png">
-<link rel="stylesheet" href="css/style.css?v=20261101BL">
+<link rel="stylesheet" href="css/style.css?v=20261101BM">
 </head>
 <body>
 
@@ -316,6 +316,17 @@
         </button>
       </div>
     </footer>
+
+    <!-- 录音浮层 -->
+    <div class="rec-overlay" id="recOverlay" hidden>
+      <div class="rec-card" id="recCard">
+        <div class="rec-wave" id="recWave">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <div class="rec-time" id="recTime">0:00</div>
+        <div class="rec-hint" id="recHint">松开发送 · 上滑取消</div>
+      </div>
+    </div>
   </section>
 
   <!-- 字卡库 -->
@@ -1236,6 +1247,6 @@
   <style id="user-font"></style>
 </div>
 
-<script type="module" src="js/app.js?v=20261101BL"></script>
+<script type="module" src="js/app.js?v=20261101BM"></script>
 </body>
 </html>

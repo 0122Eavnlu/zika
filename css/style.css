@@ -5041,6 +5041,81 @@ select.input option { background: var(--surface); color: var(--ink); }
   word-break: break-word;
 }
 .msg.me .bubble.voice .voice-text { color: var(--bubble-me-text); }
+
+/* 录音浮层 */
+.rec-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, .28);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.rec-card {
+  width: 180px;
+  padding: 26px 20px 18px;
+  border-radius: 22px;
+  background: rgba(30, 30, 32, .92);
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 20px 60px -20px rgba(0, 0, 0, .6);
+}
+.rec-wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 44px;
+  margin-bottom: 12px;
+}
+.rec-wave i {
+  display: block;
+  width: 4px;
+  border-radius: 3px;
+  background: #ff4d4f;
+  animation: recBar 1s ease-in-out infinite;
+}
+.rec-wave i:nth-child(1) { animation-delay: 0s; }
+.rec-wave i:nth-child(2) { animation-delay: .1s; }
+.rec-wave i:nth-child(3) { animation-delay: .2s; }
+.rec-wave i:nth-child(4) { animation-delay: .3s; }
+.rec-wave i:nth-child(5) { animation-delay: .4s; }
+.rec-wave i:nth-child(6) { animation-delay: .5s; }
+.rec-wave i:nth-child(7) { animation-delay: .6s; }
+@keyframes recBar {
+  0%, 100% { height: 8px; opacity: .5; }
+  50% { height: 38px; opacity: 1; }
+}
+.rec-time {
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+  margin-bottom: 10px;
+}
+.rec-hint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, .7);
+}
+.rec-card.cancel .rec-wave i { background: #ff9500; }
+.rec-card.cancel .rec-hint { color: #ff9500; }
+
+/* 录音中麦克风按钮状态 */
+.mic-btn.recording {
+  color: #ff4d4f;
+  animation: micPulse 1.2s ease-in-out infinite;
+}
+@keyframes micPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* 语音气泡播放中波形高亮 */
+.bubble.voice.playing .voice-wave { color: #ff4d4f; }
+.msg.me .bubble.voice.playing .voice-wave { color: #fff; }
 .msg-mini {
   position: absolute;
   right: 8px;
