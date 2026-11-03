@@ -1,17 +1,17 @@
-import { initAppearance } from './appearance.js?v=20261101BK';
-import { initSettings } from './settings.js?v=20261101BK';
-import { initCards } from './cards.js?v=20261101BK';
-import { initChat } from './chat.js?v=20261101BK';
-import { initCall, hideCall } from './call.js?v=20261101BK';
-import { initStatus, openStatusSheet } from './status.js?v=20261101BK';
-import { initMoments } from './moments.js?v=20261101BK';
-import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101BK';
-import { initLetters } from './letters.js?v=20261101BK';
-import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101BK';
-import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101BK';
-import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101BK';
-import { get, subscribe, commit } from './state.js?v=20261101BK';
-import { openMeSheet } from './chat.js?v=20261101BK';
+import { initAppearance } from './appearance.js?v=20261101BL';
+import { initSettings } from './settings.js?v=20261101BL';
+import { initCards } from './cards.js?v=20261101BL';
+import { initChat } from './chat.js?v=20261101BL';
+import { initCall, hideCall } from './call.js?v=20261101BL';
+import { initStatus, openStatusSheet } from './status.js?v=20261101BL';
+import { initMoments } from './moments.js?v=20261101BL';
+import { initMusic, hideQrModal, openMusic } from './music.js?v=20261101BL';
+import { initLetters } from './letters.js?v=20261101BL';
+import { bindBackButtons, open, close, currentScreen } from './router.js?v=20261101BL';
+import { openSheet, closeSheet, sheetTitle, promptSheet, actionSheet } from './ui.js?v=20261101BL';
+import { $, $$, setAvatar, toast, pickFile, compressImage, escapeHtml, uid } from './util.js?v=20261101BL';
+import { get, subscribe, commit } from './state.js?v=20261101BL';
+import { openMeSheet } from './chat.js?v=20261101BL';
 
 /* 首页重绘缓存：避免每次都把同一张超大的 base64 重新赋给 style，
    反复赋值会让移动端整块重排、非常卡。 */
@@ -692,7 +692,7 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (!/^(https?|wss?):$/.test(location.protocol)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.register('sw.js?v=20261101BK', { updateViaCache: 'none' })
+  navigator.serviceWorker.register('sw.js?v=20261101BL', { updateViaCache: 'none' })
     .then(reg => reg.update().catch(() => {}))
     .catch(() => {});
   navigator.serviceWorker.addEventListener('controllerchange', () => {

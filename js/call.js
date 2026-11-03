@@ -1,5 +1,5 @@
-import { get, commit } from './state.js?v=20261101BK';
-import { $, setAvatar, uid, randInt, toast } from './util.js?v=20261101BK';
+import { get, commit } from './state.js?v=20261101BL';
+import { $, setAvatar, uid, randInt, toast } from './util.js?v=20261101BL';
 
 let active = false;
 let connected = false;
@@ -61,13 +61,35 @@ function stopTimers() {
 
 function expand() {
   minimized = false;
+  hideNotify();
   $('#callPill').hidden = true;
   $('#callLayer').hidden = false;
+}
+
+function hideNotify() {
+  const n = $('#callNotify');
+  if (n) n.hidden = true;
+}
+
+function showNotify() {
+  const n = $('#callNotify');
+  if (!n) return;
+  const p = get().persona;
+  setAvatar($('#callNotifyAvatar'), p.name, p.avatar);
+  $('#callNotifyName').textContent = p.name || '';
+  $('#callNotifyStatus').textContent = '来电…';
+  n.hidden = false;
 }
 
 function minimize() {
   minimized = true;
   $('#callLayer').hidden = true;
+  // 来电未接通时，缩小后回到顶部来电通知；接通后用悬浮条
+  if (direction === 'in' && !connected) {
+    $('#callPill').hidden = true;
+    showNotify();
+    return;
+  }
   $('#callPill').hidden = false;
   const pill = $('#callPill');
   pill.style.left = '';
@@ -83,6 +105,7 @@ function end() {
   stopTimers();
   $('#callLayer').hidden = true;
   $('#callPill').hidden = true;
+  hideNotify();
   const card = $('.call-card');
   if (card) card.classList.remove('incoming', 'connected');
 }
@@ -167,7 +190,10 @@ export function startIncomingCall() {
   card.classList.remove('connected');
   $('#callAnswer').hidden = false;
 
-  expand();
+  // 来电时先弹出顶部通知条，不直接铺满全屏
+  $('#callLayer').hidden = true;
+  $('#callPill').hidden = true;
+  showNotify();
 
   stopTimers();
   // 来电未接听的倒计时：20~30 秒后自动挂断，记为未接来电
@@ -248,6 +274,19 @@ export function initCall() {
     hangUp();
   };
   $('[data-call-min]').onclick = minimize;
+
+  // 来电显示弹窗
+  $('#callNotifyAnswer').onclick = event => {
+    event.stopPropagation();
+    answerCall();
+  };
+  $('#callNotifyHangup').onclick = event => {
+    event.stopPropagation();
+    hangUp();
+  };
+  $('#callNotifyBody').onclick = () => {
+    if (active) expand();
+  };
 
   const pill = $('#callPill');
   let drag = null;       // { startX, startY, origLeft, origTop }
