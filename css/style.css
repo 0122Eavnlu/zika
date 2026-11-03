@@ -6223,3 +6223,113 @@ select.input option { background: var(--surface); color: var(--ink); }
   margin-left: 0;
   margin-right: 0;
 }
+
+/* 自由造句 */
+.fs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 2px 4px;
+}
+.fs-header-main { min-width: 0; }
+.fs-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: .02em;
+}
+.fs-desc {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+.fs-length {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 2px;
+  margin: 6px 0 4px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.fs-length-label {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.fs-length-tabs {
+  display: flex;
+  background: var(--scrim);
+  border-radius: 999px;
+  padding: 3px;
+}
+.fs-length-tabs button {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--ink-2);
+  transition: background .2s, color .2s;
+}
+.fs-length-tabs button.on {
+  background: var(--surface-2);
+  color: var(--ink);
+  box-shadow: 0 2px 8px -4px rgba(0,0,0,.25);
+}
+
+.fs-cats {
+  padding: 6px 0 24px;
+}
+.fs-cat {
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--line);
+}
+.fs-cat:last-child { border-bottom: none; }
+.fs-cat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.fs-cat-label {
+  font-size: 13px;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.fs-add {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 16px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+.fs-add:active { transform: scale(.9); }
+.fs-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fs-word {
+  position: relative;
+  padding: 5px 22px 5px 11px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-2) 80%, transparent);
+  border: 1px solid var(--line-2);
+  font-size: 13px;
+  color: var(--ink);
+  transition: background .15s;
+}
+.fs-word:active { background: var(--accent-soft); }
+.fs-word .fs-del {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--ink-3);
+  line-height: 1;
+}

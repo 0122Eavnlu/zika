@@ -1,4 +1,4 @@
-import { uid, toast } from './util.js?v=20261101BJ';
+import { uid, toast } from './util.js?v=20261101BK';
 
 const KEY = 'zika.state.v1';
 const AT_KEY = 'zika.state.v1.at';
@@ -157,8 +157,9 @@ function defaults(withSeed = true) {
       momentReplyDelayMin: 30,
       momentReplyDelayMax: 300,
       momentPostGapMin: 20,
-      momentPostGapMax: 180,
+    momentPostGapMax: 180,
       recallChance: 15,
+      freeSentenceChance: 30,
       letter: { enabled: true, minMin: 30, maxMin: 180, chance: 15 },
     },
     tts: {
@@ -175,6 +176,19 @@ function defaults(withSeed = true) {
     },
     group: { enabled: false, members },
     cards: seed.cards,
+    freeSentence: {
+      on: true,
+      long: false,
+      cats: {
+        who: ['我', '你', '他', '她', '我们', '你们', '大家', '朋友', '同事', '自己'],
+        action: ['抱抱你', '陪你', '想你', '等你', '找你', '哄你', '叫你', '提醒你', '陪着你', '看着你'],
+        degree: ['有点', '很', '真的', '特别', '非常', '太', '挺', '稍微'],
+        mood: ['开心', '累', '难过', '想你', '委屈', '生气', '平静', '满足', '幸福', '安心'],
+        thing: ['咖啡', '月亮', '花', '床', '公司', '家', '外面', '路上', '窗边', '梦里'],
+        time: ['今晚', '今天', '早上', '明天', '现在', '刚刚', '一会儿', '周末', '刚才', '晚上'],
+        particle: ['呀', '啦', '哦', '呢', '嘛', '哈', '哟', '罢了'],
+      },
+    },
     presets: {
       on: true,
       types: {

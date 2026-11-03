@@ -1,8 +1,9 @@
-import { get, commit, subscribe } from './state.js?v=20261101BJ';
-import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, prepareSticker, setAvatar } from './util.js?v=20261101BJ';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet, actionSheet } from './ui.js?v=20261101BJ';
-import { PRESET_TYPES, PRESET_ITEMS, PRESET_CATEGORIES, presetItemState } from './presets.js?v=20261101BJ';
-import * as router from './router.js?v=20261101BJ';
+import { get, commit, subscribe } from './state.js?v=20261101BK';
+import { $, $$, escapeHtml, uid, toast, downloadBlob, pickFile, prepareSticker, setAvatar } from './util.js?v=20261101BK';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, promptSheet, actionSheet } from './ui.js?v=20261101BK';
+import { PRESET_TYPES, PRESET_ITEMS, PRESET_CATEGORIES, presetItemState } from './presets.js?v=20261101BK';
+import { CAT_ORDER, CAT_LABEL } from './freesentence.js?v=20261101BK';
+import * as router from './router.js?v=20261101BK';
 
 const norm = text => text.replace(/\s+/g, ' ').trim();
 
@@ -245,7 +246,8 @@ function renderLibTabs() {
   $('#libPresetCount').textContent = String(PRESET_ITEMS.length);
   $('#libMine').hidden = libTab !== 'mine';
   $('#libPreset').hidden = libTab !== 'preset';
-  $('#cardAdd').hidden = tab === 'cards' && libTab === 'preset';
+  $('#libFree').hidden = libTab !== 'free';
+  $('#cardAdd').hidden = tab === 'cards' && (libTab === 'preset' || libTab === 'free');
 }
 
 function renderPreset() {
@@ -322,6 +324,71 @@ function resetPresets() {
   });
 }
 
+/* ---------- 自由造句 ---------- */
+
+function renderFree() {
+  const s = get();
+  const fs = s.freeSentence || { on: true, long: false, cats: {} };
+  const cats = fs.cats || {};
+
+  $('#fsSwitch').classList.toggle('on', Boolean(fs.on));
+  $$('#fsLengthTabs button').forEach(btn =>
+    btn.classList.toggle('on', (btn.dataset.fsLength === 'long') === !!fs.long));
+
+  $('#fsCats').innerHTML = CAT_ORDER.map(cat => {
+    const words = cats[cat] || [];
+    const label = CAT_LABEL[cat] || cat;
+    const chips = words.map((w, i) =>
+      `<button class="fs-word" data-fs-cat="${escapeHtml(cat)}" data-fs-i="${i}" aria-label="删除 ${escapeHtml(w)}">${escapeHtml(w)}<span class="fs-del">×</span></button>`
+    ).join('');
+    return `
+      <div class="fs-cat">
+        <div class="fs-cat-head">
+          <span class="fs-cat-label">${escapeHtml(label)}</span>
+          <button class="fs-add" data-fs-add="${escapeHtml(cat)}" aria-label="添加 ${escapeHtml(label)}">＋</button>
+        </div>
+        <div class="fs-words">${chips}</div>
+      </div>`;
+  }).join('');
+}
+
+function setFsOn(on) {
+  commit(s => { s.freeSentence.on = !!on; });
+  renderFree();
+}
+
+function setFsLength(long) {
+  commit(s => { s.freeSentence.long = !!long; });
+  renderFree();
+}
+
+async function addFsWord(cat) {
+  const text = await promptSheet({
+    title: `添加「${CAT_LABEL[cat] || cat}」`,
+    placeholder: '输入一个词',
+  });
+  const t = norm(text || '');
+  if (!t) return;
+  let dup = false;
+  commit(s => {
+    const arr = s.freeSentence.cats[cat] || [];
+    if (arr.includes(t)) { dup = true; return; }
+    arr.push(t);
+    s.freeSentence.cats[cat] = arr;
+  });
+  if (dup) toast('已经有了');
+  renderFree();
+}
+
+function removeFsWord(cat, i) {
+  commit(s => {
+    const arr = s.freeSentence.cats[cat] || [];
+    arr.splice(i, 1);
+    s.freeSentence.cats[cat] = arr;
+  });
+  renderFree();
+}
+
 function setLibTab(next) {
   libTab = next;
   if (next !== 'mine') {
@@ -334,6 +401,11 @@ function setLibTab(next) {
 function render() {
   renderLibTabs();
   if (tab === 'cards') {
+    if (libTab === 'free') {
+      $('#batchBar').hidden = true;
+      renderFree();
+      return;
+    }
     if (libTab !== 'mine') {
       $('#batchBar').hidden = true;
       renderPreset();
@@ -744,6 +816,20 @@ function bind() {
     const prob = event.target.closest('[data-pprob]');
     if (prob) setPresetProb(prob.dataset.pprob);
   });
+
+  // 自由造句
+  $('#fsSwitch').onclick = () => setFsOn(!get().freeSentence?.on);
+  $('#fsLengthTabs').addEventListener('click', event => {
+    const btn = event.target.closest('[data-fs-length]');
+    if (btn) setFsLength(btn.dataset.fsLength === 'long');
+  });
+  $('#fsCats').addEventListener('click', event => {
+    const addBtn = event.target.closest('[data-fs-add]');
+    if (addBtn) { addFsWord(addBtn.dataset.fsAdd); return; }
+    const wordBtn = event.target.closest('[data-fs-cat]');
+    if (wordBtn) removeFsWord(wordBtn.dataset.fsCat, Number(wordBtn.dataset.fsI));
+  });
+
   $('#cardTabs').addEventListener('click', event => {
     const btn = event.target.closest('[data-tab]');
     if (btn) setTab(btn.dataset.tab);

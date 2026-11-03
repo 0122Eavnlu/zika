@@ -1,13 +1,14 @@
-import { get, commit, subscribe } from './state.js?v=20261101BJ';
-import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BJ';
-import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BJ';
-import * as router from './router.js?v=20261101BJ';
-import { playSound } from './audio.js?v=20261101BJ';
-import { startCall, startIncomingCall } from './call.js?v=20261101BJ';
-import { openMoments } from './moments.js?v=20261101BJ';
-import { pickLyric, isListening } from './music.js?v=20261101BJ';
-import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101BJ';
-import { rollPresetTags } from './presets.js?v=20261101BJ';
+import { get, commit, subscribe } from './state.js?v=20261101BK';
+import { $, $$, escapeHtml, timeText, setAvatar, toast, sleep, randInt, randFloat, pick, uid, pickFile, prepareSticker, compressImage } from './util.js?v=20261101BK';
+import { openSheet, closeSheet, sheetTitle, confirmSheet, actionSheet, promptSheet } from './ui.js?v=20261101BK';
+import * as router from './router.js?v=20261101BK';
+import { playSound } from './audio.js?v=20261101BK';
+import { startCall, startIncomingCall } from './call.js?v=20261101BK';
+import { openMoments } from './moments.js?v=20261101BK';
+import { pickLyric, isListening } from './music.js?v=20261101BK';
+import { speak, hasTTS, voiceRateChance } from './tts.js?v=20261101BK';
+import { rollPresetTags } from './presets.js?v=20261101BK';
+import { composeFreeSentence } from './freesentence.js?v=20261101BK';
 
 let busy = false;
 let replying = false;
@@ -834,6 +835,26 @@ export async function triggerReply({ proactive = false, allowCall = true } = {})
     setSpeakState(false);
     await afterReply();
     return;
+  }
+
+  // 自由造句：用字卡库里的自由造句 + 其他字卡拼一句话，气泡下标注「自由造句」
+  if (Math.random() * 100 < Number(b.freeSentenceChance ?? 30)) {
+    const sentence = composeFreeSentence();
+    if (sentence) {
+      const sender = get().group.enabled ? pick(get().group.members) : null;
+      const id = addIncoming({
+        text: sentence,
+        senderId: sender?.id || '',
+        senderName: sender?.name || '',
+        tags: [{ type: '', text: '自由造句' }],
+      });
+      playSound();
+      afterAiMessage(id, sentence);
+      replying = false;
+      setSpeakState(false);
+      await afterReply();
+      return;
+    }
   }
 
   const count = randInt(1, 3);

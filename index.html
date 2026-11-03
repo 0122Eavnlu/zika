@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icons/icon-app-180.png">
 <link rel="icon" href="icons/icon-app-192.png" type="image/png">
 <link rel="preload" as="image" href="icons/splash-art.png">
-<link rel="stylesheet" href="css/style.css?v=20261101BJ">
+<link rel="stylesheet" href="css/style.css?v=20261101BK">
 </head>
 <body>
 
@@ -347,6 +347,7 @@
         <div class="seg-tabs" id="cardLibTabs">
           <button class="on" data-lib="mine">可自定义字卡<b id="libMineCount">0</b></button>
           <button data-lib="preset">系统预设字卡<b id="libPresetCount">0</b></button>
+          <button data-lib="free">自由造句</button>
         </div>
 
         <div id="libMine">
@@ -434,6 +435,24 @@
             </div>
           </div>
           <div class="card-list preset-list" id="presetList"></div>
+        </div>
+
+        <div id="libFree" hidden>
+          <div class="fs-header">
+            <div class="fs-header-main">
+              <div class="fs-title">自由造句</div>
+              <div class="fs-desc">对方会用下面这些词自由拼一句话，可添加字词或标点</div>
+            </div>
+            <button class="switch" id="fsSwitch" aria-label="使用自由造句"></button>
+          </div>
+          <div class="fs-length">
+            <span class="fs-length-label">句子长度</span>
+            <div class="fs-length-tabs" id="fsLengthTabs">
+              <button class="on" data-fs-length="short">短句 3-6</button>
+              <button data-fs-length="long">长句 7-12</button>
+            </div>
+          </div>
+          <div class="fs-cats" id="fsCats"></div>
         </div>
       </div>
 
@@ -1195,6 +1214,6 @@
   <style id="user-font"></style>
 </div>
 
-<script type="module" src="js/app.js?v=20261101BJ"></script>
+<script type="module" src="js/app.js?v=20261101BK"></script>
 </body>
 </html>
